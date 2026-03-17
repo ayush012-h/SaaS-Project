@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+
+    <!-- Viewport & Theme -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#6C63FF" />
+
+    <!-- Primary SEO -->
+    <title>SubTrackr — Stop Losing Money on Forgotten Subscriptions</title>
+    <meta name="description" content="AI-powered subscription tracker. Detect, track and cancel subscriptions before they drain your bank account. Free forever for 5 subscriptions." />
+    <meta name="keywords" content="subscription tracker, manage subscriptions, cancel subscriptions, subscription manager india, track subscriptions" />
+
+    <!-- Open Graph — controls how link looks on WhatsApp, Twitter, LinkedIn -->
+    <meta property="og:title" content="SubTrackr — AI Subscription Manager" />
+    <meta property="og:description" content="Stop losing money on forgotten subscriptions. Track everything in one place." />
+    <meta property="og:image" content="https://subtrackr.co/og-image.png" />
+    <meta property="og:url" content="https://subtrackr.co" />
+    <meta property="og:type" content="website" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="SubTrackr — AI Subscription Manager" />
+    <meta name="twitter:description" content="Stop losing money on forgotten subscriptions." />
+    <meta name="twitter:image" content="https://subtrackr.co/og-image.png" />
+
+    <!-- Razorpay -->
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
+    <!-- Loading screen styles -->
+    <style>
+      #loading-screen {
+        position: fixed;
+        inset: 0;
+        background: #0A0A0F;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        transition: opacity 0.3s ease;
+      }
+      .logo-pulse {
+        width: 60px;
+        height: 60px;
+        background: linear-gradient(135deg, #6C63FF, #3ECFCF);
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 28px;
+        animation: pulse 1.5s ease-in-out infinite;
+      }
+      @keyframes pulse {
+        0%, 100% { transform: scale(1); opacity: 1; }
+        50% { transform: scale(0.92); opacity: 0.7; }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Loading screen — removed by main.jsx after React mounts -->
+    <div id="loading-screen">
+      <div class="logo-pulse">💳</div>
+    </div>
+
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>
