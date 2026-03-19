@@ -64,7 +64,7 @@ We do not use third-party tracking cookies or advertising cookies.`,
 - **Delete** your data — use the "Delete Account" option in Settings, or email us
 - **Correct** your data — edit subscriptions directly in the app
 
-For any data requests, contact: privacy@subtrackr.co`,
+For any data requests, contact: support@subtrackr.me`,
   },
   {
     title: '7. Data Retention',
@@ -84,8 +84,8 @@ Anonymized, aggregated analytics data (not linked to you) may be retained indefi
     title: '10. Contact Us',
     content: `If you have any questions about this Privacy Policy, please contact us:
 
-**Email:** privacy@subtrackr.co
-**Website:** subtrackr.co
+**Email:** support@subtrackr.me
+**Website:** subtrackr.me
 
 SubTrackr, India`,
   },

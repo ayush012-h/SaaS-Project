@@ -42,7 +42,7 @@ We reserve the right to terminate accounts that violate these terms.`,
     title: '5. Free Plan & Pro Plan',
     content: `**Free Plan:** Allows tracking of up to 5 subscriptions with basic features including dashboard, charts, and renewal alerts. No credit card required.
 
-**Pro Plan:** Paid subscription (₹499/month) providing unlimited subscriptions, AI spending insights, email scanner, and advanced analytics.
+**Pro Plan:** Paid subscription (₹199/month) providing unlimited subscriptions, AI spending insights, email scanner, and advanced analytics.
 
 **Billing:** Pro plan billing is handled by Razorpay. By subscribing, you authorize us to charge your payment method on a recurring monthly basis.
 
@@ -107,8 +107,8 @@ Your continued use of SubTrackr after the effective date of updated Terms consti
     title: '13. Contact Us',
     content: `If you have questions about these Terms of Service, please contact us:
 
-**Email:** legal@subtrackr.co
-**Website:** subtrackr.co
+**Email:** support@subtrackr.me
+**Website:** subtrackr.me
 
 SubTrackr, India`,
   },
