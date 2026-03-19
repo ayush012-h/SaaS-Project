@@ -40,9 +40,9 @@ const STEPS = [
     visual: {
       type: 'table',
       rows: [
-        { name: 'Netflix', amount: '$15.99/mo', status: '✓ Added' },
-        { name: 'Spotify', amount: '$9.99/mo', status: '✓ Added' },
-        { name: 'Adobe CC', amount: '$54.99/mo', status: '⚡ Scanning...' },
+        { name: 'Netflix', amount: '₹649/mo', status: '✓ Added' },
+        { name: 'Spotify', amount: '₹179/mo', status: '✓ Added' },
+        { name: 'Adobe CC', amount: '₹4,490/mo', status: '⚡ Scanning...' },
       ]
     }
   },
@@ -61,9 +61,9 @@ const STEPS = [
     visual: {
       type: 'alerts',
       items: [
-        { name: 'Netflix', days: '4 days', amount: '$15.99', urgency: 'high' },
-        { name: 'Spotify', days: '9 days', amount: '$9.99', urgency: 'med' },
-        { name: 'GitHub', days: '14 days', amount: '$4.00', urgency: 'low' },
+        { name: 'Netflix', days: '4 days', amount: '₹649', urgency: 'high' },
+        { name: 'Spotify', days: '9 days', amount: '₹179', urgency: 'med' },
+        { name: 'GitHub', days: '14 days', amount: '₹336', urgency: 'low' },
       ]
     }
   },
@@ -76,15 +76,15 @@ const STEPS = [
     desc: 'Upgrade to Pro and our AI scans your entire subscription portfolio — finding overlaps, unused apps, and downgrade opportunities automatically.',
     details: [
       { icon: Zap, text: 'Powered by GPT-4o' },
-      { icon: TrendingUp, text: 'Avg. $47/month found' },
+      { icon: TrendingUp, text: 'Avg. ₹3,900/month found' },
       { icon: MousePointer, text: 'One-click action items' },
     ],
     visual: {
       type: 'insights',
       items: [
-        { type: '⚠ Overlap', desc: 'Netflix + YouTube Premium', save: 'Save $13.99/mo' },
-        { type: '💡 Downgrade', desc: 'Adobe CC → Photography', save: 'Save $30/mo' },
-        { type: '🗑 Unused', desc: 'Dropbox — no logins in 60d', save: 'Save $9.99/mo' },
+        { type: '⚠ Overlap', desc: 'Netflix + YouTube Premium', save: 'Save ₹189/mo' },
+        { type: '💡 Downgrade', desc: 'Adobe CC → Photography', save: 'Save ₹2,490/mo' },
+        { type: '🗑 Unused', desc: 'Dropbox — no logins in 60d', save: 'Save ₹850/mo' },
       ]
     }
   },

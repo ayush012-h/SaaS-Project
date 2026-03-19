@@ -1,7 +1,19 @@
-import { Link } from 'react-router-dom'
 import { Zap } from 'lucide-react'
+import { redirectToCheckout } from '../../lib/razorpay'
+import React from 'react'
 
 export default function ProGate({ feature = 'this feature' }) {
+  const [upgrading, setUpgrading] = React.useState(false)
+
+  const handleUpgrade = async () => {
+    setUpgrading(true)
+    try {
+      await redirectToCheckout()
+    } finally {
+      setUpgrading(false)
+    }
+  }
+
   return (
     <div className="pro-gate">
       <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4"
@@ -12,11 +24,21 @@ export default function ProGate({ feature = 'this feature' }) {
       <p className="text-text-muted mb-6 max-w-sm mx-auto text-sm">
         Upgrade to Pro to unlock {feature}, AI insights, unlimited subscriptions, and more.
       </p>
-      <Link to="/settings"
-        className="btn-primary inline-block"
-        style={{ background: 'linear-gradient(135deg, #6C63FF, #3ECFCF)', color: '#fff', padding: '10px 28px', borderRadius: '12px', fontWeight: 600, textDecoration: 'none' }}>
-        Upgrade to Pro — $6/month
-      </Link>
+      <button 
+        onClick={handleUpgrade}
+        disabled={upgrading}
+        className="btn-primary inline-block cursor-pointer border-none"
+        style={{ 
+          background: 'linear-gradient(135deg, #6C63FF, #3ECFCF)', 
+          color: '#fff', 
+          padding: '10px 28px', 
+          borderRadius: '12px', 
+          fontWeight: 600, 
+          textDecoration: 'none',
+          opacity: upgrading ? 0.7 : 1
+        }}>
+        {upgrading ? 'Connecting...' : 'Upgrade to Pro — ₹199/month'}
+      </button>
       <p className="text-text-muted text-xs mt-4">Cancel anytime. No hidden fees.</p>
     </div>
   )

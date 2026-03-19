@@ -1,0 +1,43 @@
+﻿
+> saas-project@0.0.0 lint
+> eslint .
+
+
+C:\Users\lenovo\OneDrive\Desktop\SaaS Project\src\components\Layout\Sidebar.jsx
+  69:10  warning  Unused eslint-disable directive (no problems were reported from 'no-unused-vars')
+
+C:\Users\lenovo\OneDrive\Desktop\SaaS Project\src\components\OnboardingModal.jsx
+  30:28  error  'monthlyTotal' is assigned a value but never used. Allowed unused vars must match /^([A-Z_]|motion)/u  no-unused-vars
+  64:14  error  '_' is defined but never used                                                                          no-unused-vars
+
+C:\Users\lenovo\OneDrive\Desktop\SaaS Project\src\components\UI\StatCard.jsx
+  3:1  warning  Unused eslint-disable directive (no problems were reported from 'no-unused-vars')
+
+C:\Users\lenovo\OneDrive\Desktop\SaaS Project\src\hooks\useCurrencyRates.js
+  38:16  error  '_' is defined but never used  no-unused-vars
+
+C:\Users\lenovo\OneDrive\Desktop\SaaS Project\src\lib\logos.jsx
+  57:17  error  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+C:\Users\lenovo\OneDrive\Desktop\SaaS Project\src\lib\razorpay.js
+  41:31  error  'response' is defined but never used. Allowed unused args must match /^[A-Z_]/u  no-unused-vars
+
+C:\Users\lenovo\OneDrive\Desktop\SaaS Project\src\pages\Alerts\AlertsPage.jsx
+  26:14  error  'err' is defined but never used  no-unused-vars
+  35:14  error  'err' is defined but never used  no-unused-vars
+
+C:\Users\lenovo\OneDrive\Desktop\SaaS Project\src\pages\Auth\AuthPage.jsx
+  74:68  error  'toggle' is defined but never used. Allowed unused args must match /^[A-Z_]/u  no-unused-vars
+
+C:\Users\lenovo\OneDrive\Desktop\SaaS Project\src\pages\Settings\SettingsPage.jsx
+  36:14  error  'err' is defined but never used  no-unused-vars
+  47:14  error  'err' is defined but never used  no-unused-vars
+
+C:\Users\lenovo\OneDrive\Desktop\SaaS Project\src\pages\Subscriptions\SubscriptionsPage.jsx
+   99:14  error  'err' is defined but never used  no-unused-vars
+  113:14  error  'err' is defined but never used  no-unused-vars
+  129:14  error  'err' is defined but never used  no-unused-vars
+
+Γ£û 15 problems (13 errors, 2 warnings)
+  0 errors and 2 warnings potentially fixable with the `--fix` option.
+

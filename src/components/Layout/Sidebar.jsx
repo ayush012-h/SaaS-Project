@@ -9,6 +9,10 @@ import { useTheme } from '../../contexts/ThemeContext'
 import toast from 'react-hot-toast'
 import { useState } from 'react'
 import HelpPanel from '../HelpPanel'
+import { redirectToCheckout } from '../../lib/razorpay'
+
+import { useUser } from '../../context/UserContext'
+import Avatar from '../Avatar'
 
 const navItems = [
   { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
@@ -16,11 +20,18 @@ const navItems = [
   { to: '/analytics', icon: BarChart3, label: 'Analytics' },
   { to: '/alerts', icon: Bell, label: 'Alerts' },
   { to: '/scanner', icon: ScanText, label: 'Email Scanner', pro: true },
+  { to: '/cancel-guide', icon: HelpCircle, label: 'Cancel Guide', pro: true },
+  { to: '/budget', icon: CreditCard, label: 'Budget', pro: true },
+  { to: '/yearly-report', icon: BarChart3, label: 'Yearly Report', pro: true },
+  { to: '/duplicate-detector', icon: ScanText, label: 'Duplicate Detector', pro: true },
+  { to: '/calendar-view', icon: LayoutDashboard, label: 'Calendar View', pro: true },
+  { to: '/export', icon: LayoutDashboard, label: 'Export', pro: true },
   { to: '/settings', icon: Settings, label: 'Settings' },
 ]
 
 export default function Sidebar({ style }) {
-  const { user, profile, isPro, signOut } = useAuth()
+  const { user, signOut } = useAuth()
+  const { profile, isPro } = useUser()
   const { theme, toggleTheme } = useTheme()
   const navigate = useNavigate()
   const [helpOpen, setHelpOpen] = useState(false)
@@ -33,10 +44,6 @@ export default function Sidebar({ style }) {
       toast.error('Sign out failed')
     }
   }
-
-  const initials = profile?.full_name
-    ? profile.full_name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
-    : user?.email?.[0]?.toUpperCase() ?? '?'
 
   return (
     <>
@@ -60,7 +67,6 @@ export default function Sidebar({ style }) {
 
       {/* Nav */}
       <nav className="flex-1 p-4 space-y-1">
-        {/* eslint-disable-next-line no-unused-vars */}
         {navItems.map(({ to, icon: Icon, label, pro }) => (
           <motion.div key={to} whileHover={{ x: 4 }} whileTap={{ scale: 0.98 }}>
             <NavLink
@@ -97,50 +103,55 @@ export default function Sidebar({ style }) {
             <span className="text-xs font-semibold text-text-primary">Upgrade to Pro</span>
           </div>
           <p className="text-xs text-text-muted mb-3">AI insights, unlimited subs & more</p>
-          <NavLink to="/settings"
-            className="block text-center text-xs font-semibold text-white py-2 rounded-lg transition-opacity hover:opacity-90"
+          <button 
+            onClick={async (e) => {
+              const target = e.currentTarget
+              target.disabled = true
+              target.innerText = 'Connecting...'
+              try {
+                await redirectToCheckout()
+              } finally {
+                target.disabled = false
+                target.innerText = 'Get Pro — ₹199/mo'
+              }
+            }}
+            className="w-full text-center text-xs font-semibold text-white py-2 rounded-lg transition-opacity hover:opacity-90 cursor-pointer border-none"
             style={{ background: 'linear-gradient(135deg, #6C63FF, #3ECFCF)' }}>
-            Get Pro — $6/mo
-          </NavLink>
+            Get Pro — ₹199/mo
+          </button>
         </div>
       )}
 
-      {/* User Profile */}
-      <div className="p-4 border-t border-border">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold text-white shrink-0"
-            style={{ background: 'linear-gradient(135deg, #6C63FF, #3ECFCF)' }}>
-            {initials}
-          </div>
-          <div className="flex-1 min-w-0">
-            <div className="text-sm font-medium text-text-primary truncate">
-              {profile?.full_name || user?.email?.split('@')[0] || 'User'}
+      {/* User Card */}
+      <div style={{ padding: '16px 20px', borderTop: '1px solid #1E1E2E', background: 'rgba(0,0,0,0.2)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <Avatar 
+            url={profile?.avatar_url} 
+            name={profile?.full_name} 
+            size={40} 
+          />
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: '13px', fontWeight: '700', color: '#E8E8F0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', margin: 0 }}>
+              {profile?.full_name || 'User'}
             </div>
-            <div className={`text-xs font-semibold ${isPro ? 'text-brand-purple' : 'text-text-muted'}`}>
-              {isPro ? '⚡ Pro Plan' : 'Free Plan'}
+            <div style={{ fontSize: '11px', color: '#555570', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', margin: 0 }}>
+              {user?.email}
             </div>
           </div>
-          <div className="flex gap-1">
+          <div style={{ display: 'flex', gap: '4px' }}>
             <button
-              onClick={() => setHelpOpen(true)}
-              className="p-2 rounded-lg text-text-muted hover:text-brand-purple hover:bg-brand-purple/10 transition-all duration-200"
-              title="Help & FAQ"
+              onClick={() => navigate('/settings')}
+              style={{ background: 'none', border: 'none', color: '#666680', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+              title="Settings"
             >
-              <HelpCircle size={16} />
-            </button>
-            <button
-              onClick={toggleTheme}
-              className="p-2 rounded-lg text-text-muted hover:text-text-primary hover:bg-bg-elevated transition-all duration-200"
-              title="Toggle Theme"
-            >
-              {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
+              <Settings size={18} />
             </button>
             <button
               onClick={handleSignOut}
-              className="p-2 rounded-lg text-text-muted hover:text-status-danger hover:bg-status-danger/10 transition-all duration-200"
-              title="Sign out"
+              style={{ background: 'none', border: 'none', color: '#666680', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+              title="Sign Out"
             >
-              <LogOut size={16} />
+              <LogOut size={18} />
             </button>
           </div>
         </div>

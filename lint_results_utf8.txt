@@ -1,0 +1,82 @@
+﻿
+> saas-project@0.0.0 lint
+> eslint .
+
+
+C:\Users\lenovo\OneDrive\Desktop\SaaS Project\src\components\HelpPanel.jsx
+  2:10  error  'motion' is defined but never used. Allowed unused vars must match /^[A-Z_]/u  no-unused-vars
+
+C:\Users\lenovo\OneDrive\Desktop\SaaS Project\src\components\Layout\Sidebar.jsx
+  7:10  error  'motion' is defined but never used. Allowed unused vars must match /^[A-Z_]/u  no-unused-vars
+
+C:\Users\lenovo\OneDrive\Desktop\SaaS Project\src\components\OnboardingModal.jsx
+   2:10  error  'motion' is defined but never used. Allowed unused vars must match /^[A-Z_]/u                 no-unused-vars
+  30:28  error  'monthlyTotal' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u  no-unused-vars
+  64:14  error  '_' is defined but never used                                                                 no-unused-vars
+
+C:\Users\lenovo\OneDrive\Desktop\SaaS Project\src\components\PageTransition.jsx
+  1:10  error  'motion' is defined but never used. Allowed unused vars must match /^[A-Z_]/u  no-unused-vars
+
+C:\Users\lenovo\OneDrive\Desktop\SaaS Project\src\components\UI\SubscriptionModal.jsx
+  117:9   error  'formatDateLabel' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u                                                                                             no-unused-vars
+  122:21  error  React Hook "useAuth" is called conditionally. React Hooks must be called in the exact same order in every component render. Did you accidentally call a React Hook after an early return?   react-hooks/rules-of-hooks
+  123:35  error  React Hook "useState" is called conditionally. React Hooks must be called in the exact same order in every component render. Did you accidentally call a React Hook after an early return?  react-hooks/rules-of-hooks
+
+C:\Users\lenovo\OneDrive\Desktop\SaaS Project\src\components\WhatsNewBanner.jsx
+  2:10  error  'motion' is defined but never used. Allowed unused vars must match /^[A-Z_]/u  no-unused-vars
+
+C:\Users\lenovo\OneDrive\Desktop\SaaS Project\src\contexts\AuthContext.jsx
+  107:6  warning  React Hook useEffect has a missing dependency: 'loading'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+C:\Users\lenovo\OneDrive\Desktop\SaaS Project\src\hooks\useCurrencyRates.js
+  38:16  error  '_' is defined but never used  no-unused-vars
+
+C:\Users\lenovo\OneDrive\Desktop\SaaS Project\src\lib\logos.jsx
+  57:17  error  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+C:\Users\lenovo\OneDrive\Desktop\SaaS Project\src\lib\razorpay.js
+  41:31  error  'response' is defined but never used  no-unused-vars
+
+C:\Users\lenovo\OneDrive\Desktop\SaaS Project\src\main.jsx
+  5:10  error  Fast refresh only works when a file has exports. Move your component(s) to a separate file  react-refresh/only-export-components
+
+C:\Users\lenovo\OneDrive\Desktop\SaaS Project\src\pages\Alerts\AlertsPage.jsx
+  26:14  error  'err' is defined but never used  no-unused-vars
+  35:14  error  'err' is defined but never used  no-unused-vars
+
+C:\Users\lenovo\OneDrive\Desktop\SaaS Project\src\pages\Auth\AuthPage.jsx
+   7:10  error  'motion' is defined but never used. Allowed unused vars must match /^[A-Z_]/u  no-unused-vars
+  74:38  error  'Icon' is defined but never used                                               no-unused-vars
+  74:68  error  'toggle' is defined but never used                                             no-unused-vars
+
+C:\Users\lenovo\OneDrive\Desktop\SaaS Project\src\pages\Dashboard\DashboardPage.jsx
+  14:10  error  'motion' is defined but never used. Allowed unused vars must match /^[A-Z_]/u  no-unused-vars
+
+C:\Users\lenovo\OneDrive\Desktop\SaaS Project\src\pages\Settings\SettingsPage.jsx
+  36:14  error  'err' is defined but never used  no-unused-vars
+  47:14  error  'err' is defined but never used  no-unused-vars
+
+C:\Users\lenovo\OneDrive\Desktop\SaaS Project\src\pages\Subscriptions\SubscriptionsPage.jsx
+   97:14   error  'err' is defined but never used  no-unused-vars
+  104:42   error  'selectedSub' is not defined     no-undef
+  107:34   error  'selectedSub' is not defined     no-undef
+  111:14   error  'err' is defined but never used  no-unused-vars
+  125:7    error  'setDeletingSub' is not defined  no-undef
+  126:7    error  'setSelectedSub' is not defined  no-undef
+  127:14   error  'err' is defined but never used  no-unused-vars
+  179:76   error  'setSelectedSub' is not defined  no-undef
+  233:34   error  'setSelectedSub' is not defined  no-undef
+  234:63   error  'selectedSub' is not defined     no-undef
+  269:111  error  'selectedSub' is not defined     no-undef
+  289:8    error  'selectedSub' is not defined     no-undef
+  291:16   error  'selectedSub' is not defined     no-undef
+  292:26   error  'setSelectedSub' is not defined  no-undef
+  294:30   error  'setDeletingSub' is not defined  no-undef
+  302:8    error  'deletingSub' is not defined     no-undef
+  303:86   error  'setDeletingSub' is not defined  no-undef
+  307:86   error  'deletingSub' is not defined     no-undef
+  310:71   error  'setDeletingSub' is not defined  no-undef
+  311:81   error  'deletingSub' is not defined     no-undef
+
+Γ£û 43 problems (42 errors, 1 warning)
+

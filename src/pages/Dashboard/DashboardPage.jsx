@@ -1,8 +1,10 @@
 import { useMemo, useEffect } from 'react'
-import { DollarSign, CreditCard, TrendingUp, Bell, Calendar } from 'lucide-react'
+import { DollarSign, CreditCard, TrendingUp, Bell, Calendar, AlertCircle } from 'lucide-react'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
 import { format, subMonths } from 'date-fns'
 import { useSubscriptions } from '../../hooks/useSubscriptions'
+import { useAuth } from '../../contexts/AuthContext'
+import { useCurrencyRates, getCurrencySymbol } from '../../hooks/useCurrencyRates'
 import StatCard from '../../components/UI/StatCard'
 import StatusBadge from '../../components/UI/StatusBadge'
 import { Link } from 'react-router-dom'
@@ -30,12 +32,12 @@ const itemVariants = {
   show: { opacity: 1, y: 0 }
 }
 
-const CustomTooltip = ({ active, payload, label }) => {
+const CustomTooltip = ({ active, payload, label, currencySymbol }) => {
   if (active && payload?.length) {
     return (
       <div className="bg-bg-elevated border border-border rounded-xl px-4 py-3 shadow-xl">
         <p className="text-text-muted text-xs mb-1">{label}</p>
-        <p className="text-text-primary font-bold">₹{payload[0].value.toFixed(2)}</p>
+        <p className="text-text-primary font-bold">{currencySymbol}{payload[0].value.toFixed(2)}</p>
       </div>
     )
   }
@@ -43,11 +45,48 @@ const CustomTooltip = ({ active, payload, label }) => {
 }
 
 export default function DashboardPage() {
-  const { subscriptions, activeSubscriptions, monthlyTotal, yearlyTotal, upcomingRenewals, categoryBreakdown, loading } = useSubscriptions()
+  const { subscriptions, activeSubscriptions, upcomingRenewals, loading } = useSubscriptions()
+  const { profile, isPro } = useAuth()
+  const { convert } = useCurrencyRates()
+  
+  const displayCurrency = profile?.display_currency || 'INR'
+  const currencySymbol = getCurrencySymbol(displayCurrency)
 
   useEffect(() => {
     document.title = 'Dashboard — SubTrackr'
   }, [])
+
+  // Calculate totals in display currency
+  const { convMonthlyTotal, convYearlyTotal, convCategoryBreakdown } = useMemo(() => {
+    let mTotal = 0
+    let yTotal = 0
+    const catBreakdown = {}
+
+    activeSubscriptions.forEach(sub => {
+      const amountInDisplay = convert(sub.amount, sub.currency || '₹', displayCurrency)
+      
+      let monthly = 0
+      if (sub.billing_cycle === 'monthly') monthly = amountInDisplay
+      else if (sub.billing_cycle === 'yearly') monthly = amountInDisplay / 12
+      else if (sub.billing_cycle === 'weekly') monthly = amountInDisplay * 4.33
+      
+      mTotal += monthly
+      yTotal += monthly * 12
+      
+      const cat = sub.category || 'Other'
+      catBreakdown[cat] = (catBreakdown[cat] || 0) + monthly
+    })
+
+    return { 
+      convMonthlyTotal: mTotal, 
+      convYearlyTotal: yTotal, 
+      convCategoryBreakdown: catBreakdown 
+    }
+  }, [activeSubscriptions, displayCurrency, convert])
+
+  const budget = profile?.monthly_budget || 0
+  const budgetProgress = budget > 0 ? (convMonthlyTotal / budget) * 100 : 0
+  const isOverBudget = budget > 0 && convMonthlyTotal > budget
   // Monthly spending trend (last 6 months)
   const trendData = useMemo(() => {
     const months = Array.from({ length: 6 }, (_, i) => subMonths(new Date(), 5 - i))
@@ -58,16 +97,17 @@ export default function DashboardPage() {
           return created <= month && s.status !== 'cancelled'
         })
         .reduce((sum, s) => {
-          if (s.billing_cycle === 'monthly') return sum + Number(s.amount)
-          if (s.billing_cycle === 'yearly') return sum + Number(s.amount) / 12
-          if (s.billing_cycle === 'weekly') return sum + Number(s.amount) * 4.33
+          const amountInDisplay = convert(s.amount, s.currency || '₹', displayCurrency)
+          if (s.billing_cycle === 'monthly') return sum + amountInDisplay
+          if (s.billing_cycle === 'yearly') return sum + amountInDisplay / 12
+          if (s.billing_cycle === 'weekly') return sum + amountInDisplay * 4.33
           return sum
         }, 0)
       return { month: format(month, 'MMM'), amount: parseFloat(total.toFixed(2)) }
     })
-  }, [subscriptions])
+  }, [subscriptions, displayCurrency, convert])
 
-  const categoryChartData = Object.entries(categoryBreakdown).map(([name, value]) => ({
+  const categoryChartData = Object.entries(convCategoryBreakdown).map(([name, value]) => ({
     name, value: parseFloat(value.toFixed(2))
   }))
 
@@ -101,8 +141,8 @@ export default function DashboardPage() {
         <motion.div variants={itemVariants} whileHover={{ y: -4 }}>
           <StatCard
             title="Monthly Spend"
-            value={`₹${monthlyTotal.toFixed(2)}`}
-            subtitle="All active subscriptions"
+            value={`${currencySymbol}${convMonthlyTotal.toFixed(2)}`}
+            subtitle={displayCurrency !== 'INR' ? `Converted from original` : "All active subscriptions"}
             icon={DollarSign}
             color="#6C63FF"
           />
@@ -110,7 +150,7 @@ export default function DashboardPage() {
         <motion.div variants={itemVariants} whileHover={{ y: -4 }}>
           <StatCard
             title="Yearly Estimate"
-            value={`₹${yearlyTotal.toFixed(0)}`}
+            value={`${currencySymbol}${convYearlyTotal.toFixed(0)}`}
             subtitle="Projected annual cost"
             icon={TrendingUp}
             color="#3ECFCF"
@@ -136,6 +176,49 @@ export default function DashboardPage() {
         </motion.div>
       </motion.div>
 
+      {/* Feature 2: Budget Progress (Pro) */}
+      {isPro && budget > 0 && (
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className={`card overflow-hidden relative ${isOverBudget ? 'border-status-danger/30' : ''}`}
+        >
+          <div className="flex flex-wrap items-center justify-between mb-4 gap-4">
+            <div>
+              <h3 className="text-lg font-bold text-text-primary flex items-center gap-2">
+                Monthly Budget Goal
+                {isOverBudget && <span className="bg-status-danger/10 text-status-danger text-[10px] px-2 py-0.5 rounded-full uppercase tracking-wider">Over Limit</span>}
+              </h3>
+              <p className="text-text-muted text-xs">
+                You've spent {currencySymbol}{convMonthlyTotal.toFixed(0)} of {currencySymbol}{budget.toFixed(0)} budget
+              </p>
+            </div>
+            <div className="text-right">
+              <span className={`text-2xl font-black ${isOverBudget ? 'text-status-danger' : 'text-brand-teal'}`}>
+                {Math.round(budgetProgress)}%
+              </span>
+            </div>
+          </div>
+          
+          <div className="h-3 w-full bg-bg-elevated rounded-full overflow-hidden border border-border">
+            <motion.div 
+              initial={{ width: 0 }}
+              animate={{ width: `${Math.min(budgetProgress, 100)}%` }}
+              transition={{ duration: 1, ease: "easeOut" }}
+              className={`h-full rounded-full ${isOverBudget ? 'bg-status-danger shadow-glow-red' : 'bg-brand-teal shadow-glow-teal'}`}
+              style={{ background: isOverBudget ? 'linear-gradient(90deg, #FF6363, #FF3E3E)' : 'linear-gradient(90deg, #3ECFCF, #63FFBD)' }}
+            />
+          </div>
+
+          {isOverBudget && (
+            <p className="mt-3 text-[11px] text-status-danger font-medium flex items-center gap-1">
+              <AlertCircle size={12} />
+              Warning: You have exceeded your monthly budget by {currencySymbol}{(convMonthlyTotal - budget).toFixed(0)}.
+            </p>
+          )}
+        </motion.div>
+      )}
+
       {/* Charts Row */}
       <motion.div
         variants={containerVariants}
@@ -157,8 +240,8 @@ export default function DashboardPage() {
                 <CartesianGrid strokeDasharray="3 3" stroke="#1E1E2E" vertical={false} />
                 <XAxis dataKey="month" tick={{ fill: '#666680', fontSize: 12 }} axisLine={false} tickLine={false} />
                 <YAxis tick={{ fill: '#666680', fontSize: 12 }} axisLine={false} tickLine={false}
-                  tickFormatter={v => `₹${v}`} />
-                <Tooltip content={<CustomTooltip />} />
+                  tickFormatter={v => `${currencySymbol}${v}`} />
+                <Tooltip content={<CustomTooltip currencySymbol={currencySymbol} />} />
                 <Bar dataKey="amount" fill="url(#barGrad)" radius={[6, 6, 0, 0]} />
                 <defs>
                   <linearGradient id="barGrad" x1="0" y1="0" x2="0" y2="1">
@@ -189,7 +272,7 @@ export default function DashboardPage() {
                       <Cell key={i} fill={CATEGORY_COLORS[i % CATEGORY_COLORS.length]} />
                     ))}
                   </Pie>
-                  <Tooltip formatter={(v) => [`₹${v.toFixed(2)}/mo`, '']}
+                  <Tooltip formatter={(v) => [`${currencySymbol}${v.toFixed(2)}/mo`, '']}
                     contentStyle={{ background: '#13131F', border: '1px solid #1E1E2E', borderRadius: '12px', color: '#E8E8F0' }} />
                 </PieChart>
               </ResponsiveContainer>
@@ -200,7 +283,7 @@ export default function DashboardPage() {
                       <div className="w-2.5 h-2.5 rounded-full" style={{ background: CATEGORY_COLORS[i % CATEGORY_COLORS.length] }} />
                       <span className="text-xs text-text-secondary">{item.name}</span>
                     </div>
-                    <span className="text-xs font-semibold text-text-primary">₹{item.value.toFixed(0)}/mo</span>
+                    <span className="text-xs font-semibold text-text-primary">{currencySymbol}{item.value.toFixed(0)}/mo</span>
                   </div>
                 ))}
               </div>

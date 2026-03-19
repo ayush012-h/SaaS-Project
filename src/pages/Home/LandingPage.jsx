@@ -13,11 +13,11 @@ const FEATURES = [
   { icon: Bell, title: 'Renewal Alerts', desc: 'Never get surprised by a charge again. Get notified days before any subscription renews.', color: '#FFD700', glow: 'rgba(255,215,0,0.3)' },
   { icon: ScanText, title: 'Email Scanner', desc: 'Paste your bank statement. Our AI extracts all subscriptions automatically in seconds.', color: '#4CFF8F', glow: 'rgba(76,255,143,0.3)' },
   { icon: Shield, title: 'Secure & Private', desc: 'Bank-level security with Supabase RLS. Your data is yours — never sold or shared.', color: '#FF6363', glow: 'rgba(255,99,99,0.3)' },
-  { icon: DollarSign, title: 'Save Real Money', desc: 'Our users find an average of $47/month in forgotten or duplicate subscriptions.', color: '#FF63B3', glow: 'rgba(255,99,179,0.3)' },
+  { icon: DollarSign, title: 'Save Real Money', desc: 'Our users find an average of ₹3,900/month in forgotten or duplicate subscriptions.', color: '#FF63B3', glow: 'rgba(255,99,179,0.3)' },
 ]
 
 const STATS = [
-  { value: '$47', label: 'avg. savings/month' },
+  { value: '₹3,900', label: 'avg. savings/month' },
   { value: '2M+', label: 'subscriptions tracked' },
   { value: '99.9%', label: 'uptime' },
   { value: '4.9★', label: 'user rating' },
@@ -25,12 +25,12 @@ const STATS = [
 
 const PRICING = [
   {
-    name: 'Free', price: '$0', period: '/month',
+    name: 'Free', price: '₹0', period: '/month',
     features: ['Up to 5 subscriptions', 'Dashboard & charts', 'Renewal alerts', 'Basic analytics'],
     cta: 'Get Started Free', highlight: false,
   },
   {
-    name: 'Pro', price: '$6', period: '/month',
+    name: 'Pro', price: '₹199', period: '/month',
     features: ['Unlimited subscriptions', 'AI spending insights', 'Email scanner', 'Advanced analytics', 'Priority support', 'Cancellation guides'],
     cta: 'Start Pro', highlight: true,
   },
@@ -38,14 +38,14 @@ const PRICING = [
 
 // Example subscriptions for the demo table
 const DEMO_SUBS = [
-  { name: 'Netflix', category: 'Streaming', amount: 15.99, cycle: 'Monthly', status: 'Active', statusColor: '#4CFF8F', dot: '#E50914', renewal: 'Mar 14' },
-  { name: 'Spotify', category: 'Music', amount: 9.99, cycle: 'Monthly', status: 'Active', statusColor: '#4CFF8F', dot: '#1DB954', renewal: 'Mar 18' },
-  { name: 'Adobe CC', category: 'Software', amount: 54.99, cycle: 'Monthly', status: '⚠ Overlap', statusColor: '#FFD700', dot: '#FF0000', renewal: 'Mar 22' },
-  { name: 'ChatGPT Plus', category: 'AI', amount: 20.00, cycle: 'Monthly', status: 'Active', statusColor: '#4CFF8F', dot: '#10A37F', renewal: 'Mar 25' },
-  { name: 'GitHub Pro', category: 'Dev Tools', amount: 4.00, cycle: 'Monthly', status: 'Active', statusColor: '#4CFF8F', dot: '#6C63FF', renewal: 'Apr 1' },
-  { name: 'Notion', category: 'Productivity', amount: 8.00, cycle: 'Monthly', status: '💡 Downgrade', statusColor: '#3ECFCF', dot: '#ffffff', renewal: 'Apr 3' },
-  { name: 'YouTube Premium', category: 'Streaming', amount: 13.99, cycle: 'Monthly', status: '⚠ Overlap', statusColor: '#FFD700', dot: '#FF0000', renewal: 'Apr 7' },
-  { name: 'iCloud 200GB', category: 'Storage', amount: 2.99, cycle: 'Monthly', status: 'Active', statusColor: '#4CFF8F', dot: '#007AFF', renewal: 'Apr 10' },
+  { name: 'Netflix', category: 'Streaming', amount: 649, cycle: 'Monthly', status: 'Active', statusColor: '#4CFF8F', dot: '#E50914', renewal: 'Mar 14' },
+  { name: 'Spotify', category: 'Music', amount: 179, cycle: 'Monthly', status: 'Active', statusColor: '#4CFF8F', dot: '#1DB954', renewal: 'Mar 18' },
+  { name: 'Adobe CC', category: 'Software', amount: 4490, cycle: 'Monthly', status: '⚠ Overlap', statusColor: '#FFD700', dot: '#FF0000', renewal: 'Mar 22' },
+  { name: 'ChatGPT Plus', category: 'AI', amount: 1699, cycle: 'Monthly', status: 'Active', statusColor: '#4CFF8F', dot: '#10A37F', renewal: 'Mar 25' },
+  { name: 'GitHub Pro', category: 'Dev Tools', amount: 336, cycle: 'Monthly', status: 'Active', statusColor: '#4CFF8F', dot: '#6C63FF', renewal: 'Apr 1' },
+  { name: 'Notion', category: 'Productivity', amount: 660, cycle: 'Monthly', status: '💡 Downgrade', statusColor: '#3ECFCF', dot: '#ffffff', renewal: 'Apr 3' },
+  { name: 'YouTube Premium', category: 'Streaming', amount: 189, cycle: 'Monthly', status: '⚠ Overlap', statusColor: '#FFD700', dot: '#FF0000', renewal: 'Apr 7' },
+  { name: 'iCloud 200GB', category: 'Storage', amount: 75, cycle: 'Monthly', status: 'Active', statusColor: '#4CFF8F', dot: '#007AFF', renewal: 'Apr 10' },
 ]
 
 // Mouse parallax hook
@@ -192,7 +192,7 @@ function DemoTable() {
               </span>
               <span style={{ flex: 1.2, color: 'var(--landing-text-muted-dark)', fontSize: 12 }}>{sub.category}</span>
               <span style={{ flex: 1, textAlign: 'right', color: 'var(--landing-text)', fontWeight: 600, fontSize: 13, fontFamily: "'JetBrains Mono', monospace" }}>
-                ${sub.amount.toFixed(2)}
+                ₹{sub.amount.toLocaleString('en-IN')}
               </span>
               <span style={{ flex: 1, textAlign: 'center', color: 'var(--landing-text-muted)', fontSize: 12 }}>{sub.renewal}</span>
               <span style={{ flex: 1.3, textAlign: 'right' }}>
@@ -217,9 +217,9 @@ function DemoTable() {
       <div className="demo-table-footer" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 24px', background: 'var(--landing-table-bg)', borderTop: '1px solid var(--landing-card-border)' }}>
         <span style={{ color: 'var(--landing-text-muted-dark)', fontSize: 12 }}>8 subscriptions tracked</span>
         <span style={{ color: 'var(--landing-text)', fontWeight: 700, fontSize: 13, fontFamily: "'JetBrains Mono', monospace" }}>
-          $129.95<span style={{ color: 'var(--landing-text-muted-dark)', fontWeight: 400, fontSize: 11 }}>/mo</span>
+          ₹8,277<span style={{ color: 'var(--landing-text-muted-dark)', fontWeight: 400, fontSize: 11 }}>/mo</span>
         </span>
-        <span style={{ color: '#4CFF8F', fontSize: 12, fontWeight: 600 }}>💡 Save $28 with AI</span>
+        <span style={{ color: '#4CFF8F', fontSize: 12, fontWeight: 600 }}>💡 Save ₹2,300 with AI</span>
       </div>
     </div>
   )
@@ -916,7 +916,7 @@ export default function LandingPage() {
             </h1>
             
             <p className="cinematic-subtitle reveal active" style={{ transitionDelay: '0.2s' }}>
-              SubTrackr tracks every subscription, detects hidden charges, and helps you save an average of <strong style={{ color: '#4CFF8F' }}>$47/month</strong> with AI-powered insights.
+              SubTrackr tracks every subscription, detects hidden charges, and helps you save an average of <strong style={{ color: '#4CFF8F' }}>₹3,900/month</strong> with AI-powered insights.
             </p>
             
             <div className="hero-actions reveal active" style={{ transitionDelay: '0.3s' }}>

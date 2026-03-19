@@ -10,6 +10,13 @@ import { format } from 'date-fns'
 import { ServiceLogo } from '../../lib/logos'
 import { SkeletonSubscriptionRow } from '../../components/Skeleton'
 import { EmptySubscriptions, EmptySearch } from '../../components/EmptyState'
+import DuplicateDetector from '../DuplicateDetector'
+import SubscriptionHistory from '../../components/SubscriptionHistory'
+import ProGate from '../../components/UI/ProGate'
+import { Download, History, Tag as TagIcon, FileText } from 'lucide-react'
+import { saveAs } from 'file-saver'
+import jsPDF from 'jspdf'
+import 'jspdf-autotable'
 
 const CATEGORIES = ['All', 'Entertainment', 'Productivity', 'Health & Fitness', 'News & Media',
   'Cloud Storage', 'Gaming', 'Education', 'Finance', 'Music', 'Design', 'Developer Tools', 'Other']
@@ -26,13 +33,58 @@ export default function SubscriptionsPage() {
   const [addOpen, setAddOpen] = useState(false)
   const [selectedSub, setSelectedSub] = useState(null)
   const [deletingSub, setDeletingSub] = useState(null)
+  const [selectedHistorySub, setSelectedHistorySub] = useState(null)
+  const [showExportOptions, setShowExportOptions] = useState(false)
   const FREE_LIMIT = 5
 
   const canAdd = isPro || subscriptions.length < FREE_LIMIT
 
   const filtered = subscriptions
-    .filter(s => category === 'All' || s.category === category)
-    .filter(s => s.name.toLowerCase().includes(search.toLowerCase()))
+    .filter(s => category === 'All' || s.category?.toLowerCase() === category?.toLowerCase())
+    .filter(s => {
+      const matchesSearch = s.name.toLowerCase().includes(search.toLowerCase()) || 
+                           (s.tags && s.tags.some(t => t.toLowerCase().includes(search.toLowerCase())))
+      return matchesSearch
+    })
+
+  const handleExportCSV = () => {
+    if (!isPro) return
+    const headers = ['Name', 'Amount', 'Currency', 'Cycle', 'Category', 'Next Renewal', 'Status', 'Tags']
+    const rows = filtered.map(s => [
+      s.name,
+      s.amount,
+      s.currency || '₹',
+      s.billing_cycle,
+      s.category,
+      s.next_renewal_date,
+      s.status,
+      (s.tags || []).join(', ')
+    ])
+    
+    const csvContent = [headers, ...rows].map(e => e.join(",")).join("\n")
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+    saveAs(blob, `subscriptions_${format(new Date(), 'yyyy-MM-dd')}.csv`)
+    setShowExportOptions(false)
+  }
+
+  const handleExportPDF = () => {
+    if (!isPro) return
+    const doc = new jsPDF()
+    doc.text('My Subscriptions Report', 14, 15)
+    
+    const tableColumn = ["Name", "Amount", "Cycle", "Category", "Renewal"]
+    const tableRows = filtered.map(s => [
+      s.name,
+      `${s.currency || '₹'}${s.amount}`,
+      s.billing_cycle,
+      s.category,
+      s.next_renewal_date
+    ])
+
+    doc.autoTable(tableColumn, tableRows, { startY: 20 })
+    doc.save(`subscriptions_${format(new Date(), 'yyyy-MM-dd')}.pdf`)
+    setShowExportOptions(false)
+  }
 
   async function handleAdd(data) {
     if (!canAdd) return toast.error(`Free plan limited to ${FREE_LIMIT} subscriptions. Upgrade to Pro!`)
@@ -44,7 +96,7 @@ export default function SubscriptionsPage() {
         error: (err) => err.message || 'Failed to add'
       })
       await promise
-    } catch (err) {
+    } catch {
       // toast.error handled by toast.promise
     }
   }
@@ -58,7 +110,7 @@ export default function SubscriptionsPage() {
         error: (err) => err.message || 'Failed to update'
       })
       await promise
-    } catch (err) {
+    } catch {
       // handled
     }
   }
@@ -74,7 +126,7 @@ export default function SubscriptionsPage() {
       await promise
       setDeletingSub(null)
       setSelectedSub(null)
-    } catch (err) {
+    } catch {
       // handled
     }
   }
@@ -90,13 +142,43 @@ export default function SubscriptionsPage() {
             {!isPro && <span className="ml-2 text-status-warning">{subscriptions.length}/{FREE_LIMIT} free</span>}
           </p>
         </div>
-        <button
-          onClick={() => canAdd ? setAddOpen(true) : toast.error('Upgrade to Pro to add more subscriptions!')}
-          className="btn-primary flex items-center gap-2">
-          <Plus size={18} />
-          Add Subscription
-        </button>
+        <div className="flex items-center gap-3">
+          <div className="relative">
+            <button
+              onClick={() => isPro ? setShowExportOptions(!showExportOptions) : null}
+              className={`btn-secondary flex items-center gap-2 ${!isPro ? 'opacity-50 cursor-not-allowed' : ''}`}
+            >
+              <Download size={18} />
+              Export
+            </button>
+            {showExportOptions && isPro && (
+              <div className="absolute right-0 mt-2 w-48 bg-bg-elevated border border-border rounded-xl shadow-xl z-20 overflow-hidden animate-slide-up">
+                <button onClick={handleExportCSV} className="w-full text-left px-4 py-3 text-sm text-text-primary hover:bg-bg-hover flex items-center gap-2 border-b border-border">
+                  <FileText size={16} className="text-brand-purple" />
+                  Export as CSV
+                </button>
+                <button onClick={handleExportPDF} className="w-full text-left px-4 py-3 text-sm text-text-primary hover:bg-bg-hover flex items-center gap-2">
+                  <CreditCard size={16} className="text-brand-teal" />
+                  Export as PDF
+                </button>
+              </div>
+            )}
+            {!isPro && showExportOptions && (
+              <div className="absolute right-0 mt-2 z-20">
+                <ProGate feature="data export" />
+              </div>
+            )}
+          </div>
+          <button
+            onClick={() => canAdd ? setAddOpen(true) : toast.error('Upgrade to Pro to add more subscriptions!')}
+            className="btn-primary flex items-center gap-2">
+            <Plus size={18} />
+            Add Subscription
+          </button>
+        </div>
       </div>
+
+      {isPro && <DuplicateDetector userPlan="pro" isEmbedded={true} />}
 
       {/* Filters */}
       <div className="card p-4 space-y-4">
@@ -158,11 +240,19 @@ export default function SubscriptionsPage() {
                       <ServiceLogo name={sub.name} size={36} color={sub.color || '#6C63FF'} />
                       <div>
                         <p className="font-medium text-text-primary">{sub.name}</p>
-                        {sub.notes && <p className="text-xs text-text-muted truncate max-w-[120px]">{sub.notes}</p>}
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {sub.tags?.map(tag => (
+                            <span key={tag} className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-brand-purple/10 text-brand-purple border border-brand-purple/20">
+                              {tag}
+                            </span>
+                          ))}
+                        </div>
                       </div>
                     </div>
                   </td>
-                  <td className="table-cell text-text-secondary">{sub.category || '—'}</td>
+                  <td className="table-cell text-text-secondary">
+                    {sub.category ? (sub.category.charAt(0).toUpperCase() + sub.category.slice(1)) : '—'}
+                  </td>
                   <td className="table-cell font-semibold text-text-primary">{sub.currency || '₹'}{Number(sub.amount).toFixed(2)}</td>
                   <td className="table-cell text-text-secondary capitalize">{sub.billing_cycle}</td>
                   <td className="table-cell text-text-secondary">
@@ -170,7 +260,18 @@ export default function SubscriptionsPage() {
                   </td>
                   <td className="table-cell"><StatusBadge status={sub.status} /></td>
                   <td className="table-cell text-right">
-                    <ChevronRight size={16} className={`text-text-muted transition-transform duration-200 ${selectedSub?.id === sub.id ? 'translate-x-1 text-brand-purple' : ''}`} />
+                    <div className="flex items-center justify-end gap-2">
+                      {isPro && (
+                        <button 
+                          onClick={(e) => { e.stopPropagation(); setSelectedHistorySub(sub); }}
+                          className="p-1.5 rounded-lg text-text-muted hover:text-brand-purple hover:bg-brand-purple/10 transition-colors"
+                          title="View History"
+                        >
+                          <History size={16} />
+                        </button>
+                      )}
+                      <ChevronRight size={16} className={`text-text-muted transition-transform duration-200 ${selectedSub?.id === sub.id ? 'translate-x-1 text-brand-purple' : ''}`} />
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -178,6 +279,15 @@ export default function SubscriptionsPage() {
           </table>
         )}
       </div>
+
+      {/* History Modal */}
+      {selectedHistorySub && (
+        <SubscriptionHistory 
+          subscriptionId={selectedHistorySub.id}
+          subscriptionName={selectedHistorySub.name}
+          onClose={() => setSelectedHistorySub(null)}
+        />
+      )}
 
       {/* Detail Modal */}
       {selectedSub && (

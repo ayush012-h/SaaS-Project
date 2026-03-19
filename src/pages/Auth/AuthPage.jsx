@@ -71,7 +71,7 @@ function ParticleCanvas() {
 }
 
 /* ─── Input row ─── */
-function AuthInput({ id, type, icon: Icon, label, value, onChange, toggle, showToggle, onToggle, error }) {
+function AuthInput({ id, type, icon: Icon, label, value, onChange, showToggle, onToggle, error }) {
   const [focused, setFocused] = useState(false)
   const active = focused || value.length > 0
   return (

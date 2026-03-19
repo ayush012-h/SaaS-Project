@@ -22,9 +22,9 @@ const FEATURES = [
       'Upcoming renewals countdown',
     ],
     preview: [
-      { label: 'Monthly Total', value: '$142.95', sub: '↑ 3% from last month', color: '#6C63FF' },
+      { label: 'Monthly Total', value: '₹11,990', sub: '↑ 3% from last month', color: '#6C63FF' },
       { label: 'Active Subs', value: '14', sub: '2 renewing soon', color: '#3ECFCF' },
-      { label: 'Yearly Estimate', value: '$1,715', sub: 'Save $564 with Pro', color: '#4CFF8F' },
+      { label: 'Yearly Estimate', value: '₹1.43L', sub: 'Save ₹47K with Pro', color: '#4CFF8F' },
     ]
   },
   {
@@ -43,9 +43,9 @@ const FEATURES = [
       'Calculates exact monthly savings',
     ],
     preview: [
-      { label: 'Overlap Found', value: 'Netflix + YT', sub: 'Same category — save $13.99', color: '#FFD700' },
-      { label: 'Downgrade', value: 'Adobe CC', sub: 'Photography plan saves $30', color: '#3ECFCF' },
-      { label: 'Total Savings', value: '$47/mo', sub: 'Potential monthly savings', color: '#4CFF8F' },
+      { label: 'Overlap Found', value: 'Netflix + YT', sub: 'Same category — save ₹189', color: '#FFD700' },
+      { label: 'Downgrade', value: 'Adobe CC', sub: 'Photography plan saves ₹2,490', color: '#3ECFCF' },
+      { label: 'Total Savings', value: '₹3,900/mo', sub: 'Potential monthly savings', color: '#4CFF8F' },
     ]
   },
   {
@@ -64,9 +64,9 @@ const FEATURES = [
       'Email & in-app notifications',
     ],
     preview: [
-      { label: 'Next Alert', value: 'Netflix', sub: 'Renews in 4 days · $15.99', color: '#FF6363' },
-      { label: 'This week', value: '3 renewals', sub: 'Total: $49.97', color: '#FFD700' },
-      { label: 'Saved', value: '$54.99', sub: 'Cancelled Adobe before charge', color: '#4CFF8F' },
+      { label: 'Next Alert', value: 'Netflix', sub: 'Renews in 4 days · ₹649', color: '#FF6363' },
+      { label: 'This week', value: '3 renewals', sub: 'Total: ₹4,204', color: '#FFD700' },
+      { label: 'Saved', value: '₹4,490', sub: 'Cancelled Adobe before charge', color: '#4CFF8F' },
     ]
   },
   {
@@ -86,8 +86,8 @@ const FEATURES = [
     ],
     preview: [
       { label: 'Scanned', value: '6 found', sub: 'In 2.3 seconds', color: '#4CFF8F' },
-      { label: 'New', value: 'Hulu $17.99', sub: 'Previously untracked', color: '#3ECFCF' },
-      { label: 'Saved', value: '$23.98/mo', sub: 'By cancelling 2 duplicates', color: '#6C63FF' },
+      { label: 'New', value: 'Hotstar ₹299', sub: 'Previously untracked', color: '#3ECFCF' },
+      { label: 'Saved', value: '₹2,010/mo', sub: 'By cancelling 2 duplicates', color: '#6C63FF' },
     ]
   },
   {
@@ -119,17 +119,17 @@ const FEATURES = [
     tag: 'Pro',
     title: 'Real Savings',
     headline: 'Turn insights into cash',
-    desc: 'Our Pro users find an average of $47/month in wasted subscriptions within the first week. The product pays for itself in hours.',
+    desc: 'Our Pro users find an average of ₹3,900/month in wasted subscriptions within the first week. The product pays for itself in hours.',
     bullets: [
-      'Average $47/month found per user',
+      'Average ₹3,900/month found per user',
       'ROI positive within first week',
       'Track historical savings over time',
       'Share reports with family members',
     ],
     preview: [
-      { label: 'Avg Save', value: '$47/mo', sub: 'Per Pro user', color: '#4CFF8F' },
-      { label: 'ROI', value: '683%', sub: 'vs $6/mo Pro cost', color: '#FF63B3' },
-      { label: 'Year 1', value: '$564', sub: 'Avg annual savings', color: '#FFD700' },
+      { label: 'Avg Save', value: '₹3,900/mo', sub: 'Per Pro user', color: '#4CFF8F' },
+      { label: 'ROI', value: '1859%', sub: 'vs ₹199/mo Pro cost', color: '#FF63B3' },
+      { label: 'Year 1', value: '₹46,800', sub: 'Avg annual savings', color: '#FFD700' },
     ]
   },
 ]

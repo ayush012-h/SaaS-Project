@@ -3,6 +3,7 @@ import { X, Pencil, Trash2, Calendar, Tag, CreditCard, FileText, Check, AlertCir
 import { format } from 'date-fns'
 import StatusBadge from './StatusBadge'
 import { ServiceLogo } from '../../lib/logos'
+import { useAuth } from '../../contexts/AuthContext'
 
 const CATEGORIES = ['Entertainment', 'Productivity', 'Health & Fitness', 'News & Media',
   'Cloud Storage', 'Gaming', 'Education', 'Finance', 'Music', 'Design', 'Developer Tools', 'Other']
@@ -11,11 +12,23 @@ const STATUSES = ['active', 'trial', 'paused', 'cancelled']
 
 export default function SubscriptionDetailModal({ sub, onClose, onSave, onDelete }) {
   const [isEditing, setIsEditing] = useState(false)
-  const [form, setForm] = useState({ ...sub, currency: sub.currency || '₹' })
+  const [form, setForm] = useState({ ...sub, currency: sub.currency || '₹', tags: sub.tags || [] })
   const [loading, setLoading] = useState(false)
+  const { isPro } = useAuth()
+  const [tagInput, setTagInput] = useState('')
+
+  const addTag = () => {
+    if (!tagInput.trim() || form.tags.includes(tagInput.trim())) return
+    setForm({ ...form, tags: [...form.tags, tagInput.trim()] })
+    setTagInput('')
+  }
+
+  const removeTag = (tag) => {
+    setForm({ ...form, tags: form.tags.filter(t => t !== tag) })
+  }
 
   useEffect(() => {
-    setForm({ ...sub, currency: sub.currency || '₹' })
+    setForm({ ...sub, currency: sub.currency || '₹', tags: sub.tags || [] })
   }, [sub])
 
   if (!sub) return null
@@ -151,6 +164,30 @@ export default function SubscriptionDetailModal({ sub, onClose, onSave, onDelete
                   <textarea className="input resize-none" rows={2} placeholder="Any notes..."
                     value={form.notes || ''} onChange={e => update('notes', e.target.value)} />
                 </div>
+
+                {isPro && (
+                  <div className="col-span-2">
+                    <label className="label">Tags</label>
+                    <div className="flex gap-2 mb-2">
+                      <input 
+                        className="input" 
+                        placeholder="Add tag..." 
+                        value={tagInput}
+                        onChange={e => setTagInput(e.target.value)}
+                        onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addTag())}
+                      />
+                      <button type="button" onClick={addTag} className="btn-secondary">Add</button>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {form.tags.map(tag => (
+                        <span key={tag} className="flex items-center gap-2 px-3 py-1 rounded-lg bg-brand-purple/10 text-brand-purple text-xs font-bold border border-brand-purple/20">
+                          {tag}
+                          <X size={12} className="cursor-pointer" onClick={() => removeTag(tag)} />
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </form>
           ) : (
@@ -183,7 +220,9 @@ export default function SubscriptionDetailModal({ sub, onClose, onSave, onDelete
                   </div>
                   <div>
                     <p className="detail-label">Category</p>
-                    <p className="detail-value">{form.category || 'Uncategorized'}</p>
+                    <p className="detail-value">
+                      {form.category ? (form.category.charAt(0).toUpperCase() + form.category.slice(1)) : 'Uncategorized'}
+                    </p>
                   </div>
                 </div>
 
@@ -205,6 +244,24 @@ export default function SubscriptionDetailModal({ sub, onClose, onSave, onDelete
                     <div className="flex-1">
                       <p className="detail-label">Notes</p>
                       <p className="detail-value leading-relaxed text-text-secondary italic">"{form.notes}"</p>
+                    </div>
+                  </div>
+                )}
+
+                {isPro && form.tags?.length > 0 && (
+                  <div className="col-span-2 flex items-start gap-3 pt-2">
+                    <div className="w-8 h-8 rounded-lg bg-brand-purple/10 flex items-center justify-center text-brand-purple shrink-0">
+                      <Tag size={16} />
+                    </div>
+                    <div className="flex-1">
+                      <p className="detail-label">Tags</p>
+                      <div className="flex flex-wrap gap-2 mt-2">
+                        {form.tags.map(tag => (
+                          <span key={tag} className="px-2 py-1 rounded-lg bg-bg-elevated text-xs font-bold text-text-primary border border-border">
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
                     </div>
                   </div>
                 )}

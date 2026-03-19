@@ -23,7 +23,7 @@ export default function AlertsPage() {
     try {
       await snoozeSubscription(id, 7)
       toast.success('Alert snoozed for 7 days')
-    } catch (err) {
+    } catch {
       toast.error('Failed to snooze alert')
     }
   }
@@ -32,7 +32,7 @@ export default function AlertsPage() {
     try {
       await unsnoozeSubscription(id)
       toast.success('Alert unsnoozed')
-    } catch (err) {
+    } catch {
       toast.error('Failed to unsnooze')
     }
   }

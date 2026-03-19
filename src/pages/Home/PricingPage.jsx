@@ -33,9 +33,9 @@ const COMPARE_ROWS = [
 ]
 
 const TESTIMONIALS = [
-  { name: 'Sarah K.', role: 'Freelance Designer', text: 'Found 3 subscriptions I forgot about. Saved $47 in the first week.', stars: 5 },
+  { name: 'Sarah K.', role: 'Freelance Designer', text: 'Found 3 subscriptions I forgot about. Saved ₹3,900 in the first week.', stars: 5 },
   { name: 'Marcus T.', role: 'Software Engineer', text: 'The AI scanner is unreal. Pasted my bank statement and it found everything.', stars: 5 },
-  { name: 'Priya M.', role: 'Marketing Manager', text: 'Worth every penny. The ROI is insane — $6/month to save $60+.', stars: 5 },
+  { name: 'Priya M.', role: 'Marketing Manager', text: 'Worth every penny. The ROI is insane — ₹199/month to save ₹5,000+.', stars: 5 },
 ]
 
 function CheckIcon({ value, isProCol }) {
@@ -49,8 +49,8 @@ function CheckIcon({ value, isProCol }) {
 
 export default function PricingPage() {
   const [annual, setAnnual] = useState(false)
-  const proPrice = annual ? '4.99' : '6'
-  const proSavings = annual ? 'Save $13/year' : null
+  const proPrice = annual ? '166' : '199'
+  const proSavings = annual ? 'Save ₹396/year' : null
 
   return (
     <div className="landing-page">
@@ -112,7 +112,7 @@ export default function PricingPage() {
           {/* Free plan */}
           <div className="pricing-card">
             <div className="pricing-name">Free</div>
-            <div className="pricing-price">$0<span className="pricing-period">/month</span></div>
+            <div className="pricing-price">₹0<span className="pricing-period">/month</span></div>
             <p style={{ color: '#666680', fontSize: 13, marginBottom: '1.25rem', lineHeight: 1.6 }}>
               Perfect for getting started and tracking a handful of subscriptions.
             </p>
@@ -134,7 +134,7 @@ export default function PricingPage() {
               <Zap size={16} style={{ color: '#6C63FF' }} />
             </div>
             <div className="pricing-price">
-              ${proPrice}<span className="pricing-period">/month</span>
+              ₹{proPrice}<span className="pricing-period">/month</span>
               {proSavings && <span style={{ fontSize: 11, color: '#4CFF8F', marginLeft: 8, fontWeight: 600 }}>{proSavings}</span>}
             </div>
             <p style={{ color: '#9999BB', fontSize: 13, marginBottom: '1.25rem', lineHeight: 1.6 }}>
@@ -164,9 +164,9 @@ export default function PricingPage() {
         }}>
           <div style={{ fontSize: 28, }}>💡</div>
           <div>
-            <div style={{ fontWeight: 700, color: '#E8E8F0', fontSize: 15 }}>The average user saves $47/month</div>
+            <div style={{ fontWeight: 700, color: '#E8E8F0', fontSize: 15 }}>The average user saves ₹3,900/month</div>
             <div style={{ color: '#9999BB', fontSize: 13, marginTop: 2 }}>
-              That's a <span style={{ color: '#4CFF8F', fontWeight: 700 }}>683% ROI</span> on Pro — paid back in hours, not months.
+              That's a <span style={{ color: '#4CFF8F', fontWeight: 700 }}>1859% ROI</span> on Pro — paid back in hours, not months.
             </div>
           </div>
         </div>
@@ -236,7 +236,7 @@ export default function PricingPage() {
           { q: 'Can I cancel Pro at any time?', a: 'Yes. Cancel anytime from your settings page. You\'ll keep Pro features until the end of your billing period.' },
           { q: 'How does the AI work?', a: 'We use OpenAI\'s GPT-4o models to analyze your subscriptions and detect patterns, overlaps, and savings opportunities.' },
           { q: 'Is my financial data safe?', a: 'Absolutely. We never store bank credentials. You only paste text — no direct bank connections. Data is encrypted with RLS.' },
-          { q: 'What if I have more than 5 subscriptions?', a: 'Upgrade to Pro for unlimited subscriptions. At $6/month, you only need to find one forgotten subscription to break even.' },
+          { q: 'What if I have more than 5 subscriptions?', a: 'Upgrade to Pro for unlimited subscriptions. At ₹199/month, you only need to find one forgotten subscription to break even.' },
         ].map((faq, i) => <PricingFaq key={i} faq={faq} />)}
       </div>
 

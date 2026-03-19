@@ -30,7 +30,7 @@ const VALUES = [
     icon: Heart,
     color: '#FF63B3',
     title: 'Built With Purpose',
-    desc: 'SubTrackr was built to solve a real problem. The average person wastes $348/year on unused subscriptions. We\'re here to change that.',
+    desc: 'SubTrackr was built to solve a real problem. The average Indian user wastes ₹29,000/year on unused subscriptions. We\'re here to change that.',
   },
   {
     icon: Globe,
@@ -44,7 +44,7 @@ const MILESTONES = [
   { year: '2024', event: 'SubTrackr founded to solve the "forgotten subscription" problem' },
   { year: 'Q1 2025', event: 'Launched with AI insights powered by GPT-4o-mini' },
   { year: 'Q2 2025', event: 'Added AI email scanner and cancellation guides' },
-  { year: 'Q3 2025', event: '50,000+ active users and $2M+ in subscriptions tracked' },
+  { year: 'Q3 2025', event: '50,000+ active users and ₹16 Cr+ in subscriptions tracked' },
   { year: 'Today', event: 'Continuing to save users money, one subscription at a time' },
 ]
 
@@ -106,9 +106,9 @@ export default function AboutPage() {
           border: '1px solid rgba(255,255,255,0.07)',
         }}>
           {[
-            { value: '$47', label: 'Avg. savings per user / month' },
+            { value: '₹3,900', label: 'Avg. savings per user / month' },
             { value: '50K+', label: 'Active users worldwide' },
-            { value: '$2M+', label: 'Subscriptions tracked' },
+            { value: '₹16Cr+', label: 'Subscriptions tracked' },
             { value: '99.9%', label: 'Platform uptime' },
           ].map((s, i) => (
             <div key={i} style={{
@@ -132,13 +132,13 @@ export default function AboutPage() {
         }}>
           <div className="section-badge" style={{ marginBottom: '1.5rem', display: 'inline-block' }}>Our Story</div>
           <h2 style={{ fontSize: '1.9rem', fontWeight: 700, color: '#E8E8F0', margin: '0 0 1.5rem', lineHeight: 1.2 }}>
-            Born from a $340 mistake
+            Born from a ₹28,000 mistake
           </h2>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             {[
-              'It started with a credit card statement. The founder noticed 6 subscriptions they had completely forgotten about — a VPN, two streaming services, a design tool, and a SaaS trial that auto-renewed. Total: $340 wasted in 3 months.',
+              'It started with a credit card statement. The founder noticed 6 subscriptions they had completely forgotten about — a VPN, two streaming services, a design tool, and a SaaS trial that auto-renewed. Total: ₹28,000 wasted in 3 months.',
               'The natural reaction was frustration. Not at the companies charging them, but at themselves for not tracking it. And then a question: how many other people have this exact problem?',
-              'Turns out, a lot. The average American spends $219/month on subscriptions but underestimates their spending by 2.5x. Subscriptions are deliberately designed to be easy to sign up for and hard to notice.',
+              'Turns out, a lot. The average Indian user spends ₹2,400/month on subscriptions but underestimates their spending by 2.5x. Subscriptions are deliberately designed to be easy to sign up for and hard to notice.',
               'SubTrackr was built to flip that equation. With AI-powered detection, smart alerts, and spending analysis, we make it effortless to see exactly where your money goes — and take back control.',
             ].map((p, i) => (
               <p key={i} style={{ color: '#9999BB', fontSize: '0.975rem', lineHeight: 1.8, margin: 0 }}>{p}</p>

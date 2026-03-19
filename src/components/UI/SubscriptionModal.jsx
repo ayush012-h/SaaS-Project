@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { X, Calendar, DollarSign, Type, Tag, CreditCard, Info, Check, ChevronDown, Bell, Minus, Plus } from 'lucide-react'
 import { ServiceLogo } from '../../lib/logos'
+import { useAuth } from '../../contexts/AuthContext'
 
 const SUGGESTIONS = [
   { name: 'Netflix', color: '#E50914' },
@@ -13,15 +14,15 @@ const SUGGESTIONS = [
 ]
 
 const CATEGORIES = [
-  { id: 'entertainment', name: 'Entertainment', icon: '🎬' },
-  { id: 'music', name: 'Music', icon: '🎵' },
-  { id: 'productivity', name: 'Productivity', icon: '💼' },
-  { id: 'cloud', name: 'Cloud', icon: '☁️' },
-  { id: 'dev', name: 'Dev Tools', icon: '⚙️' },
-  { id: 'health', name: 'Health', icon: '🏥' },
-  { id: 'education', name: 'Education', icon: '📚' },
-  { id: 'lifestyle', name: 'Lifestyle', icon: '🏠' },
-  { id: 'other', name: 'Other', icon: '📦' },
+  { id: 'Entertainment', name: 'Entertainment', icon: '🎬' },
+  { id: 'Music', name: 'Music', icon: '🎵' },
+  { id: 'Productivity', name: 'Productivity', icon: '💼' },
+  { id: 'Cloud', name: 'Cloud', icon: '☁️' },
+  { id: 'Dev Tools', name: 'Dev Tools', icon: '⚙️' },
+  { id: 'Health', name: 'Health', icon: '🏥' },
+  { id: 'Education', name: 'Education', icon: '📚' },
+  { id: 'Lifestyle', name: 'Lifestyle', icon: '🏠' },
+  { id: 'Other', name: 'Other', icon: '📦' },
 ]
 
 const PRESET_COLORS = ['#E50914', '#1DB954', '#FF0000', '#6C63FF', '#FF9900', '#00A8E0', '#FFD700', '#3ECFCF']
@@ -36,11 +37,15 @@ export default function AddSubscriptionModal({ isOpen, onClose, onSave, initial 
     color: '#6C63FF',
     reminder_enabled: false,
     reminder_days: 3,
-    currency: '₹'
+    currency: '₹',
+    tags: []
   })
   const [errors, setErrors] = useState({})
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isCycleOpen, setIsCycleOpen] = useState(false)
+
+  const { isPro } = useAuth()
+  const [tagInput, setTagInput] = useState('')
 
   // Reset form when modal opens
   useEffect(() => {
@@ -54,7 +59,8 @@ export default function AddSubscriptionModal({ isOpen, onClose, onSave, initial 
         color: '#6C63FF',
         reminder_enabled: false,
         reminder_days: 3,
-        currency: '₹'
+        currency: '₹',
+        tags: []
       })
       setErrors({})
     }
@@ -111,9 +117,10 @@ export default function AddSubscriptionModal({ isOpen, onClose, onSave, initial 
     setForm({ ...form, next_renewal_date: d.toISOString().split('T')[0] })
   }
 
-  const formatDateLabel = (dateStr) => {
-    if (!dateStr) return 'Select Date'
-    return new Date(dateStr).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+  const addTag = () => {
+    if (!tagInput.trim() || form.tags.includes(tagInput.trim())) return
+    setForm({ ...form, tags: [...form.tags, tagInput.trim()] })
+    setTagInput('')
   }
 
   return (
@@ -334,6 +341,47 @@ export default function AddSubscriptionModal({ isOpen, onClose, onSave, initial 
                  )
               })}
             </div>
+          </div>
+
+          {/* Tags (Pro) */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <label style={{ fontSize: '0.75rem', fontWeight: 800, color: theme.muted, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Tags</label>
+              {!isPro && <span style={{ fontSize: '10px', fontWeight: 800, color: '#6C63FF', background: 'rgba(108,99,255,0.1)', padding: '2px 6px', borderRadius: '4px' }}>PRO</span>}
+            </div>
+            {isPro ? (
+              <div style={{ spaceY: '8px' }}>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <input 
+                    className="input" 
+                    placeholder="Add tag (e.g. Work, Family)" 
+                    value={tagInput}
+                    onChange={e => setTagInput(e.target.value)}
+                    onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addTag())}
+                    style={{ height: '40px', fontSize: '13px' }}
+                  />
+                  <button type="button" onClick={addTag} className="btn-secondary" style={{ padding: '0 12px', height: '40px' }}>Add</button>
+                </div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '8px' }}>
+                  {form.tags.map(tag => (
+                    <span key={tag} style={{ 
+                      display: 'flex', alignItems: 'center', gap: '4px',
+                      padding: '4px 10px', borderRadius: '8px', fontSize: '12px', fontWeight: 600,
+                      background: 'rgba(108,99,255,0.1)', color: '#6C63FF', border: '1px solid rgba(108,99,255,0.2)'
+                    }}>
+                      {tag}
+                      <X size={12} style={{ cursor: 'pointer' }} onClick={() => setForm({ ...form, tags: form.tags.filter(t => t !== tag) })} />
+                    </span>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <div style={{ padding: '12px', borderRadius: '10px', border: '1px dashed var(--border)', textAlign: 'center' }}>
+                <p style={{ margin: 0, fontSize: '12px', color: 'var(--text-muted)' }}>
+                   Upgrade to Pro to use custom tags
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Reminder Toggle */}

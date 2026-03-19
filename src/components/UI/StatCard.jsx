@@ -1,6 +1,5 @@
 import { TrendingUp, TrendingDown } from 'lucide-react'
 
-// eslint-disable-next-line no-unused-vars
 export default function StatCard({ title, value, subtitle, icon: Icon, color = '#6C63FF', trend }) {
   return (
     <div className="stat-card group">

@@ -3,6 +3,8 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { subMonths, format } from 'date-fns'
 import { useSubscriptions } from '../../hooks/useSubscriptions'
 import { useAuth } from '../../contexts/AuthContext'
+import { useCurrencyRates, getCurrencySymbol } from '../../hooks/useCurrencyRates'
+import { useMemo } from 'react'
 import { supabase } from '../../lib/supabase'
 import ProGate from '../../components/UI/ProGate'
 import { Sparkles, RefreshCw, TrendingUp, DollarSign, AlertTriangle } from 'lucide-react'
@@ -15,12 +17,12 @@ const COLORS = ['#6C63FF', '#3ECFCF', '#FFD700', '#FF6363', '#4CFF8F', '#FF63B3'
 const INSIGHT_ICONS = { overlap: AlertTriangle, unused: TrendingUp, downgrade: DollarSign }
 const INSIGHT_COLORS = { overlap: '#FFD700', unused: '#FF6363', downgrade: '#4CFF8F' }
 
-const CustomTooltip = ({ active, payload, label }) => {
+const CustomTooltip = ({ active, payload, label, currencySymbol }) => {
   if (active && payload?.length) {
     return (
       <div className="bg-bg-elevated border border-border rounded-xl px-4 py-3 shadow-xl">
         <p className="text-text-muted text-xs mb-1">{label}</p>
-        <p className="text-text-primary font-bold">₹{payload[0].value.toFixed(2)}</p>
+        <p className="text-text-primary font-bold">{currencySymbol}{payload[0].value.toFixed(2)}</p>
       </div>
     )
   }
@@ -28,9 +30,12 @@ const CustomTooltip = ({ active, payload, label }) => {
 }
 
 export default function AnalyticsPage() {
-  // Single hook call — was previously called twice, causing double Supabase subscriptions
-  const { subscriptions, categoryBreakdown, loading: subsLoading } = useSubscriptions()
-  const { user, isPro } = useAuth()
+  const { subscriptions, loading: subsLoading } = useSubscriptions()
+  const { user, profile, isPro } = useAuth()
+  const { convert } = useCurrencyRates()
+  
+  const displayCurrency = profile?.display_currency || 'INR'
+  const currencySymbol = getCurrencySymbol(displayCurrency)
   const [insights, setInsights] = useState([])
   const [insightsLoading, setInsightsLoading] = useState(false)
 
@@ -38,21 +43,42 @@ export default function AnalyticsPage() {
     document.title = 'Analytics — SubTrackr'
   }, [])
 
-  const trendData = Array.from({ length: 6 }, (_, i) => subMonths(new Date(), 5 - i)).map(month => {
-    const total = subscriptions
-      .filter(s => new Date(s.created_at) <= month && s.status !== 'cancelled')
-      .reduce((sum, s) => {
-        if (s.billing_cycle === 'monthly') return sum + Number(s.amount)
-        if (s.billing_cycle === 'yearly') return sum + Number(s.amount) / 12
-        if (s.billing_cycle === 'weekly') return sum + Number(s.amount) * 4.33
-        return sum
-      }, 0)
-    return { month: format(month, 'MMM yy'), amount: parseFloat(total.toFixed(2)) }
-  })
+  const { trendData, categoryData } = useMemo(() => {
+    // Trend Data
+    const tData = Array.from({ length: 6 }, (_, i) => subMonths(new Date(), 5 - i)).map(month => {
+      const total = subscriptions
+        .filter(s => new Date(s.created_at) <= month && s.status !== 'cancelled')
+        .reduce((sum, s) => {
+          const amountInDisplay = convert(s.amount, s.currency || '₹', displayCurrency)
+          if (s.billing_cycle === 'monthly') return sum + amountInDisplay
+          if (s.billing_cycle === 'yearly') return sum + amountInDisplay / 12
+          if (s.billing_cycle === 'weekly') return sum + amountInDisplay * 4.33
+          return sum
+        }, 0)
+      return { month: format(month, 'MMM yy'), amount: parseFloat(total.toFixed(2)) }
+    })
 
-  const categoryData = Object.entries(categoryBreakdown)
-    .map(([name, value]) => ({ name, value: parseFloat(value.toFixed(2)) }))
-    .sort((a, b) => b.value - a.value)
+    // Category Data
+    const catBreakdown = {}
+    subscriptions
+      .filter(s => s.status !== 'cancelled')
+      .forEach(sub => {
+        const amountInDisplay = convert(sub.amount, sub.currency || '₹', displayCurrency)
+        let monthly = 0
+        if (sub.billing_cycle === 'monthly') monthly = amountInDisplay
+        else if (sub.billing_cycle === 'yearly') monthly = amountInDisplay / 12
+        else if (sub.billing_cycle === 'weekly') monthly = amountInDisplay * 4.33
+        
+        const cat = sub.category || 'Other'
+        catBreakdown[cat] = (catBreakdown[cat] || 0) + monthly
+      })
+
+    const cData = Object.entries(catBreakdown)
+      .map(([name, value]) => ({ name, value: parseFloat(value.toFixed(2)) }))
+      .sort((a, b) => b.value - a.value)
+
+    return { trendData: tData, categoryData: cData }
+  }, [subscriptions, convert, displayCurrency])
 
   async function generateInsights() {
     setInsightsLoading(true)
@@ -90,8 +116,8 @@ export default function AnalyticsPage() {
             <BarChart data={trendData} barSize={36}>
               <CartesianGrid strokeDasharray="3 3" stroke="#1E1E2E" vertical={false} />
               <XAxis dataKey="month" tick={{ fill: '#666680', fontSize: 12 }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fill: '#666680', fontSize: 12 }} axisLine={false} tickLine={false} tickFormatter={v => `₹${v}`} />
-              <Tooltip content={<CustomTooltip />} />
+              <YAxis tick={{ fill: '#666680', fontSize: 12 }} axisLine={false} tickLine={false} tickFormatter={v => `${currencySymbol}${v}`} />
+              <Tooltip content={<CustomTooltip currencySymbol={currencySymbol} />} />
               <Bar dataKey="amount" fill="url(#barGrad2)" radius={[6, 6, 0, 0]} />
               <defs>
                 <linearGradient id="barGrad2" x1="0" y1="0" x2="0" y2="1">
@@ -114,7 +140,7 @@ export default function AnalyticsPage() {
                   <Pie data={categoryData} cx="50%" cy="50%" innerRadius={50} outerRadius={75} paddingAngle={4} dataKey="value">
                     {categoryData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
                   </Pie>
-                  <Tooltip formatter={v => [`₹${v.toFixed(2)}/mo`]} contentStyle={{ background: '#13131F', border: '1px solid #1E1E2E', borderRadius: '12px', color: '#E8E8F0' }} />
+                  <Tooltip formatter={v => [`${currencySymbol}${v.toFixed(2)}/mo`]} contentStyle={{ background: '#13131F', border: '1px solid #1E1E2E', borderRadius: '12px', color: '#E8E8F0' }} />
                 </PieChart>
               </ResponsiveContainer>
               <div className="space-y-2">
@@ -124,7 +150,7 @@ export default function AnalyticsPage() {
                       <div className="w-2.5 h-2.5 rounded-full" style={{ background: COLORS[i % COLORS.length] }} />
                       <span className="text-xs text-text-secondary">{item.name}</span>
                     </div>
-                    <span className="text-xs font-semibold text-text-primary">₹{item.value}/mo</span>
+                    <span className="text-xs font-semibold text-text-primary">{currencySymbol}{item.value.toFixed(0)}/mo</span>
                   </div>
                 ))}
               </div>
@@ -183,9 +209,9 @@ export default function AnalyticsPage() {
               <div className="mb-6 p-4 rounded-xl border border-status-savings/30"
                 style={{ background: 'rgba(76,255,143,0.05)' }}>
                 <p className="text-status-savings font-bold text-lg">
-                  💰 Total potential savings: ₹{totalSavings.toFixed(2)}/month
+                  💰 Total potential savings: {currencySymbol}{convert(totalSavings, '₹', displayCurrency).toFixed(2)}/month
                 </p>
-                <p className="text-text-muted text-sm">That's ₹{(totalSavings * 12).toFixed(0)} per year!</p>
+                <p className="text-text-muted text-sm">That's {currencySymbol}{(convert(totalSavings, '₹', displayCurrency) * 12).toFixed(0)} per year!</p>
               </div>
             )}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -209,7 +235,7 @@ export default function AnalyticsPage() {
                     <p className="text-xs text-text-muted mb-3">{insight.explanation}</p>
                     {insight.saving_amount > 0 && (
                       <p className="text-status-savings text-sm font-bold">
-                        Save ₹{insight.saving_amount.toFixed(2)}/mo
+                        Save {currencySymbol}{convert(insight.saving_amount, '₹', displayCurrency).toFixed(2)}/mo
                       </p>
                     )}
                   </div>

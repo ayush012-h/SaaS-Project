@@ -10,23 +10,85 @@ export function AuthProvider({ children }) {
   const [profile, setProfile] = useState(null)
   const [loading, setLoading] = useState(true)
 
+  console.log('AuthProvider: Initializing...')
+
+  // Force loading to complete after 2 seconds max - reduced timeout
+  useEffect(() => {
+    console.log('AuthProvider: Setting up force timeout')
+    const forceTimeout = setTimeout(() => {
+      if (loading) {
+        console.warn('AuthProvider: Forcing auth loading to complete - timeout reached')
+        setLoading(false)
+      }
+    }, 2000) // Reduced from 5 seconds
+    return () => clearTimeout(forceTimeout)
+  }, [loading])
+
+  // Immediate fallback for development
+  useEffect(() => {
+    const immediateTimeout = setTimeout(() => {
+      if (loading) {
+        console.warn('AuthProvider: Immediate fallback - setting loading to false')
+        setLoading(false)
+      }
+    }, 1000) // 1 second immediate fallback
+    return () => clearTimeout(immediateTimeout)
+  }, [loading])
+
   async function fetchProfile(userId) {
-    const { data } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', userId)
-      .single()
-    setProfile(data)
-    setLoading(false)
+    try {
+      const { data } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single()
+      setProfile(data)
+    } catch (error) {
+      console.error('Error fetching profile:', error)
+      setProfile(null)
+    } finally {
+      setLoading(false)
+    }
   }
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session)
-      setUser(session?.user ?? null)
-      if (session?.user) fetchProfile(session.user.id)
-      else setLoading(false)
-    })
+    console.log('AuthProvider: Setting up auth initialization')
+    
+    // Set a timeout to ensure loading doesn't hang
+    const timeoutId = setTimeout(() => {
+      if (loading) {
+        console.warn('Auth loading timeout - proceeding without session')
+        setLoading(false)
+      }
+    }, 1500) // Reduced from 3 seconds
+
+    // Try to get session, but don't let it hang
+    try {
+      supabase.auth.getSession().then(({ data: { session }, error }) => {
+        console.log('AuthProvider: Got session result:', { session: !!session, error })
+        clearTimeout(timeoutId)
+        if (error) {
+          console.error('Error getting session:', error)
+          setLoading(false)
+          return
+        }
+        setSession(session)
+        setUser(session?.user ?? null)
+        if (session?.user) {
+          fetchProfile(session.user.id)
+        } else {
+          setLoading(false)
+        }
+      }).catch(error => {
+        clearTimeout(timeoutId)
+        console.error('Error getting session:', error)
+        setLoading(false)
+      })
+    } catch (error) {
+      clearTimeout(timeoutId)
+      console.error('Auth initialization error:', error)
+      setLoading(false)
+    }
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session)
@@ -38,7 +100,11 @@ export function AuthProvider({ children }) {
       }
     })
 
-    return () => subscription.unsubscribe()
+    return () => {
+      clearTimeout(timeoutId)
+      subscription?.unsubscribe()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   async function signUp(email, password, fullName) {

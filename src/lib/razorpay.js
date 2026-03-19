@@ -29,7 +29,8 @@ export async function redirectToCheckout() {
       key: import.meta.env.VITE_RAZORPAY_KEY_ID,
       subscription_id: subscription_id,
       name: 'SubTrackr',
-      description: 'Pro Plan - Unlimited Subscription Tracking',
+      description: 'Pro Plan — ₹199/month · Unlimited Subscription Tracking',
+      currency: 'INR',
       image: '/logo.png',
       prefill: {
         email: user.email,
@@ -37,7 +38,7 @@ export async function redirectToCheckout() {
       theme: {
         color: '#6C63FF'
       },
-      handler: async function(response) {
+      handler: async function() {
         // Payment successful
         // Update user plan in Supabase
         await supabase

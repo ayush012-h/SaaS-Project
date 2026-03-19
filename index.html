@@ -56,7 +56,20 @@
         0%, 100% { transform: scale(1); opacity: 1; }
         50% { transform: scale(0.92); opacity: 0.7; }
       }
+      /* Hide loading screen immediately for development */
+      #loading-screen.hide-immediately {
+        display: none !important;
+      }
     </style>
+    <script>
+      // Hide loading screen immediately for development
+      setTimeout(() => {
+        const loader = document.getElementById('loading-screen');
+        if (loader) {
+          loader.classList.add('hide-immediately');
+        }
+      }, 100);
+    </script>
   </head>
   <body>
     <!-- Loading screen — removed by main.jsx after React mounts -->

@@ -38,6 +38,9 @@ export function useSubscriptions() {
   }
 
   async function updateSubscription(id, updates) {
+    // Find existing record to diff
+    const existing = subscriptions.find(s => s.id === id)
+
     const { data, error } = await supabase
       .from('subscriptions')
       .update(updates)
@@ -46,6 +49,24 @@ export function useSubscriptions() {
       .single()
     if (error) throw error
     setSubscriptions(prev => prev.map(s => s.id === id ? data : s))
+
+    // Log diffs to subscription_history
+    if (existing && user) {
+      const TRACKED_FIELDS = ['name', 'amount', 'billing_cycle', 'category', 'status', 'next_renewal_date', 'notes', 'reminder_days', 'tags']
+      const historyEntries = TRACKED_FIELDS
+        .filter(field => field in updates && String(updates[field]) !== String(existing[field]))
+        .map(field => ({
+          user_id: user.id,
+          subscription_id: id,
+          field,
+          old_value: existing[field] != null ? String(existing[field]) : null,
+          new_value: updates[field] != null ? String(updates[field]) : null,
+        }))
+      if (historyEntries.length > 0) {
+        supabase.from('subscription_history').insert(historyEntries).then(() => {})
+      }
+    }
+
     return data
   }
 

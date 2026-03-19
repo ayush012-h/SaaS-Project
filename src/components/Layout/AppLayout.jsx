@@ -1,11 +1,13 @@
 import { Outlet } from 'react-router-dom'
 import Sidebar from './Sidebar'
+import OnboardingModal from '../OnboardingModal'
 
 export default function AppLayout() {
   const bannerHeight = 40 // Matches the height of the global BetaBanner
 
   return (
     <div className="flex flex-col min-h-screen bg-bg-primary">
+      <OnboardingModal />
       <div className="flex flex-1 relative">
         <div style={{ width: 256 }}> {/* Sidebar placeholder to push main content */}
           <Sidebar style={{ top: bannerHeight }} />

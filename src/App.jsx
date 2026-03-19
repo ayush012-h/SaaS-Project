@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import React from 'react'
 import { Toaster } from 'react-hot-toast'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
 import AppLayout from './components/Layout/AppLayout'
@@ -17,9 +18,14 @@ import AlertsPage from './pages/Alerts/AlertsPage'
 import SettingsPage from './pages/Settings/SettingsPage'
 import EmailScannerPage from './pages/Scanner/EmailScannerPage'
 import NotFound from './pages/NotFound'
+import CancelGuide from './pages/CancelGuide'
+import Budget from './pages/Budget'
+import YearlyReport from './pages/YearlyReport'
+import DuplicateDetector from './pages/DuplicateDetector'
+import CalendarView from './pages/CalendarView'
+import Export from './pages/Export'
 import BetaBanner from './components/BetaBanner'
 import FeedbackWidget from './components/FeedbackWidget'
-import OnboardingModal from './components/OnboardingModal'
 import PageTransition, { AnimatePresence } from './components/PageTransition'
 import { useLocation } from 'react-router-dom'
 
@@ -49,22 +55,46 @@ function PublicRoute({ children }) {
 
 function HomeRoute() {
   const { session, loading } = useAuth()
-  if (loading) return (
-    <PageTransition>
-      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--color-bg-primary)' }}>
-        <div className="w-8 h-8 border-2 border-border border-t-brand-teal rounded-full animate-spin" />
+  
+  console.log('HomeRoute: rendering', { session: !!session, loading })
+  
+  // Temporary test - show simple content instead of LandingPage
+  if (loading) {
+    return (
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0A0A0F', color: 'white', fontSize: '24px' }}>
+        Loading app...
       </div>
-    </PageTransition>
+    )
+  }
+  
+  // Show simple test page instead of LandingPage for now
+  return (
+    <div style={{ minHeight: '100vh', background: '#0A0A0F', color: 'white', padding: '50px', textAlign: 'center' }}>
+      <h1 style={{ fontSize: '48px', marginBottom: '20px' }}>SubTrackr is Working!</h1>
+      <p style={{ fontSize: '20px', marginBottom: '30px' }}>The app loaded successfully.</p>
+      <div style={{ background: '#1A1A2E', padding: '20px', borderRadius: '10px', margin: '20px auto', maxWidth: '500px' }}>
+        <p>Session: {session ? 'Logged In' : 'Not Logged In'}</p>
+        <p>Loading: {loading ? 'Yes' : 'No'}</p>
+      </div>
+      <button 
+        onClick={() => window.location.href = '/register'}
+        style={{ background: '#6C63FF', color: 'white', padding: '15px 30px', border: 'none', borderRadius: '8px', fontSize: '18px', cursor: 'pointer' }}
+      >
+        Get Started
+      </button>
+    </div>
   )
-  return session ? <Navigate to="/dashboard" replace /> : <LandingPage />
 }
 
 function AppRoutes() {
   const location = useLocation()
+  const { profile } = useAuth()
+  const userPlan = profile?.plan || 'free'
+
   return (
     <AnimatePresence mode="wait">
       <Routes location={location} key={location.pathname}>
-        <Route path="/" element={<HomeRoute />} />
+        <Route path="/" element={<PageTransition><LandingPage /></PageTransition>} />
         <Route path="/features" element={<PageTransition><FeaturesPage /></PageTransition>} />
         <Route path="/how-it-works" element={<PageTransition><HowItWorksPage /></PageTransition>} />
         <Route path="/pricing" element={<PageTransition><PricingPage /></PageTransition>} />
@@ -80,6 +110,12 @@ function AppRoutes() {
           <Route path="/alerts" element={<PageTransition><AlertsPage /></PageTransition>} />
           <Route path="/scanner" element={<PageTransition><EmailScannerPage /></PageTransition>} />
           <Route path="/settings" element={<PageTransition><SettingsPage /></PageTransition>} />
+          <Route path="/cancel-guide" element={<PageTransition><CancelGuide userPlan={userPlan} /></PageTransition>} />
+          <Route path="/budget" element={<PageTransition><Budget userPlan={userPlan} /></PageTransition>} />
+          <Route path="/yearly-report" element={<PageTransition><YearlyReport userPlan={userPlan} /></PageTransition>} />
+          <Route path="/duplicate-detector" element={<PageTransition><DuplicateDetector userPlan={userPlan} /></PageTransition>} />
+          <Route path="/calendar-view" element={<PageTransition><CalendarView userPlan={userPlan} /></PageTransition>} />
+          <Route path="/export" element={<PageTransition><Export userPlan={userPlan} /></PageTransition>} />
         </Route>
         <Route path="*" element={<NotFound />} />
       </Routes>
@@ -88,42 +124,23 @@ function AppRoutes() {
 }
 
 
+import { ThemeProvider } from './contexts/ThemeContext'
+import { UserProvider } from './context/UserContext'
+
 export default function App() {
   return (
-    <BrowserRouter>
-      <AuthProvider>
-        <BetaBanner />
-        <Toaster
-          position="bottom-right"
-          toastOptions={{
-            duration: 3000,
-            style: {
-              background: '#1A1A2A',
-              color: '#E8E8F0',
-              border: '1px solid #2A2A3A',
-              borderRadius: '12px',
-              fontSize: '13px',
-              fontWeight: '600',
-              padding: '12px 16px',
-              boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
-            },
-            success: {
-              icon: '✓',
-              iconTheme: { primary: '#4CFF8F', secondary: '#1A1A2A' },
-            },
-            error: {
-              icon: '✕',
-              iconTheme: { primary: '#FF6363', secondary: '#1A1A2A' },
-            },
-            loading: {
-              iconTheme: { primary: '#6C63FF', secondary: '#1A1A2A' },
-            },
-          }}
-        />
-        <AppRoutes />
-        <OnboardingModal />
-        <FeedbackWidget darkMode={true} />
-      </AuthProvider>
-    </BrowserRouter>
+    <ThemeProvider>
+      <BrowserRouter>
+        <AuthProvider>
+          <UserProvider>
+            <div style={{ color: 'white' }}>
+              <BetaBanner />
+              <AppRoutes />
+              <FeedbackWidget />
+            </div>
+          </UserProvider>
+        </AuthProvider>
+      </BrowserRouter>
+    </ThemeProvider>
   )
 }
