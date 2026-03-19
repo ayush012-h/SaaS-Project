@@ -18,16 +18,18 @@ import {
   Settings as SettingsIcon, 
   Check,
   FileText,
-  Camera
+  Camera,
+  HelpCircle
 } from 'lucide-react'
 import { SUPPORTED_CURRENCIES } from '../../hooks/useCurrencyRates'
 import { useAuth } from '../../contexts/AuthContext'
+import { redirectToCheckout } from '../../lib/razorpay'
 import { supabase } from '../../lib/supabase'
 import toast from 'react-hot-toast'
-import { redirectToCheckout } from '../../lib/razorpay'
 import { useTheme } from '../../contexts/ThemeContext'
 import { motion, AnimatePresence } from 'framer-motion'
 import ProfileUpload from '../../components/ProfileUpload'
+import { useUser } from '../../context/UserContext'
 
 const TABS = [
   { id: 'profile', icon: User, label: 'Profile', desc: 'Manage your personal info' },
@@ -35,10 +37,12 @@ const TABS = [
   { id: 'notifications', icon: Bell, label: 'Notifications', desc: 'Alerts and updates' },
   { id: 'billing', icon: CreditCard, label: 'Billing/Pro', desc: 'Plan and payments' },
   { id: 'security', icon: Shield, label: 'Security', desc: 'Data and privacy' },
+  { id: 'faq', icon: HelpCircle, label: 'FAQ', desc: 'Answers to common questions' },
 ]
 
 export default function SettingsPage() {
   const { user, profile, isPro, signOut } = useAuth()
+  const { updateProfile } = useUser()
   const { theme, toggleTheme } = useTheme()
   const [activeTab, setActiveTab] = useState('profile')
   const [saving, setSaving] = useState(false)
@@ -50,21 +54,37 @@ export default function SettingsPage() {
   const [pushAlerts, setPushAlerts] = useState(profile?.preferences?.push_alerts !== false)
   const [daysBefore, setDaysBefore] = useState(profile?.preferences?.days_before || '7')
   const [upgrading, setUpgrading] = useState(false)
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
+  
+  // Profile Editable States
+  const [displayName, setDisplayName] = useState(profile?.display_name || '')
+  const [bio, setBio] = useState(profile?.bio || '')
 
-  const handleProfileSave = async () => {
-    toast.success('Preferences saved ✨')
-  }
+  useEffect(() => {
+    if (profile) {
+      setDisplayName(profile.display_name || '')
+      setBio(profile.bio || '')
+    }
+  }, [profile])
 
-  async function handleUpgrade() {
-    setUpgrading(true)
+  const handleProfileSave = async (field, value) => {
     try {
-      await redirectToCheckout()
+      await updateProfile({ [field]: value })
+      toast.success('Saved ✓', {
+        style: {
+          background: '#13131F', color: '#fff', border: '1px solid #1E1E2E'
+        },
+        iconTheme: { primary: '#4CFF8F', secondary: '#13131F' }
+      })
     } catch {
-      toast.error('Payment failed')
-    } finally {
-      setUpgrading(false)
+      toast.error('Failed to save')
     }
   }
+
+  function handleUpgrade() {
+    redirectToCheckout()
+  }
+
 
   const SectionHeader = ({ icon: Icon, title, subtitle }) => (
     <div style={{ marginBottom: '32px' }}>
@@ -117,9 +137,39 @@ export default function SettingsPage() {
             
             <div style={{ background: '#13131F', borderRadius: '24px', border: '1px solid #1E1E2E', padding: '32px' }}>
               <SectionHeader icon={Shield} title="Extended Profile" subtitle="Biography and public info" />
-              <div className="space-y-2">
-                <label style={{ fontSize: '12px', fontWeight: '800', color: '#666680', textTransform: 'uppercase' }}>Biography (Optional)</label>
-                <textarea className="input" placeholder="Tell us a bit about yourself..." rows={3} style={{ height: 'auto', paddingTop: '12px' }} />
+              <div className="space-y-6">
+                <div>
+                  <label style={{ fontSize: '12px', fontWeight: '800', color: '#666680', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Display Name</label>
+                  <input 
+                    className="input w-full" 
+                    placeholder="E.g., Crypto King, Budget Master..." 
+                    value={displayName}
+                    onChange={e => setDisplayName(e.target.value)}
+                    onBlur={() => {
+                       if (displayName !== profile?.display_name) handleProfileSave('display_name', displayName)
+                    }}
+                  />
+                </div>
+                <div>
+                  <div className="flex justify-between items-end mb-2">
+                    <label style={{ fontSize: '12px', fontWeight: '800', color: '#666680', textTransform: 'uppercase' }}>Biography (Optional)</label>
+                    <span className="text-[10px] font-bold text-text-muted">{bio.length}/200</span>
+                  </div>
+                  <textarea 
+                    className="input w-full" 
+                    placeholder="Tell us a bit about yourself..." 
+                    rows={3} 
+                    style={{ height: 'auto', paddingTop: '12px', resize: 'vertical' }}
+                    maxLength={200}
+                    value={bio}
+                    onChange={e => {
+                      if (e.target.value.length <= 200) setBio(e.target.value)
+                    }}
+                    onBlur={() => {
+                       if (bio !== profile?.bio) handleProfileSave('bio', bio)
+                    }}
+                  />
+                </div>
               </div>
             </div>
           </motion.div>
@@ -213,17 +263,49 @@ export default function SettingsPage() {
             </div>
           </motion.div>
         )
+      case 'faq':
+        const faqs = [
+          { q: 'How does SubTrackr track my money?', a: 'SubTrackr calculates your total subscription costs across monthly, yearly, and weekly cycles. You can set a monthly budget to monitor your goals.' },
+          { q: 'Is my data secure?', a: 'Yes, we use Supabase (PostgreSQL) with industry-standard encryption. Your bank details are never stored unless you manually enter them.' },
+          { q: 'How do I cancel a subscription?', a: 'SubTrackr provides cancellation guides for most popular services in the "Cancel Guide" section. We don\'t cancel them for you yet, but we show you how.' },
+          { q: 'What are the Pro features?', a: 'Pro includes AI spending insights, email scanning, duplicate detection, calendar views, and advanced export options.' },
+          { q: 'Can I export my data?', a: 'Yes! Pro users can export their entire subscription history as CSV or PDF for financial audits.' }
+        ]
+        return (
+          <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-6">
+            <SectionHeader icon={HelpCircle} title="Frequently Asked Questions" subtitle="Quick answers to common doubts" />
+            <div className="grid grid-cols-1 gap-4">
+              {faqs.map((f, i) => (
+                <div key={i} style={{ background: '#13131F', border: '1px solid #1E1E2E', borderRadius: '20px', padding: '24px' }}>
+                  <h3 style={{ fontSize: '16px', fontWeight: '800', color: '#E8E8F0', marginBottom: '12px', display: 'flex', gap: '10px' }}>
+                    <span style={{ color: '#6C63FF' }}>Q.</span> {f.q}
+                  </h3>
+                  <p style={{ fontSize: '14px', color: '#9999BB', lineHeight: '1.6', margin: 0 }}>{f.a}</p>
+                </div>
+              ))}
+            </div>
+            <div style={{ padding: '24px', background: 'rgba(108, 99, 255, 0.05)', border: '1px dashed rgba(108, 99, 255, 0.3)', borderRadius: '20px', textAlign: 'center' }}>
+               <p style={{ color: '#E8E8F0', fontSize: '14px', margin: '0 0 12px 0' }}>Still have questions?</p>
+               <button className="btn-secondary" style={{ border: 'none', background: 'white', color: 'black' }}>Contact Support</button>
+            </div>
+          </motion.div>
+        )
       default:
         return null
     }
   }
 
   return (
-    <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'grid', gridTemplateColumns: '300px 1fr', gap: '48px', padding: '40px 20px' }}>
-      <div style={{ position: 'sticky', top: '40px', height: 'fit-content' }}>
-        <h1 style={{ fontSize: '32px', fontWeight: '900', color: '#E8E8F0', marginBottom: '8px' }}>Settings</h1>
-        <p style={{ color: '#666680', fontSize: '14px', marginBottom: '32px' }}>Configure your dashboard</p>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+    <div className="max-w-7xl mx-auto flex flex-col md:flex-row gap-8 lg:gap-12 pb-24 md:pb-12">
+      {/* Sidebar Navigation */}
+      <div className="md:w-64 shrink-0 flex flex-col">
+        <div className="hidden md:block mb-8">
+          <h1 className="text-3xl font-bold text-text-primary mb-2">Settings</h1>
+          <p className="text-sm font-medium text-text-muted">Configure your dashboard</p>
+        </div>
+        
+        {/* Mobile Pills / Desktop List */}
+        <div className="flex overflow-x-auto md:flex-col gap-2 pb-4 md:pb-0 mb-6 md:mb-0 snap-x hide-scrollbar">
           {TABS.map(tab => {
             const isActive = activeTab === tab.id
             const Icon = tab.icon
@@ -231,41 +313,48 @@ export default function SettingsPage() {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: '16px', 
-                  padding: '16px', borderRadius: '16px', border: 'none', textAlign: 'left',
-                  background: isActive ? 'linear-gradient(135deg, rgba(108, 99, 255, 0.15), rgba(62, 207, 207, 0.1))' : 'transparent',
-                  cursor: 'pointer', transition: 'all 0.2s', position: 'relative'
-                }}
+                className={`flex items-center gap-3 px-4 py-3 md:py-4 rounded-xl border-none text-left cursor-pointer transition-all shrink-0 snap-start relative ${
+                  isActive 
+                    ? 'bg-gradient-to-r from-brand-purple/15 to-brand-teal/10' 
+                    : 'bg-transparent hover:bg-bg-hover'
+                }`}
               >
-                {isActive && <div style={{ position: 'absolute', left: 0, top: '25%', bottom: '25%', width: '4px', background: '#6C63FF', borderRadius: '0 4px 4px 0' }} />}
-                <div style={{ color: isActive ? '#6C63FF' : '#666680' }}><Icon size={22} /></div>
+                {isActive && <div className="absolute left-0 top-1/4 bottom-1/4 w-1 bg-brand-purple rounded-r-md hidden md:block" />}
+                <div className={`${isActive ? 'text-brand-purple' : 'text-text-muted'}`}><Icon size={20} /></div>
                 <div>
-                  <p style={{ fontSize: '15px', fontWeight: '800', color: isActive ? '#E8E8F0' : '#666680', margin: 0 }}>{tab.label}</p>
+                  <p className={`text-sm font-bold m-0 ${isActive ? 'text-text-primary' : 'text-text-muted'}`}>{tab.label}</p>
                 </div>
               </button>
             )
           })}
         </div>
-        <div style={{ marginTop: '48px', paddingTop: '32px', borderTop: '1px solid #1E1E2E' }}>
-           <button onClick={signOut} style={{ display: 'flex', alignItems: 'center', gap: '12px', background: 'none', border: 'none', color: '#FF6363', fontWeight: '800', cursor: 'pointer' }}>
-             <LogOut size={18} /> Sign Out
-           </button>
-        </div>
       </div>
 
-      <div style={{ position: 'relative' }}>
+      {/* Main Content Area */}
+      <div className="flex-1 min-w-0">
          {renderTabContent()}
-         <div style={{ 
-           position: 'fixed', bottom: '40px', right: '40px', zIndex: 50,
-           background: '#1A1A2A', border: '1px solid #2A2A3E', borderRadius: '16px',
-           padding: '12px 24px', boxShadow: '0 20px 50px rgba(0,0,0,0.5)',
-           display: 'flex', alignItems: 'center', gap: '24px'
-         }}>
-           <p style={{ fontSize: '13px', color: '#9999BB', margin: 0 }}>Unsaved changes</p>
-           <button onClick={handleProfileSave} disabled={saving} style={{ background: 'linear-gradient(135deg, #6C63FF, #3ECFCF)', color: '#fff', border: 'none', borderRadius: '10px', padding: '10px 24px', fontWeight: '800', cursor: 'pointer' }}>
-             {saving ? 'Saving...' : 'Save Changes'}
-           </button>
+         
+         {/* Sign Out Section */}
+         <div className="mt-12 pt-8 border-t border-border flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="text-center md:text-left">
+               <h3 className="text-base font-bold text-text-primary">Sign out of your account</h3>
+               <p className="text-xs text-text-muted mt-1">You will be required to log back in.</p>
+            </div>
+            {showLogoutConfirm ? (
+              <div className="flex gap-3 animate-fade-in">
+                 <button onClick={() => setShowLogoutConfirm(false)} className="btn-secondary py-2 px-4 text-sm font-semibold">Cancel</button>
+                 <button onClick={signOut} className="btn-danger py-2 px-4 text-sm font-semibold flex items-center gap-2">
+                   <LogOut size={16} /> Confirm
+                 </button>
+              </div>
+            ) : (
+              <button 
+                onClick={() => setShowLogoutConfirm(true)} 
+                className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-transparent border border-border text-status-danger font-bold hover:bg-status-danger/10 hover:border-status-danger/30 transition-all cursor-pointer"
+              >
+                <LogOut size={18} /> Sign Out
+              </button>
+            )}
          </div>
       </div>
     </div>

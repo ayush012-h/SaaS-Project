@@ -196,7 +196,7 @@ export default function OnboardingModal() {
                     <button
                       onClick={() => setStep(3)}
                       style={{
-                        width: '100%', padding: '14px', border: 'none', borderRadius: 14,
+                        width: '100%', padding: '14px', borderRadius: 14,
                         background: '#1E1E2E', border: '1px solid #2A2A3A',
                         color: '#fff', fontWeight: 600, fontSize: 15, cursor: 'pointer',
                         display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,

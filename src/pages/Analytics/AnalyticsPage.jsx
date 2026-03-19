@@ -69,7 +69,8 @@ export default function AnalyticsPage() {
         else if (sub.billing_cycle === 'yearly') monthly = amountInDisplay / 12
         else if (sub.billing_cycle === 'weekly') monthly = amountInDisplay * 4.33
         
-        const cat = sub.category || 'Other'
+        let cat = sub.category || 'Other'
+        cat = cat.charAt(0).toUpperCase() + cat.slice(1)
         catBreakdown[cat] = (catBreakdown[cat] || 0) + monthly
       })
 

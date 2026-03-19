@@ -1,16 +1,16 @@
 import { NavLink, useNavigate } from 'react-router-dom'
 import {
   LayoutDashboard, CreditCard, BarChart3, Bell,
-  ScanText, Settings, LogOut, Zap, TrendingUp, Sun, Moon, HelpCircle
+  ScanText, Settings, LogOut, Zap, TrendingUp, HelpCircle,
+  Menu, ChevronUp, Lock, User as UserIcon
 } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { useTheme } from '../../contexts/ThemeContext'
 import toast from 'react-hot-toast'
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import HelpPanel from '../HelpPanel'
 import { redirectToCheckout } from '../../lib/razorpay'
-
 import { useUser } from '../../context/UserContext'
 import Avatar from '../Avatar'
 
@@ -29,12 +29,46 @@ const navItems = [
   { to: '/settings', icon: Settings, label: 'Settings' },
 ]
 
-export default function Sidebar({ style }) {
+function Tooltip({ children, content, isCollapsed }) {
+  const [show, setShow] = useState(false)
+  if (!isCollapsed && !content.includes('Upgrade')) return <>{children}</>
+  return (
+    <div className="relative flex items-center" onMouseEnter={() => setShow(true)} onMouseLeave={() => setShow(false)}>
+      {children}
+      <AnimatePresence>
+        {show && (
+          <motion.div 
+            initial={{ opacity: 0, x: 5 }} 
+            animate={{ opacity: 1, x: 0 }} 
+            exit={{ opacity: 0 }}
+            className="absolute left-full ml-3 px-2 py-1 bg-gray-800 text-white text-xs rounded shadow-lg whitespace-nowrap z-50 pointer-events-none"
+          >
+            {content}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  )
+}
+
+export default function Sidebar({ style, isCollapsed, setIsCollapsed }) {
   const { user, signOut } = useAuth()
   const { profile, isPro } = useUser()
-  const { theme, toggleTheme } = useTheme()
+  const { theme } = useTheme()
   const navigate = useNavigate()
   const [helpOpen, setHelpOpen] = useState(false)
+  const [menuOpen, setMenuOpen] = useState(false)
+  const menuRef = useRef(null)
+
+  useEffect(() => {
+    function handleClickOutside(e) {
+      if (menuRef.current && !menuRef.current.contains(e.target)) {
+        setMenuOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
 
   async function handleSignOut() {
     try {
@@ -48,113 +82,122 @@ export default function Sidebar({ style }) {
   return (
     <>
     <aside 
-      className="fixed left-0 bottom-0 w-64 bg-bg-surface border-r border-border flex flex-col z-40"
+      className={`fixed left-0 bottom-0 bg-bg-surface border-r border-border flex flex-col z-40 transition-all duration-300 ease-in-out ${isCollapsed ? 'w-16' : 'w-64'}`}
       style={{ top: 0, ...style }}
     >
-      {/* Logo */}
-      <div className="p-6 border-b border-border">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl flex items-center justify-center"
-            style={{ background: 'linear-gradient(135deg, #6C63FF, #3ECFCF)' }}>
-            <TrendingUp size={18} className="text-white" />
+      {/* Logo & Toggle */}
+      <div className={`p-4 border-b border-border flex items-center justify-between ${isCollapsed ? 'flex-col gap-4' : ''}`}>
+        <div className="flex items-center gap-3 overflow-hidden whitespace-nowrap">
+          <div className="w-8 h-8 shrink-0 rounded-xl flex items-center justify-center bg-gradient-to-br from-brand-purple to-brand-teal shadow-[0_0_15px_rgba(108,99,255,0.4)]">
+            <TrendingUp size={16} className="text-white" />
           </div>
-          <div>
-            <span className="text-text-primary font-bold text-lg tracking-tight">SubTrackr</span>
-            <div className="text-xs text-text-muted">Subscription Manager</div>
-          </div>
+          {!isCollapsed && (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col">
+              <span className="text-text-primary font-bold text-lg tracking-tight">SubTrackr</span>
+            </motion.div>
+          )}
         </div>
+        <button 
+          onClick={() => setIsCollapsed(!isCollapsed)} 
+          className="p-1.5 rounded-lg text-text-muted hover:bg-bg-hover transition-colors"
+        >
+          <Menu size={18} />
+        </button>
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 p-4 space-y-1">
+      <nav className="flex-1 p-3 space-y-1 overflow-y-auto custom-scrollbar overflow-x-hidden">
         {navItems.map(({ to, icon: Icon, label, pro }) => (
-          <motion.div key={to} whileHover={{ x: 4 }} whileTap={{ scale: 0.98 }}>
-            <NavLink
-              to={to}
-              className={({ isActive }) => isActive ? 'sidebar-link-active' : 'sidebar-link'}
-            >
-              <Icon size={18} />
-              <span>{label}</span>
-              {pro && !isPro && (
-                <span className="ml-auto badge-pro text-[10px] px-1.5 py-0.5 rounded"
-                  style={{
-                    background: 'linear-gradient(135deg, rgba(108,99,255,0.2), rgba(62,207,207,0.2))',
-                    border: '1px solid rgba(108,99,255,0.4)',
-                    color: '#6C63FF',
-                    fontSize: '10px',
-                    padding: '2px 6px',
-                    borderRadius: '6px',
-                    fontWeight: 600,
-                  }}>
-                  PRO
-                </span>
-              )}
-            </NavLink>
-          </motion.div>
+          <Tooltip key={to} content={pro && !isPro ? 'Upgrade to Pro' : label} isCollapsed={isCollapsed}>
+            <div>
+              <NavLink
+                to={to}
+                className={({ isActive }) => `flex items-center rounded-xl transition-all duration-200 ${isCollapsed ? 'justify-center p-3' : 'px-3 py-2.5 gap-3'} ${isActive ? 'bg-brand-purple/10 text-brand-purple font-semibold shadow-[inset_3px_0_0_#6C63FF]' : 'text-text-muted hover:bg-bg-hover hover:text-text-primary'}`}
+              >
+                <Icon size={isCollapsed ? 20 : 18} className="shrink-0" />
+                {!isCollapsed && <span className="truncate">{label}</span>}
+                {pro && !isPro && !isCollapsed && (
+                  <Lock size={14} className="ml-auto text-brand-purple opacity-70 shrink-0" />
+                )}
+                {pro && !isPro && isCollapsed && (
+                  <div className="absolute top-2 right-2 w-2 h-2 rounded-full bg-brand-purple shadow-[0_0_6px_#6C63FF]" />
+                )}
+              </NavLink>
+            </div>
+          </Tooltip>
         ))}
       </nav>
 
       {/* Pro Upgrade Banner */}
       {!isPro && (
-        <div className="mx-4 mb-4 p-4 rounded-xl border border-brand-purple/30 relative overflow-hidden"
-          style={{ background: 'linear-gradient(135deg, rgba(108,99,255,0.1), rgba(62,207,207,0.05))' }}>
-          <div className="flex items-center gap-2 mb-2">
-            <Zap size={14} className="text-brand-purple" />
-            <span className="text-xs font-semibold text-text-primary">Upgrade to Pro</span>
-          </div>
-          <p className="text-xs text-text-muted mb-3">AI insights, unlimited subs & more</p>
-          <button 
-            onClick={async (e) => {
-              const target = e.currentTarget
-              target.disabled = true
-              target.innerText = 'Connecting...'
-              try {
-                await redirectToCheckout()
-              } finally {
-                target.disabled = false
-                target.innerText = 'Get Pro — ₹199/mo'
-              }
-            }}
-            className="w-full text-center text-xs font-semibold text-white py-2 rounded-lg transition-opacity hover:opacity-90 cursor-pointer border-none"
-            style={{ background: 'linear-gradient(135deg, #6C63FF, #3ECFCF)' }}>
-            Get Pro — ₹199/mo
-          </button>
+        <div className="p-3">
+          <Tooltip content="Upgrade to Pro" isCollapsed={isCollapsed}>
+            <button 
+              onClick={() => redirectToCheckout()}
+              className={`w-full flex items-center justify-center gap-2 text-xs font-bold text-white py-2.5 rounded-xl transition-all hover:opacity-90 border-none bg-gradient-to-r from-brand-purple to-brand-teal`}
+            >
+              <Zap size={16} className="shrink-0" />
+              {!isCollapsed && <span className="truncate">Get Pro — ₹199/mo</span>}
+            </button>
+          </Tooltip>
         </div>
       )}
 
       {/* User Card */}
-      <div style={{ padding: '16px 20px', borderTop: '1px solid #1E1E2E', background: 'rgba(0,0,0,0.2)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+      <div className="relative p-3 border-t border-border bg-black/20" ref={menuRef}>
+        <div 
+          className={`flex items-center gap-3 p-2 rounded-xl cursor-pointer hover:bg-bg-hover transition-colors ${isCollapsed ? 'justify-center' : ''}`}
+          onClick={() => setMenuOpen(!menuOpen)}
+        >
           <Avatar 
             url={profile?.avatar_url} 
-            name={profile?.full_name} 
-            size={40} 
+            name={profile?.full_name || user?.email} 
+            size={36} 
+            isPro={isPro}
           />
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: '13px', fontWeight: '700', color: '#E8E8F0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', margin: 0 }}>
-              {profile?.full_name || 'User'}
-            </div>
-            <div style={{ fontSize: '11px', color: '#555570', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', margin: 0 }}>
-              {user?.email}
-            </div>
-          </div>
-          <div style={{ display: 'flex', gap: '4px' }}>
-            <button
-              onClick={() => navigate('/settings')}
-              style={{ background: 'none', border: 'none', color: '#666680', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-              title="Settings"
-            >
-              <Settings size={18} />
-            </button>
-            <button
-              onClick={handleSignOut}
-              style={{ background: 'none', border: 'none', color: '#666680', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-              title="Sign Out"
-            >
-              <LogOut size={18} />
-            </button>
-          </div>
+          {!isCollapsed && (
+            <>
+              <div className="flex-1 min-w-0">
+                <div className="text-sm font-bold text-text-primary truncate">
+                  {profile?.full_name || 'User'}
+                </div>
+                <div className="text-[10px] text-text-muted truncate">
+                  {user?.email}
+                </div>
+              </div>
+              <ChevronUp size={16} className={`text-text-muted transition-transform ${menuOpen ? 'rotate-180' : ''}`} />
+            </>
+          )}
         </div>
+
+        {/* User Dropdown */}
+        <AnimatePresence>
+          {menuOpen && (
+            <motion.div 
+              initial={{ opacity: 0, y: 10, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 10, scale: 0.95 }}
+              transition={{ duration: 0.15 }}
+              className={`absolute bottom-full mb-2 bg-bg-elevated border border-border rounded-xl shadow-xl py-1 z-50 overflow-hidden ${isCollapsed ? 'left-4 w-48' : 'left-3 right-3'}`}
+            >
+              {isCollapsed && (
+                <div className="px-4 py-3 border-b border-border mb-1">
+                  <div className="text-sm font-bold text-text-primary truncate">{profile?.full_name || 'User'}</div>
+                  <div className="text-[10px] text-text-muted truncate">{user?.email}</div>
+                </div>
+              )}
+              <button onClick={() => { navigate('/settings'); setMenuOpen(false) }} className="w-full flex items-center gap-2 px-4 py-2 text-sm text-text-primary hover:bg-bg-hover transition-colors">
+                <UserIcon size={16} /> Profile
+              </button>
+              <button onClick={() => { navigate('/settings'); setMenuOpen(false) }} className="w-full flex items-center gap-2 px-4 py-2 text-sm text-text-primary hover:bg-bg-hover transition-colors border-b border-border">
+                <Settings size={16} /> Settings
+              </button>
+              <button onClick={handleSignOut} className="w-full flex items-center gap-2 px-4 py-2.5 text-sm font-semibold text-status-danger hover:bg-status-danger/10 transition-colors mt-1">
+                <LogOut size={16} /> Sign Out
+              </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </aside>
 

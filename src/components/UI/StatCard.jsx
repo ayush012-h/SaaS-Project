@@ -16,14 +16,21 @@ export default function StatCard({ title, value, subtitle, icon: Icon, color = '
       </div>
       {trend !== undefined && (
         <div className="flex items-center gap-1.5">
-          {trend >= 0
-            ? <TrendingUp size={14} className="text-status-savings" />
-            : <TrendingDown size={14} className="text-status-danger" />}
-          <span className={`text-xs font-medium ${trend >= 0 ? 'text-status-savings' : 'text-status-danger'}`}>
-            {Math.abs(trend)}% vs last month
-          </span>
+          {trend > 0 ? (
+            <TrendingUp size={14} className="text-status-danger" />
+          ) : trend < 0 ? (
+            <TrendingDown size={14} className="text-status-savings" />
+          ) : (
+            <span className="text-text-muted text-sm font-bold">—</span>
+          )}
+          {trend !== 0 && (
+            <span className={`text-xs font-medium ${trend > 0 ? 'text-status-danger' : 'text-status-savings'}`}>
+              {Math.abs(trend)}% vs last month
+            </span>
+          )}
         </div>
       )}
+
     </div>
   )
 }

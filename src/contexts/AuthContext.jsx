@@ -12,27 +12,15 @@ export function AuthProvider({ children }) {
 
   console.log('AuthProvider: Initializing...')
 
-  // Force loading to complete after 2 seconds max - reduced timeout
+  // Robust timeout to prevent hanging loading state
   useEffect(() => {
-    console.log('AuthProvider: Setting up force timeout')
-    const forceTimeout = setTimeout(() => {
+    const timer = setTimeout(() => {
       if (loading) {
-        console.warn('AuthProvider: Forcing auth loading to complete - timeout reached')
+        console.warn('Auth fallback: Loading timed out after 2.5s')
         setLoading(false)
       }
-    }, 2000) // Reduced from 5 seconds
-    return () => clearTimeout(forceTimeout)
-  }, [loading])
-
-  // Immediate fallback for development
-  useEffect(() => {
-    const immediateTimeout = setTimeout(() => {
-      if (loading) {
-        console.warn('AuthProvider: Immediate fallback - setting loading to false')
-        setLoading(false)
-      }
-    }, 1000) // 1 second immediate fallback
-    return () => clearTimeout(immediateTimeout)
+    }, 2500)
+    return () => clearTimeout(timer)
   }, [loading])
 
   async function fetchProfile(userId) {
@@ -52,43 +40,26 @@ export function AuthProvider({ children }) {
   }
 
   useEffect(() => {
-    console.log('AuthProvider: Setting up auth initialization')
-    
-    // Set a timeout to ensure loading doesn't hang
-    const timeoutId = setTimeout(() => {
-      if (loading) {
-        console.warn('Auth loading timeout - proceeding without session')
-        setLoading(false)
-      }
-    }, 1500) // Reduced from 3 seconds
-
-    // Try to get session, but don't let it hang
-    try {
-      supabase.auth.getSession().then(({ data: { session }, error }) => {
-        console.log('AuthProvider: Got session result:', { session: !!session, error })
-        clearTimeout(timeoutId)
-        if (error) {
-          console.error('Error getting session:', error)
-          setLoading(false)
-          return
-        }
-        setSession(session)
-        setUser(session?.user ?? null)
-        if (session?.user) {
-          fetchProfile(session.user.id)
+    // Initial check
+    const checkSession = async () => {
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession()
+        if (error) throw error
+        
+        if (session) {
+          setSession(session)
+          setUser(session.user)
+          await fetchProfile(session.user.id)
         } else {
           setLoading(false)
         }
-      }).catch(error => {
-        clearTimeout(timeoutId)
-        console.error('Error getting session:', error)
+      } catch (err) {
+        console.error('Initial session check failed:', err)
         setLoading(false)
-      })
-    } catch (error) {
-      clearTimeout(timeoutId)
-      console.error('Auth initialization error:', error)
-      setLoading(false)
+      }
     }
+
+    checkSession()
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session)
@@ -101,7 +72,6 @@ export function AuthProvider({ children }) {
     })
 
     return () => {
-      clearTimeout(timeoutId)
       subscription?.unsubscribe()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps

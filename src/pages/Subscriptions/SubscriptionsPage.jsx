@@ -13,6 +13,7 @@ import { EmptySubscriptions, EmptySearch } from '../../components/EmptyState'
 import DuplicateDetector from '../DuplicateDetector'
 import SubscriptionHistory from '../../components/SubscriptionHistory'
 import ProGate from '../../components/UI/ProGate'
+import { redirectToCheckout } from '../../lib/razorpay'
 import { Download, History, Tag as TagIcon, FileText } from 'lucide-react'
 import { saveAs } from 'file-saver'
 import jsPDF from 'jspdf'
@@ -170,7 +171,7 @@ export default function SubscriptionsPage() {
             )}
           </div>
           <button
-            onClick={() => canAdd ? setAddOpen(true) : toast.error('Upgrade to Pro to add more subscriptions!')}
+            onClick={() => canAdd ? setAddOpen(true) : redirectToCheckout()}
             className="btn-primary flex items-center gap-2">
             <Plus size={18} />
             Add Subscription

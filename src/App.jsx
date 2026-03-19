@@ -1,5 +1,7 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import React from 'react'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { ThemeProvider } from './contexts/ThemeContext'
+import { UserProvider } from './context/UserContext'
 import { Toaster } from 'react-hot-toast'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
 import AppLayout from './components/Layout/AppLayout'
@@ -24,7 +26,6 @@ import YearlyReport from './pages/YearlyReport'
 import DuplicateDetector from './pages/DuplicateDetector'
 import CalendarView from './pages/CalendarView'
 import Export from './pages/Export'
-import BetaBanner from './components/BetaBanner'
 import FeedbackWidget from './components/FeedbackWidget'
 import PageTransition, { AnimatePresence } from './components/PageTransition'
 import { useLocation } from 'react-router-dom'
@@ -53,38 +54,7 @@ function PublicRoute({ children }) {
   return session ? <Navigate to="/dashboard" replace /> : children
 }
 
-function HomeRoute() {
-  const { session, loading } = useAuth()
-  
-  console.log('HomeRoute: rendering', { session: !!session, loading })
-  
-  // Temporary test - show simple content instead of LandingPage
-  if (loading) {
-    return (
-      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0A0A0F', color: 'white', fontSize: '24px' }}>
-        Loading app...
-      </div>
-    )
-  }
-  
-  // Show simple test page instead of LandingPage for now
-  return (
-    <div style={{ minHeight: '100vh', background: '#0A0A0F', color: 'white', padding: '50px', textAlign: 'center' }}>
-      <h1 style={{ fontSize: '48px', marginBottom: '20px' }}>SubTrackr is Working!</h1>
-      <p style={{ fontSize: '20px', marginBottom: '30px' }}>The app loaded successfully.</p>
-      <div style={{ background: '#1A1A2E', padding: '20px', borderRadius: '10px', margin: '20px auto', maxWidth: '500px' }}>
-        <p>Session: {session ? 'Logged In' : 'Not Logged In'}</p>
-        <p>Loading: {loading ? 'Yes' : 'No'}</p>
-      </div>
-      <button 
-        onClick={() => window.location.href = '/register'}
-        style={{ background: '#6C63FF', color: 'white', padding: '15px 30px', border: 'none', borderRadius: '8px', fontSize: '18px', cursor: 'pointer' }}
-      >
-        Get Started
-      </button>
-    </div>
-  )
-}
+
 
 function AppRoutes() {
   const location = useLocation()
@@ -124,17 +94,16 @@ function AppRoutes() {
 }
 
 
-import { ThemeProvider } from './contexts/ThemeContext'
-import { UserProvider } from './context/UserContext'
 
-export default function App() {
+
+function App() {
   return (
     <ThemeProvider>
       <BrowserRouter>
         <AuthProvider>
           <UserProvider>
             <div style={{ color: 'white' }}>
-              <BetaBanner />
+              <Toaster position="top-right" />
               <AppRoutes />
               <FeedbackWidget />
             </div>
@@ -144,3 +113,5 @@ export default function App() {
     </ThemeProvider>
   )
 }
+
+export default App;

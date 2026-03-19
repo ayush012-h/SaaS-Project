@@ -26,13 +26,27 @@ export function UserProvider({ children }) {
   }
 
   useEffect(() => {
+    // Prevent infinite loading
+    const timer = setTimeout(() => {
+      if (loading) {
+        console.warn('UserProvider fallback: Loading timed out')
+        setLoading(false)
+      }
+    }, 3000)
+
     // Initial fetch
     const init = async () => {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (session?.user) {
-        await fetchProfile(session.user.id)
-      } else {
+      try {
+        const { data: { session } } = await supabase.auth.getSession()
+        if (session?.user) {
+          await fetchProfile(session.user.id)
+        } else {
+          setLoading(false)
+        }
+      } catch (err) {
         setLoading(false)
+      } finally {
+        clearTimeout(timer)
       }
     }
 
@@ -49,11 +63,11 @@ export function UserProvider({ children }) {
         }
       }
     )
-
-    // Optional: Realtime subscription for profile changes if needed
-    // But for now manual updateProfile is enough for instant sync
     
-    return () => subscription.unsubscribe()
+    return () => {
+      clearTimeout(timer)
+      subscription.unsubscribe()
+    }
   }, [])
 
   async function updateProfile(updates) {

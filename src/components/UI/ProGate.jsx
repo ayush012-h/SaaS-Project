@@ -5,13 +5,8 @@ import React from 'react'
 export default function ProGate({ feature = 'this feature' }) {
   const [upgrading, setUpgrading] = React.useState(false)
 
-  const handleUpgrade = async () => {
-    setUpgrading(true)
-    try {
-      await redirectToCheckout()
-    } finally {
-      setUpgrading(false)
-    }
+  const handleUpgrade = () => {
+    redirectToCheckout()
   }
 
   return (

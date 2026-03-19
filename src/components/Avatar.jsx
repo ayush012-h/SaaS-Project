@@ -8,7 +8,8 @@ export default function Avatar({
   loading = false,
   showOverlay = false,
   overlayIcon: Icon,
-  overlayText = "Change"
+  overlayText = "Change",
+  isPro = false
 }) {
   const initials = name
     ? name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
@@ -73,6 +74,15 @@ export default function Avatar({
            <Loader2 size={size / 3} className="animate-spin text-white opacity-80" />
         </div>
       )}
+       {/* PRO Badge */}
+       {isPro && (
+         <div style={{
+           position: 'absolute', top: '-1px', right: '-1px', 
+           background: 'linear-gradient(135deg, #6C63FF, #3ECFCF)', 
+           width: '12px', height: '12px', borderRadius: '50%', border: '2px solid #13131F',
+           boxShadow: '0 0 10px rgba(108, 99, 255, 0.4)'
+         }} title="Pro Member" />
+       )}
     </div>
   )
 }

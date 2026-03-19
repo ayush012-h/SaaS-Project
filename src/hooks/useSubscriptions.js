@@ -9,7 +9,10 @@ export function useSubscriptions() {
   const [error, setError] = useState(null)
 
   const fetchSubscriptions = useCallback(async () => {
-    if (!user) return
+    if (!user) {
+      setLoading(false)
+      return
+    }
     setLoading(true)
     const { data, error } = await supabase
       .from('subscriptions')
@@ -118,7 +121,8 @@ export function useSubscriptions() {
   const snoozedSubscriptions = subscriptions.filter(s => s.snoozed_until && s.snoozed_until > today)
 
   const categoryBreakdown = activeSubscriptions.reduce((acc, sub) => {
-    const cat = sub.category || 'Other'
+    let cat = sub.category || 'Other'
+    cat = cat.charAt(0).toUpperCase() + cat.slice(1)
     const monthly = sub.billing_cycle === 'monthly' ? Number(sub.amount)
       : sub.billing_cycle === 'yearly' ? Number(sub.amount) / 12
       : Number(sub.amount) * 4.33

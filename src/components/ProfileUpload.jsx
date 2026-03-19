@@ -4,21 +4,24 @@ import {
   Mail, 
   Calendar, 
   CheckCircle, 
-  Trash2, 
   Loader2, 
   Sparkles,
-  User,
-  ExternalLink
+  Pencil,
+  X,
+  Check
 } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { useUser } from '../context/UserContext'
 import Avatar from './Avatar'
 import toast from 'react-hot-toast'
+import { redirectToCheckout } from '../lib/razorpay'
+
 
 export default function ProfileUpload() {
   const { profile, updateProfile, loading: profileLoading } = useUser()
   const [uploading, setUploading] = useState(false)
   const [name, setName] = useState('')
+  const [isEditingName, setIsEditingName] = useState(false)
   const fileInputRef = useRef(null)
 
   useEffect(() => {
@@ -126,6 +129,16 @@ export default function ProfileUpload() {
   const memberSince = profile?.created_at 
     ? new Date(profile.created_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
     : 'Recently'
+    
+  // Calculate completion percentage
+  const fields = [
+    Boolean(profile?.full_name),
+    Boolean(profile?.avatar_url),
+    Boolean(profile?.bio),
+    Boolean(profile?.display_name || profile?.currency_code)
+  ]
+  const completedFields = fields.filter(f => f).length
+  const completionPercent = Math.round((completedFields / fields.length) * 100)
 
   return (
     <div style={{
@@ -135,17 +148,18 @@ export default function ProfileUpload() {
     }}>
       {/* Avatar Display */}
       <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
-        <Avatar 
+        <Avatar
           url={profile?.avatar_url}
           name={profile?.full_name}
-          size={100}
+          size={80}
           loading={uploading}
           showOverlay={true}
           overlayIcon={Camera}
-          overlayText="Change"
+          overlayText="Upload photo"
+          isPro={profile?.plan === 'pro'}
           onClick={() => fileInputRef.current.click()}
         />
-        
+
         {profile?.avatar_url && !uploading && (
           <button 
             onClick={removePhoto}
@@ -168,53 +182,108 @@ export default function ProfileUpload() {
       </div>
 
       {/* User Info */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '12px' }}>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '12px', minWidth: 0 }}>
         {/* Full Name (Inline Edit) */}
-        <div>
-          <input 
-            value={name}
-            onChange={e => setName(e.target.value)}
-            onBlur={handleNameBlur}
-            placeholder="Your name"
-            spellCheck={false}
-            style={{
-              background: 'transparent', border: 'none', outline: 'none',
-              fontSize: '22px', fontWeight: '900', color: '#E8E8F0', padding: 0,
-              width: '100%', borderBottom: '1px solid transparent', transition: 'border 0.2s', margin: 0
-            }}
-            onFocus={e => e.target.style.borderBottomColor = '#6C63FF'}
-            onMouseOver={e => e.target.style.borderBottomColor = 'rgba(108, 99, 255, 0.4)'}
-            onMouseOut={e => e.target.style.borderBottomColor = 'transparent'}
-          />
-          <div style={{ marginTop: '4px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-             <div style={{ 
-               padding: '4px 10px', borderRadius: '8px', fontSize: '11px', fontWeight: '900',
-               background: profile?.plan === 'pro' ? 'linear-gradient(135deg, rgba(108, 99, 255, 0.15), rgba(62, 207, 207, 0.15))' : 'rgba(102, 102, 128, 0.1)',
-               border: profile?.plan === 'pro' ? '1px solid rgba(108, 99, 255, 0.3)' : '1px solid rgba(102, 102, 128, 0.2)',
-               color: profile?.plan === 'pro' ? '#6C63FF' : '#666680',
-               display: 'flex', alignItems: 'center', gap: '6px', textTransform: 'uppercase'
-             }}>
-               {profile?.plan === 'pro' && <Sparkles size={12} />}
-               {profile?.plan === 'pro' ? 'PRO MEMBER' : 'FREE ACCOUNT'}
-             </div>
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
+          <div style={{ flex: 1, minWidth: '200px' }}>
+            {isEditingName ? (
+              <div className="flex items-center gap-2">
+                <input 
+                  value={name}
+                  onChange={e => setName(e.target.value)}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter') {
+                      handleNameBlur()
+                      setIsEditingName(false)
+                    } else if (e.key === 'Escape') {
+                      setName(profile?.full_name || '')
+                      setIsEditingName(false)
+                    }
+                  }}
+                  autoFocus
+                  placeholder="Your name"
+                  spellCheck={false}
+                  className="input py-1 px-3"
+                  style={{ fontSize: '18px', fontWeight: '800', maxWidth: '250px' }}
+                />
+                <button 
+                  onClick={() => { handleNameBlur(); setIsEditingName(false); }}
+                  className="p-1.5 rounded bg-brand-teal/20 text-brand-teal hover:bg-brand-teal/30 transition-colors"
+                >
+                  <Check size={16} />
+                </button>
+                <button 
+                  onClick={() => { setName(profile?.full_name || ''); setIsEditingName(false); }}
+                  className="p-1.5 rounded bg-status-danger/20 text-status-danger hover:bg-status-danger/30 transition-colors"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+            ) : (
+              <div 
+                className="group flex items-center gap-2 cursor-pointer w-fit"
+                onClick={() => setIsEditingName(true)}
+              >
+                <h2 style={{ fontSize: '24px', fontWeight: '900', color: '#E8E8F0', margin: 0 }} className="truncate">
+                  {name || 'Add your name'}
+                </h2>
+                <Pencil size={16} className="text-text-muted opacity-0 group-hover:opacity-100 transition-opacity" />
+              </div>
+            )}
+            
+            <div style={{ marginTop: '8px', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+               <div style={{ 
+                 padding: '4px 10px', borderRadius: '100px', fontSize: '11px', fontWeight: '700',
+                 background: profile?.plan === 'pro' ? 'linear-gradient(135deg, rgba(108, 99, 255, 0.15), rgba(62, 207, 207, 0.15))' : 'rgba(255, 255, 255, 0.08)',
+                 color: profile?.plan === 'pro' ? '#6C63FF' : '#A0A0B8',
+                 display: 'flex', alignItems: 'center', gap: '6px'
+               }}>
+                 {profile?.plan === 'pro' && <Sparkles size={12} />}
+                 {profile?.plan === 'pro' ? 'PRO MEMBER' : 'FREE ACCOUNT'}
+               </div>
+               {profile?.plan !== 'pro' && (
+                 <button 
+                   onClick={() => redirectToCheckout()}
+                   className="text-xs text-brand-purple hover:underline font-semibold bg-transparent border-none p-0 cursor-pointer"
+                 >
+                   Upgrade
+                 </button>
+               )}
+            </div>
           </div>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '24px', marginTop: '4px' }}>
-           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#8888AA', fontSize: '13px' }}>
-             <div style={{ width: '28px', height: '28px', borderRadius: '8px', background: 'rgba(108, 99, 255, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-               <Mail size={14} color="#6C63FF" />
-             </div>
-             {profile?.email || 'No email set'}
+        {/* Profile Completion Bar */}
+        <div className="mt-2 w-full max-w-sm">
+           <div className="flex items-center justify-between mb-1.5">
+             <span className="text-xs font-semibold text-text-primary">Profile completion</span>
+             <span className="text-xs font-bold text-brand-teal">{completionPercent}%</span>
            </div>
-           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#8888AA', fontSize: '13px' }}>
-             <div style={{ width: '28px', height: '28px', borderRadius: '8px', background: 'rgba(76, 255, 143, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-               <Calendar size={14} color="#4CFF8F" />
-             </div>
-             Joined {memberSince}
+           <div className="h-1.5 w-full bg-border rounded-full overflow-hidden">
+             <div 
+               className="h-full bg-gradient-to-r from-brand-purple to-brand-teal transition-all duration-500 ease-out" 
+               style={{ width: `${completionPercent}%` }}
+             />
+           </div>
+           {completionPercent < 100 && (
+             <p className="text-[10px] text-text-muted mt-1.5">
+               Add your {!profile?.full_name ? 'name' : !profile?.avatar_url ? 'avatar' : !profile?.display_name ? 'display name' : 'bio'} to reach 100%
+             </p>
+           )}
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '16px', marginTop: '8px' }}>
+           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#8888AA', fontSize: '12px' }}>
+             <Mail size={14} className="text-text-muted" />
+             <span className="truncate max-w-[150px]">{profile?.email || 'No email set'}</span>
+           </div>
+           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#8888AA', fontSize: '12px' }}>
+             <Calendar size={14} className="text-text-muted" />
+             <span>Joined {memberSince}</span>
            </div>
         </div>
       </div>
     </div>
+
   )
 }

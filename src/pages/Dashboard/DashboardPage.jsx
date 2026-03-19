@@ -12,6 +12,7 @@ import { ServiceLogo } from '../../lib/logos'
 import { SkeletonDashboard } from '../../components/Skeleton'
 import { EmptySubscriptions, EmptyAlerts } from '../../components/EmptyState'
 import { motion } from 'framer-motion'
+import { CheckSquare, Square, X } from 'lucide-react'
 import WhatsNewBanner from '../../components/WhatsNewBanner'
 
 
@@ -73,7 +74,8 @@ export default function DashboardPage() {
       mTotal += monthly
       yTotal += monthly * 12
       
-      const cat = sub.category || 'Other'
+      let cat = sub.category || 'Other'
+      cat = cat.charAt(0).toUpperCase() + cat.slice(1)
       catBreakdown[cat] = (catBreakdown[cat] || 0) + monthly
     })
 
@@ -122,7 +124,7 @@ export default function DashboardPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-text-primary">
-            Good {new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 18 ? 'afternoon' : 'evening'} 👋
+            Good {new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 18 ? 'afternoon' : 'evening'}{profile?.full_name ? `, ${profile.full_name.split(' ')[0]}` : ''}! 👋
           </h1>
           <p className="text-text-muted mt-1">Here's your subscription overview</p>
         </div>
@@ -130,6 +132,18 @@ export default function DashboardPage() {
           <p className="text-text-muted text-sm">{format(new Date(), 'EEEE, MMMM d')}</p>
         </div>
       </div>
+
+      {/* Onboarding Checklist */}
+      {!localStorage.getItem('dashboard_checklist_dismissed') && (
+        <DashboardChecklist 
+          profile={profile} 
+          subscriptions={subscriptions} 
+          onDismiss={() => {
+            localStorage.setItem('dashboard_checklist_dismissed', 'true')
+            window.location.reload()
+          }} 
+        />
+      )}
 
       {/* Stat Cards */}
       <motion.div
@@ -145,6 +159,7 @@ export default function DashboardPage() {
             subtitle={displayCurrency !== 'INR' ? `Converted from original` : "All active subscriptions"}
             icon={DollarSign}
             color="#6C63FF"
+            trend={trendData.length > 1 && trendData[4].amount ? Math.round(((trendData[5].amount - trendData[4].amount) / trendData[4].amount) * 100) : 0}
           />
         </motion.div>
         <motion.div variants={itemVariants} whileHover={{ y: -4 }}>
@@ -154,6 +169,7 @@ export default function DashboardPage() {
             subtitle="Projected annual cost"
             icon={TrendingUp}
             color="#3ECFCF"
+            trend={trendData.length > 1 && trendData[4].amount ? Math.round(((trendData[5].amount - trendData[4].amount) / trendData[4].amount) * 100) : 0}
           />
         </motion.div>
         <motion.div variants={itemVariants} whileHover={{ y: -4 }}>
@@ -163,6 +179,7 @@ export default function DashboardPage() {
             subtitle={`of ${subscriptions.length} total`}
             icon={CreditCard}
             color="#4CFF8F"
+            trend={0}
           />
         </motion.div>
         <motion.div variants={itemVariants} whileHover={{ y: -4 }}>
@@ -172,6 +189,7 @@ export default function DashboardPage() {
             subtitle="Next 7 days"
             icon={Bell}
             color="#FFD700"
+            trend={0}
           />
         </motion.div>
       </motion.div>
@@ -230,9 +248,17 @@ export default function DashboardPage() {
         <motion.div variants={itemVariants} whileHover={{ y: -4 }} className="card lg:col-span-2">
           <h2 className="text-lg font-semibold text-text-primary mb-6">Monthly Spending Trend</h2>
           {trendData.every(d => d.amount === 0) ? (
-            <div className="h-52 flex flex-col items-center justify-center text-text-muted">
-              <TrendingUp size={32} className="mb-3 opacity-30" />
-              <p className="text-sm">Add subscriptions to see your spending trend</p>
+            <div className="h-52 flex flex-col items-center justify-center text-text-muted text-center p-4 rounded-xl border border-dashed border-border/50 bg-bg-elevated/20">
+              <div className="w-16 h-16 bg-brand-purple/10 flex items-center justify-center rounded-full mb-4 shadow-[0_0_15px_rgba(108,99,255,0.2)]">
+                <TrendingUp size={28} className="text-brand-purple" />
+              </div>
+              <p className="text-sm text-text-primary font-medium mb-1">Visualize your spending</p>
+              <p className="text-xs text-text-muted mb-4 max-w-xs">Add your first subscription to see your spending trend over time.</p>
+              <button 
+                 onClick={() => window.dispatchEvent(new KeyboardEvent('keydown', { key: 'n' }))}
+                 className="btn-primary py-1.5 px-4 text-xs">
+                + Add Subscription
+              </button>
             </div>
           ) : (
             <ResponsiveContainer width="100%" height={200}>
@@ -258,9 +284,23 @@ export default function DashboardPage() {
         <motion.div variants={itemVariants} whileHover={{ y: -4 }} className="card">
           <h2 className="text-lg font-semibold text-text-primary mb-6">By Category</h2>
           {categoryChartData.length === 0 ? (
-            <div className="h-48 flex flex-col items-center justify-center text-text-muted">
-              <CreditCard size={32} className="mb-3 opacity-30" />
-              <p className="text-sm text-center">No subscriptions yet</p>
+            <div className="h-48 flex flex-col justify-center items-center">
+              <div className="w-28 h-28 rounded-full border-[10px] border-border relative opacity-40 shadow-inner -mt-4">
+                <div className="absolute inset-0 m-auto w-10 h-10 flex items-center justify-center text-text-muted/60">
+                  <CreditCard size={24} />
+                </div>
+              </div>
+              <div className="w-full flex-1 flex flex-col justify-center gap-2 mt-4 px-4">
+                {['Streaming', 'Software', 'Utilities', 'Other'].map((cat, i) => (
+                  <div key={cat} className="flex items-center justify-between opacity-30">
+                    <div className="flex items-center gap-2">
+                       <div className="w-2 h-2 rounded-full" style={{ background: CATEGORY_COLORS[i] }} />
+                       <span className="text-xs text-text-muted font-medium">{cat}</span>
+                    </div>
+                    <span className="text-[10px] font-semibold text-text-muted">—</span>
+                  </div>
+                ))}
+              </div>
             </div>
           ) : (
             <>
@@ -301,8 +341,10 @@ export default function DashboardPage() {
             <Link to="/alerts" className="text-brand-purple text-sm hover:underline">View all →</Link>
           </div>
           {upcomingRenewals.length === 0 ? (
-            <div className="py-2">
-              <EmptyAlerts />
+            <div className="py-4 text-center text-text-muted text-sm border border-dashed border-border/50 rounded-xl bg-bg-elevated/20 flex flex-col items-center justify-center" style={{ minHeight: '160px' }}>
+              <Bell size={24} className="mb-2 opacity-30 text-brand-teal" />
+              No upcoming renewals.<br/>
+              Enjoy the peace of mind!
             </div>
           ) : (
             <motion.div
@@ -346,8 +388,32 @@ export default function DashboardPage() {
             <Link to="/subscriptions" className="text-brand-purple text-sm hover:underline">View all →</Link>
           </div>
           {subscriptions.length === 0 ? (
-            <div className="py-2">
-              <EmptySubscriptions onAddClick={() => { /* Navigation to subs or open modal */ }} />
+            <div className="py-2 px-2">
+              <div className="space-y-4">
+                <div className="flex items-start gap-4 relative">
+                  <div className="w-6 h-6 rounded-full bg-brand-purple/20 text-brand-purple flex items-center justify-center text-xs font-bold leading-none shrink-0 z-10 border border-brand-purple/30">1</div>
+                  <div>
+                    <h4 className="text-sm font-semibold text-text-primary" style={{ marginTop: '3px' }}>Add a subscription</h4>
+                    <p className="text-xs text-text-muted mt-0.5">Track your first recurring cost</p>
+                  </div>
+                  <div className="absolute left-[11px] top-6 bottom-[-24px] w-px bg-border z-0"></div>
+                </div>
+                <div className="flex items-start gap-4 relative mt-4">
+                  <div className="w-6 h-6 rounded-full bg-brand-teal/20 text-brand-teal flex items-center justify-center text-xs font-bold leading-none shrink-0 z-10 border border-brand-teal/30">2</div>
+                  <div>
+                    <h4 className="text-sm font-semibold text-text-primary" style={{ marginTop: '3px' }}>Set renewal date</h4>
+                    <p className="text-xs text-text-muted mt-0.5">So we know when to alert you</p>
+                  </div>
+                  <div className="absolute left-[11px] top-6 bottom-[-24px] w-px bg-border z-0"></div>
+                </div>
+                <div className="flex items-start gap-4 relative mt-4 mb-2">
+                  <div className="w-6 h-6 rounded-full bg-status-warning/20 text-status-warning flex items-center justify-center text-xs font-bold leading-none shrink-0 z-10 border border-status-warning/30">3</div>
+                  <div>
+                    <h4 className="text-sm font-semibold text-text-primary" style={{ marginTop: '3px' }}>Get alerts</h4>
+                    <p className="text-xs text-text-muted mt-0.5">Never miss a payment again</p>
+                  </div>
+                </div>
+              </div>
             </div>
           ) : (
             <motion.div
@@ -367,7 +433,9 @@ export default function DashboardPage() {
                     <ServiceLogo name={sub.name} size={36} color={sub.color || '#6C63FF'} />
                     <div>
                       <p className="text-sm font-medium text-text-primary">{sub.name}</p>
-                      <p className="text-xs text-text-muted">{sub.category}</p>
+                      <p className="text-xs text-text-muted">
+                        {sub.category ? (sub.category.charAt(0).toUpperCase() + sub.category.slice(1)) : 'Other'}
+                      </p>
                     </div>
                   </div>
                   <div className="text-right">
@@ -379,6 +447,54 @@ export default function DashboardPage() {
             </motion.div>
           )}
         </motion.div>
+      </div>
+    </div>
+  )
+}
+
+function DashboardChecklist({ profile, subscriptions, onDismiss }) {
+  const steps = [
+    { id: 'sub', label: 'Add your first subscription', done: subscriptions.length > 0 },
+    { id: 'budget', label: 'Set your monthly budget', done: Boolean(profile?.monthly_budget) },
+    { id: 'alerts', label: 'Enable renewal alerts', done: profile?.preferences?.email_alerts || profile?.preferences?.push_alerts },
+    { id: 'scanner', label: 'Connect email scanner', done: false },
+    { id: 'invite', label: 'Invite a teammate', done: false }
+  ]
+  
+  const completedCount = steps.filter(s => s.done).length
+
+  return (
+    <div className="card bg-gradient-to-r from-bg-surface to-bg-elevated/30 border-brand-purple/20 relative animate-fade-in my-6">
+      <button onClick={onDismiss} className="absolute top-4 right-4 p-1.5 text-text-muted hover:text-white bg-bg-elevated rounded-lg transition-colors">
+        <X size={16} />
+      </button>
+      <div className="mb-4">
+        <h3 className="text-lg font-bold text-text-primary flex items-center gap-2">
+          <CheckSquare size={18} className="text-brand-purple" /> Get started with SubTrackr
+        </h3>
+        <p className="text-sm text-text-muted mt-1">{completedCount} of {steps.length} tasks completed</p>
+        
+        <div className="h-1.5 w-full bg-border rounded-full overflow-hidden mt-3 max-w-sm">
+          <div 
+            className="h-full bg-gradient-to-r from-brand-purple to-brand-teal transition-all duration-500 ease-out" 
+            style={{ width: `${(completedCount / steps.length) * 100}%` }}
+          />
+        </div>
+      </div>
+      
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        {steps.map((step) => (
+          <div key={step.id} className="flex items-center gap-3 p-3 rounded-xl bg-bg-elevated/50 border border-border">
+            {step.done ? (
+              <CheckSquare size={18} className="text-brand-teal shrink-0" />
+            ) : (
+              <Square size={18} className="text-text-muted/50 shrink-0" />
+            )}
+            <span className={`text-sm ${step.done ? 'text-text-muted line-through' : 'text-text-primary font-medium'}`}>
+              {step.label}
+            </span>
+          </div>
+        ))}
       </div>
     </div>
   )

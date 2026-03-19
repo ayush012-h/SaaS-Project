@@ -110,9 +110,9 @@ export default function FeedbackWidget({ darkMode = true }) {
         onClick={() => setIsOpen(true)}
         style={{
           position: 'fixed',
-          bottom: 28,
-          right: 28,
-          zIndex: 999,
+          top: 24,
+          right: 32,
+          zIndex: 1000,
           background: 'linear-gradient(135deg, #6C63FF, #3ECFCF)',
           border: 'none',
           borderRadius: 50,
@@ -159,8 +159,8 @@ export default function FeedbackWidget({ darkMode = true }) {
       {isOpen && (
         <div style={{
           position: 'fixed',
-          bottom: 90,
-          right: 28,
+          top: 80,
+          right: 32,
           zIndex: 1001,
           width: 360,
           background: bg,
