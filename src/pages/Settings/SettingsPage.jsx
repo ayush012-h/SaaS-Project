@@ -471,7 +471,7 @@ export default function SettingsPage() {
                   <span style={{ background: isPro ? 'rgba(108, 99, 255, 0.1)' : 'rgba(102, 102, 128, 0.1)', color: isPro ? '#6C63FF' : '#666680', fontSize: '11px', fontWeight: '900', padding: '6px 12px', borderRadius: '8px', textTransform: 'uppercase' }}>
                     Current Plan: {isPro ? 'Pro' : 'Free'}
                   </span>
-                  <h3 style={{ fontSize: '32px', fontWeight: '900', marginTop: '16px' }}>₹{isPro ? '499' : '0'}/mo</h3>
+                  <h3 style={{ fontSize: '32px', fontWeight: '900', marginTop: '16px' }}>₹{isPro ? '199' : '0'}/mo</h3>
                   {isPro && <p style={{ color: '#9999BB', fontSize: '14px' }}>Next payment: {new Date(new Date().setMonth(new Date().getMonth() + 1)).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</p>}
                 </div>
                 {!isPro && <button onClick={handleUpgrade} disabled={upgrading} className="btn-primary">Upgrade</button>}

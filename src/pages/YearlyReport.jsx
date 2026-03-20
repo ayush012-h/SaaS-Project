@@ -16,7 +16,8 @@ import ProGate from '../components/ProGate'
 import toast from 'react-hot-toast'
 
 export default function YearlyReport({ userPlan }) {
-  const [selectedYear, setSelectedYear] = useState(2025)
+  const currentYear = new Date().getFullYear()  // 2026
+  const [selectedYear, setSelectedYear] = useState(currentYear)
   const [loading, setLoading] = useState(false)
   const [subscriptions, setSubscriptions] = useState([])
   const [insights, setInsights] = useState([])
@@ -39,31 +40,59 @@ export default function YearlyReport({ userPlan }) {
   }
 
   const reports = useMemo(() => {
-    const totalSpend = subscriptions.reduce((sum, sub) => {
+    // Filter subscriptions active/created during the selected year
+    const yearSubs = subscriptions.filter(sub => {
+      const created = new Date(sub.created_at || sub.start_date)
+      const createdYear = created.getFullYear()
+      // Include if created in or before the selected year (still active)
+      return createdYear <= selectedYear
+    })
+
+    const totalSpend = yearSubs.reduce((sum, sub) => {
       let amount = sub.amount || 0
       if (sub.billing_cycle === 'yearly') return sum + amount
       return sum + (amount * 12)
     }, 0)
 
-    const categories = subscriptions.reduce((acc, sub) => {
+    const categories = yearSubs.reduce((acc, sub) => {
       acc[sub.category] = (acc[sub.category] || 0) + sub.amount
       return acc
     }, {})
 
     const topCategory = Object.keys(categories).sort((a,b) => categories[b] - categories[a])[0] || 'N/A'
-    const mostExpensive = [...subscriptions].sort((a,b) => b.amount - a.amount)[0]
+    const mostExpensive = [...yearSubs].sort((a,b) => b.amount - a.amount)[0]
     
-    // Fake monthly data for chart
-    const monthlyData = Array.from({length: 12}, (_, i) => {
-      const month = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][i]
-      const base = totalSpend / 12
-      return { month, amount: base + (Math.random() * 200 - 100) }
+    // Build monthly spend data based on actual subscriptions for that year
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+    const monthlyData = months.map((month, i) => {
+      // For the selected year, only show months up to current month if it's the current year
+      const isCurrentYear = selectedYear === currentYear
+      const currentMonth = new Date().getMonth() // 0-indexed
+      if (isCurrentYear && i > currentMonth) {
+        return { month, amount: 0, isFuture: true }
+      }
+      // Sum subs active during this month of the selected year
+      const monthAmount = yearSubs.filter(sub => {
+        const created = new Date(sub.created_at || sub.start_date)
+        const createdYear = created.getFullYear()
+        const createdMonth = created.getMonth()
+        // Sub was created before or during this month
+        return createdYear < selectedYear || (createdYear === selectedYear && createdMonth <= i)
+      }).reduce((sum, sub) => {
+        const amount = sub.amount || 0
+        if (sub.billing_cycle === 'yearly') return sum + (amount / 12)
+        return sum + amount
+      }, 0)
+      return { month, amount: monthAmount, isFuture: false }
     })
 
-    const peakMonth = monthlyData.reduce((prev, current) => (prev.amount > current.amount) ? prev : current, monthlyData[0])
+    const validMonths = monthlyData.filter(m => !m.isFuture && m.amount > 0)
+    const peakMonth = validMonths.length > 0
+      ? validMonths.reduce((prev, curr) => (prev.amount > curr.amount) ? prev : curr, validMonths[0])
+      : monthlyData[0]
 
-    return { totalSpend, topCategory, mostExpensive, monthlyData, peakMonth }
-  }, [subscriptions])
+    return { totalSpend, topCategory, mostExpensive, monthlyData, peakMonth, yearSubs }
+  }, [subscriptions, selectedYear])
 
   async function generateReport() {
     setLoading(true)
@@ -99,17 +128,27 @@ export default function YearlyReport({ userPlan }) {
     link.click()
   }
 
-  const copyShare = () => {
-    const text = `I spent ₹${reports.totalSpend.toFixed(0)} on ${subscriptions.length} subscriptions in ${selectedYear} 😅\nTracked with SubTrackr — subtrackr.co`
-    navigator.clipboard.writeText(text)
-    toast.success('Copied for WhatsApp! 📱')
+  const shareWhatsApp = () => {
+    const text = `I spent ₹${reports.totalSpend.toFixed(0)} on ${reports.yearSubs?.length ?? subscriptions.length} subscriptions in ${selectedYear} 😅\nTracked with SubTrackr — subtrackr.co`
+    const encoded = encodeURIComponent(text)
+    window.open(`https://wa.me/?text=${encoded}`, '_blank', 'noopener,noreferrer')
   }
 
   const content = (
     <div style={{ maxWidth: '900px', margin: '0 auto', padding: '40px 20px' }}>
       {/* Year Selector */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px', marginBottom: '40px' }}>
-        {[2024, 2025, 2026].map(y => (
+  {/* Only show years from the earliest subscription year up to current year */}
+        {Array.from({ length: currentYear - 2025 + 1 }, (_, i) => 2025 + i)
+          .filter(y => {
+            // Only include a year if there's at least one subscription created in or before that year
+            const hasSubs = subscriptions.some(sub => {
+              const created = new Date(sub.created_at || sub.start_date)
+              return created.getFullYear() <= y
+            })
+            return hasSubs
+          })
+          .map(y => (
           <button 
             key={y}
             onClick={() => setSelectedYear(y)}
@@ -182,7 +221,7 @@ export default function YearlyReport({ userPlan }) {
           }}>
             ₹{reports.totalSpend.toFixed(0)}
           </div>
-          <p style={{ color: '#666680', fontSize: '18px', marginTop: '8px' }}>Spent across {subscriptions.length} active services</p>
+          <p style={{ color: '#666680', fontSize: '18px', marginTop: '8px' }}>Spent across {reports.yearSubs?.length ?? subscriptions.length} active services</p>
         </div>
 
         {/* 2. Stats Grid */}
@@ -208,11 +247,12 @@ export default function YearlyReport({ userPlan }) {
               <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
                 <div style={{ 
                   width: '100%', 
-                  height: `${(data.amount / reports.peakMonth.amount) * 100}%`,
-                  background: data.month === reports.peakMonth.month ? 'linear-gradient(180deg, #FFD700, #FF9F43)' : 'linear-gradient(180deg, #6C63FF, #3ECFCF)',
-                  borderRadius: '6px'
+                  height: data.isFuture || !reports.peakMonth?.amount ? '4px' : `${Math.max(4, (data.amount / reports.peakMonth.amount) * 100)}%`,
+                  background: data.isFuture ? '#1E1E2E' : data.month === reports.peakMonth?.month ? 'linear-gradient(180deg, #FFD700, #FF9F43)' : 'linear-gradient(180deg, #6C63FF, #3ECFCF)',
+                  borderRadius: '6px',
+                  opacity: data.isFuture ? 0.3 : 1
                 }} />
-                <span style={{ fontSize: '11px', color: '#666680', fontWeight: '700' }}>{data.month}</span>
+                <span style={{ fontSize: '11px', color: data.isFuture ? '#333348' : '#666680', fontWeight: '700' }}>{data.month}</span>
               </div>
             ))}
           </div>
@@ -222,7 +262,7 @@ export default function YearlyReport({ userPlan }) {
         <div style={{ padding: '0 40px 40px' }}>
            <h3 style={{ color: '#fff', fontSize: '18px', fontWeight: '800', marginBottom: '24px' }}>Top Rankings</h3>
            <div style={{ background: '#13131F', borderRadius: '24px', border: '1px solid #1E1E2E', overflow: 'hidden' }}>
-             {subscriptions.sort((a,b) => b.amount - a.amount).slice(0, 5).map((sub, i) => (
+             {(reports.yearSubs ?? subscriptions).slice().sort((a,b) => b.amount - a.amount).slice(0, 5).map((sub, i) => (
                <div key={sub.id} style={{ 
                  padding: '16px 24px', 
                  display: 'flex', 
@@ -269,7 +309,7 @@ export default function YearlyReport({ userPlan }) {
         <button onClick={downloadReport} style={{ background: '#13131F', border: '1px solid #1E1E2E', borderRadius: '16px', padding: '16px', color: '#fff', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}>
           <Download size={20} /> Download Image
         </button>
-        <button onClick={copyShare} style={{ background: 'linear-gradient(135deg, #128C7E, #25D366)', border: 'none', borderRadius: '16px', padding: '16px', color: '#fff', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}>
+        <button onClick={shareWhatsApp} style={{ background: 'linear-gradient(135deg, #128C7E, #25D366)', border: 'none', borderRadius: '16px', padding: '16px', color: '#fff', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}>
           <Share2 size={20} /> Share to WhatsApp
         </button>
       </div>
