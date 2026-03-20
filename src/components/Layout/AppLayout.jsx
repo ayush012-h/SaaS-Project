@@ -6,13 +6,17 @@ import SubscriptionModal from '../UI/SubscriptionModal'
 import { useSubscriptions } from '../../hooks/useSubscriptions'
 import toast from 'react-hot-toast'
 import { Plus } from 'lucide-react'
-import { useAuth, AuthProvider } from '../../contexts/AuthContext'
+import { useAuth } from '../../contexts/AuthContext'
 import GlobalSearch from '../GlobalSearch'
+import { useIsMobile } from '../../hooks/useIsMobile'
+import BottomNav from './BottomNav'
+import MobileHeader from './MobileHeader'
 
 export default function AppLayout() {
-  const bannerHeight = 0 // Removed BetaBanner
-  
-  // Collapsible sidebar state
+  const bannerHeight = 0
+  const isMobile = useIsMobile()
+
+  // Collapsible sidebar state (desktop only)
   const [isCollapsed, setIsCollapsed] = useState(() => {
     return localStorage.getItem('sidebar_collapsed') === 'true'
   })
@@ -29,7 +33,6 @@ export default function AppLayout() {
 
   useEffect(() => {
     const handleKeyDown = (e) => {
-      // Don't trigger if user is typing in an input
       if (['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName)) return
       if (e.key === 'n' || e.key === 'N') {
         e.preventDefault()
@@ -59,32 +62,75 @@ export default function AppLayout() {
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-bg-primary">
+    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: 'var(--color-bg-primary)', overflowX: 'hidden' }}>
       <OnboardingModal />
-      <div className="flex flex-1 relative">
-        <div style={{ width: isCollapsed ? 48 : 256, transition: 'width 0.3s ease' }} className="shrink-0 z-50"> {/* Sidebar placeholder */}
-          <Sidebar style={{ top: bannerHeight }} isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
-        </div>
-        <main className="flex-1 min-h-screen overflow-auto relative">
-          <div className="p-8 max-w-7xl mx-auto animate-fade-in pb-20">
+
+      {/* ── Mobile Header (top bar + drawer) ── */}
+      {isMobile && <MobileHeader />}
+
+      <div style={{ display: 'flex', flex: 1, position: 'relative' }}>
+
+        {/* ── Desktop Sidebar ── */}
+        {!isMobile && (
+          <div style={{ width: isCollapsed ? 48 : 256, transition: 'width 0.3s ease', flexShrink: 0, zIndex: 50 }}>
+            <Sidebar style={{ top: bannerHeight }} isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
+          </div>
+        )}
+
+        {/* ── Main Content ── */}
+        <main style={{
+          flex: 1,
+          minHeight: '100vh',
+          overflowX: 'hidden',
+          overflowY: 'auto',
+          position: 'relative',
+        }}>
+          <div style={{
+            padding: isMobile ? '16px 16px 88px 16px' : '2rem',
+            maxWidth: isMobile ? '100%' : '80rem',
+            margin: '0 auto',
+            animation: 'fadeIn 0.3s ease-in-out',
+          }}>
             <Outlet />
           </div>
-          
-          {/* Global FAB */}
-          <button 
+
+          {/* ── FAB: Add Subscription ── */}
+          <button
             onClick={() => setAddOpen(true)}
-            className="fixed bottom-8 right-8 z-50 flex items-center justify-center gap-2 bg-gradient-to-r from-brand-purple to-brand-teal text-white p-4 rounded-full shadow-[0_8px_32px_rgba(108,99,255,0.4)] hover:shadow-[0_12px_40px_rgba(108,99,255,0.6)] hover:-translate-y-1 transition-all md:px-6 md:py-3 cursor-pointer border-none"
+            style={{
+              position: 'fixed',
+              bottom: isMobile ? 76 : 32,
+              right: isMobile ? 16 : 32,
+              zIndex: 900,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 8,
+              background: 'linear-gradient(135deg, #6C63FF, #3ECFCF)',
+              color: '#fff',
+              padding: isMobile ? '14px' : '12px 20px',
+              borderRadius: '50px',
+              border: 'none',
+              cursor: 'pointer',
+              boxShadow: '0 8px 32px rgba(108,99,255,0.4)',
+              fontWeight: 700,
+              fontSize: 14,
+              minWidth: 48,
+              minHeight: 48,
+            }}
+            aria-label="Add Subscription"
           >
-            <Plus size={24} />
-            <span className="hidden md:inline font-bold text-sm">Add Subscription</span>
+            <Plus size={22} />
+            {!isMobile && <span>Add Subscription</span>}
           </button>
         </main>
       </div>
-      
-      {/* Global Add Modal */}
+
+      {/* ── Mobile Bottom Nav ── */}
+      {isMobile && <BottomNav />}
+
+      {/* ── Global Modals ── */}
       <SubscriptionModal isOpen={addOpen} onClose={() => setAddOpen(false)} onSave={handleAdd} />
-      
-      {/* Search and Checkout overlay modals */}
       <GlobalSearch />
     </div>
   )

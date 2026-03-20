@@ -73,11 +73,11 @@ export default function ProfileUpload() {
       const res1 = await supabase.storage.from('avatars').upload(fileName, compressedBlob, { upsert: true })
       uploadError = res1.error
 
-      // Attempt 2: singular 'avatar' fallback
+      // Attempt 2: 'avatars' retry with different upsert flag
       if (uploadError && (uploadError.message.includes('not found') || uploadError.error === 'Bucket not found')) {
-         const res2 = await supabase.storage.from('avatar').upload(fileName, compressedBlob, { upsert: true })
+         const res2 = await supabase.storage.from('avatars').upload(fileName, compressedBlob, { upsert: false })
          uploadError = res2.error
-         finalBucket = 'avatar'
+         finalBucket = 'avatars'
       }
 
       if (uploadError) throw uploadError

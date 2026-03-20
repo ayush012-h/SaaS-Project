@@ -56,12 +56,73 @@ html, body {
   color: var(--color-text-primary);
   font-family: 'DM Sans', system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+  max-width: 100vw;
 }
 
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: #0F0F1A; }
 ::-webkit-scrollbar-thumb { background: #2A2A3E; border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: #3A3A5E; }
+
+/* ══════════════════════════════════════════════════════════
+   MOBILE RESPONSIVE GLOBAL RULES
+══════════════════════════════════════════════════════════ */
+
+/* Safe area inset support (iPhone notch / Dynamic Island) */
+:root {
+  --safe-area-top: env(safe-area-inset-top, 0px);
+  --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* Prevent iOS tap highlight */
+a, button { -webkit-tap-highlight-color: transparent; }
+
+@media (max-width: 767px) {
+  /* Prevent iOS zoom on input focus — font-size must be >= 16px */
+  input, textarea, select {
+    font-size: 16px !important;
+    min-height: 44px;
+  }
+
+  /* Touch-friendly buttons */
+  button {
+    min-height: 44px;
+  }
+
+  /* Prevent content overflow on mobile */
+  img, video, canvas, svg {
+    max-width: 100%;
+  }
+
+  /* Mobile modal: slide up from bottom as bottom sheet */
+  .modal-content {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    max-width: 100% !important;
+    border-radius: 20px 20px 0 0 !important;
+    margin: 0 !important;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+
+  /* Collapse wide grids to single column */
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 1rem !important;
+  }
+  .features-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .pricing-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Hide desktop-only scrollbars on mobile to save space */
+  ::-webkit-scrollbar { width: 0; height: 0; }
+}
 
 /* ═══════════════════════════════════════════════════════
    REUSABLE COMPONENT CLASSES
