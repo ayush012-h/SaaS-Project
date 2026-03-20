@@ -1,5 +1,5 @@
-import { useMemo, useEffect } from 'react'
-import { DollarSign, CreditCard, TrendingUp, Bell, Calendar, AlertCircle } from 'lucide-react'
+import { useMemo, useEffect, useState } from 'react'
+import { DollarSign, CreditCard, TrendingUp, Bell, Calendar, AlertCircle, MessageSquare } from 'lucide-react'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
 import { format, subMonths } from 'date-fns'
 import { useSubscriptions } from '../../hooks/useSubscriptions'
@@ -11,9 +11,31 @@ import { Link } from 'react-router-dom'
 import { ServiceLogo } from '../../lib/logos'
 import { SkeletonDashboard } from '../../components/Skeleton'
 import { EmptySubscriptions, EmptyAlerts } from '../../components/EmptyState'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { CheckSquare, Square, X } from 'lucide-react'
 import WhatsNewBanner from '../../components/WhatsNewBanner'
+import { useIsMobile } from '../../hooks/useIsMobile'
+import FeedbackWidget from '../../components/FeedbackWidget'
+
+function FeedbackModal({ onClose }) {
+  return (
+    <>
+      <div
+        onClick={onClose}
+        style={{
+          position: 'fixed', inset: 0, zIndex: 9998,
+          background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(4px)',
+        }}
+      />
+      <div style={{
+        position: 'fixed', top: '50%', left: '50%', zIndex: 9999,
+        transform: 'translate(-50%, -50%)',
+      }}>
+        <FeedbackWidget _asModal onModalClose={onClose} />
+      </div>
+    </>
+  )
+}
 
 
 const CATEGORY_COLORS = ['#6C63FF', '#3ECFCF', '#FFD700', '#FF6363', '#4CFF8F', '#FF63B3', '#63B3FF', '#FF9F63']
@@ -113,25 +135,43 @@ export default function DashboardPage() {
     name, value: parseFloat(value.toFixed(2))
   }))
 
+  const [feedbackOpen, setFeedbackOpen] = useState(false)
+  const isMobile = useIsMobile()
+
   if (loading) {
     return <SkeletonDashboard />
   }
 
   return (
-    <div className="space-y-8 animate-fade-in">
+    <div className={`${isMobile ? 'space-y-4' : 'space-y-8'} animate-fade-in`}>
       <WhatsNewBanner />
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-end justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-text-primary">
+          <h1 className={`${isMobile ? 'text-xl' : 'text-3xl'} font-black text-text-primary tracking-tight`}>
             Good {new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 18 ? 'afternoon' : 'evening'}{profile?.full_name ? `, ${profile.full_name.split(' ')[0]}` : ''}! 👋
           </h1>
-          <p className="text-text-muted mt-1">Here's your subscription overview</p>
+          <p className={`${isMobile ? 'text-[10px]' : 'text-text-muted mt-1'} uppercase font-bold tracking-widest text-text-muted`}>Subscription overview</p>
         </div>
-        <div className="text-right">
-          <p className="text-text-muted text-sm">{format(new Date(), 'EEEE, MMMM d')}</p>
+        <div className="flex items-center gap-3">
+          {!isMobile && (
+            <div className="text-right">
+              <p className="text-text-muted text-sm font-semibold">{format(new Date(), 'EEEE, MMMM d')}</p>
+            </div>
+          )}
+          <button
+            onClick={() => setFeedbackOpen(true)}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-bg-elevated border border-border text-text-muted hover:text-white transition-all group shadow-sm active:scale-95"
+          >
+            <MessageSquare size={16} className="text-brand-purple group-hover:scale-110 transition-transform" />
+            <span className="text-sm font-bold tracking-tight">Feedback</span>
+          </button>
         </div>
       </div>
+
+      <AnimatePresence>
+        {feedbackOpen && <FeedbackModal onClose={() => setFeedbackOpen(false)} />}
+      </AnimatePresence>
 
       {/* Onboarding Checklist */}
       {!localStorage.getItem('dashboard_checklist_dismissed') && (
@@ -150,7 +190,7 @@ export default function DashboardPage() {
         variants={containerVariants}
         initial="hidden"
         animate="show"
-        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"
+        className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4"
       >
         <motion.div variants={itemVariants} whileHover={{ y: -4 }}>
           <StatCard
@@ -199,26 +239,26 @@ export default function DashboardPage() {
         <motion.div 
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          className={`card overflow-hidden relative ${isOverBudget ? 'border-status-danger/30' : ''}`}
+          className={`card overflow-hidden relative p-4 sm:p-5 ${isOverBudget ? 'border-status-danger/30' : ''}`}
         >
-          <div className="flex flex-wrap items-center justify-between mb-4 gap-4">
+          <div className="flex items-center justify-between mb-3 sm:mb-4 gap-4">
             <div>
-              <h3 className="text-lg font-bold text-text-primary flex items-center gap-2">
-                Monthly Budget Goal
-                {isOverBudget && <span className="bg-status-danger/10 text-status-danger text-[10px] px-2 py-0.5 rounded-full uppercase tracking-wider">Over Limit</span>}
+              <h3 className="text-sm sm:text-lg font-bold text-text-primary flex items-center gap-2">
+                Monthly Budget
+                {isOverBudget && <span className="bg-status-danger/10 text-status-danger text-[9px] px-2 py-0.5 rounded-full uppercase tracking-wider">Over</span>}
               </h3>
-              <p className="text-text-muted text-xs">
-                You've spent {currencySymbol}{convMonthlyTotal.toFixed(0)} of {currencySymbol}{budget.toFixed(0)} budget
+              <p className="text-text-muted text-[10px] sm:text-xs">
+                {currencySymbol}{convMonthlyTotal.toFixed(0)} / {currencySymbol}{budget.toFixed(0)}
               </p>
             </div>
             <div className="text-right">
-              <span className={`text-2xl font-black ${isOverBudget ? 'text-status-danger' : 'text-brand-teal'}`}>
+              <span className={`text-xl sm:text-2xl font-black ${isOverBudget ? 'text-status-danger' : 'text-brand-teal'}`}>
                 {Math.round(budgetProgress)}%
               </span>
             </div>
           </div>
           
-          <div className="h-3 w-full bg-bg-elevated rounded-full overflow-hidden border border-border">
+          <div className="h-2 sm:h-3 w-full bg-bg-elevated rounded-full overflow-hidden border border-border">
             <motion.div 
               initial={{ width: 0 }}
               animate={{ width: `${Math.min(budgetProgress, 100)}%` }}
@@ -228,10 +268,10 @@ export default function DashboardPage() {
             />
           </div>
 
-          {isOverBudget && (
+          {!isMobile && isOverBudget && (
             <p className="mt-3 text-[11px] text-status-danger font-medium flex items-center gap-1">
               <AlertCircle size={12} />
-              Warning: You have exceeded your monthly budget by {currencySymbol}{(convMonthlyTotal - budget).toFixed(0)}.
+              Warning: Budget exceeded by {currencySymbol}{(convMonthlyTotal - budget).toFixed(0)}.
             </p>
           )}
         </motion.div>
@@ -335,42 +375,40 @@ export default function DashboardPage() {
       {/* Upcoming Renewals + Recent Subs */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Upcoming Renewals */}
-        <motion.div variants={itemVariants} whileHover={{ y: -4 }} className="card">
-          <div className="flex items-center justify-between mb-5">
-            <h2 className="text-lg font-semibold text-text-primary">Upcoming Renewals</h2>
-            <Link to="/alerts" className="text-brand-purple text-sm hover:underline">View all →</Link>
+        <motion.div variants={itemVariants} whileHover={{ y: -4 }} className="card p-4 sm:p-5">
+          <div className="flex items-center justify-between mb-4 sm:mb-5">
+            <h2 className="text-base sm:text-lg font-bold text-text-primary uppercase tracking-tight">Renewals</h2>
+            <Link to="/alerts" className="text-brand-purple text-[10px] sm:text-sm font-bold uppercase tracking-wider hover:opacity-80">View all →</Link>
           </div>
           {upcomingRenewals.length === 0 ? (
-            <div className="py-4 text-center text-text-muted text-sm border border-dashed border-border/50 rounded-xl bg-bg-elevated/20 flex flex-col items-center justify-center" style={{ minHeight: '160px' }}>
-              <Bell size={24} className="mb-2 opacity-30 text-brand-teal" />
-              No upcoming renewals.<br/>
-              Enjoy the peace of mind!
+            <div className="py-4 text-center text-text-muted text-xs border border-dashed border-border/50 rounded-xl bg-bg-elevated/20 flex flex-col items-center justify-center" style={{ minHeight: '130px' }}>
+              <Bell size={20} className="mb-2 opacity-30 text-brand-teal" />
+              No upcoming renewals
             </div>
           ) : (
             <motion.div
               initial="hidden"
               animate="show"
               variants={containerVariants}
-              className="space-y-3"
+              className="space-y-2"
             >
-              {upcomingRenewals.map(sub => {
+              {upcomingRenewals.slice(0, 4).map(sub => {
                 const days = Math.ceil((new Date(sub.next_renewal_date) - new Date()) / (1000 * 60 * 60 * 24))
                 return (
                   <motion.div
                     key={sub.id}
                     variants={itemVariants}
-                    whileHover={{ x: 4 }}
-                    className="flex items-center justify-between p-3 rounded-xl bg-bg-elevated border border-border hover:bg-bg-hover transition-colors"
+                    className="flex items-center justify-between p-2 sm:p-3 rounded-lg sm:rounded-xl bg-bg-elevated/40 border border-border/50"
                   >
-                    <div className="flex items-center gap-3">
-                      <ServiceLogo name={sub.name} size={36} color={sub.color || '#6C63FF'} />
-                      <div>
-                        <p className="text-sm font-medium text-text-primary">{sub.name}</p>
-                        <p className="text-xs text-text-muted">{sub.currency || '₹'}{sub.amount}/{sub.billing_cycle}</p>
+                    <div className="flex items-center gap-2 sm:gap-3">
+                      <ServiceLogo name={sub.name} size={isMobile ? 28 : 36} color={sub.color || '#6C63FF'} />
+                      <div className="min-w-0">
+                        <p className="text-[13px] font-bold text-text-primary truncate">{sub.name}</p>
+                        <p className="text-[10px] text-text-muted truncate">{sub.currency || '₹'}{sub.amount}</p>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <span className={`text-xs font-bold ${days <= 2 ? 'text-status-danger' : days <= 5 ? 'text-status-warning' : 'text-text-secondary'}`}>
+                    <div className="shrink-0 text-right">
+                      <span className={`text-[11px] font-black uppercase ${days <= 2 ? 'text-status-danger' : days <= 5 ? 'text-status-warning' : 'text-text-secondary'}`}>
                         {days === 0 ? 'Today' : `${days}d`}
                       </span>
                     </div>
@@ -382,37 +420,20 @@ export default function DashboardPage() {
         </motion.div>
 
         {/* Recent Subscriptions */}
-        <motion.div variants={itemVariants} whileHover={{ y: -4 }} className="card">
-          <div className="flex items-center justify-between mb-5">
-            <h2 className="text-lg font-semibold text-text-primary">Recent Subscriptions</h2>
-            <Link to="/subscriptions" className="text-brand-purple text-sm hover:underline">View all →</Link>
+        <motion.div variants={itemVariants} whileHover={{ y: -4 }} className="card p-4 sm:p-5">
+          <div className="flex items-center justify-between mb-4 sm:mb-5">
+            <h2 className="text-base sm:text-lg font-bold text-text-primary uppercase tracking-tight">Recent</h2>
+            <Link to="/subscriptions" className="text-brand-purple text-[10px] sm:text-sm font-bold uppercase tracking-wider hover:opacity-80">All →</Link>
           </div>
           {subscriptions.length === 0 ? (
-            <div className="py-2 px-2">
-              <div className="space-y-4">
-                <div className="flex items-start gap-4 relative">
-                  <div className="w-6 h-6 rounded-full bg-brand-purple/20 text-brand-purple flex items-center justify-center text-xs font-bold leading-none shrink-0 z-10 border border-brand-purple/30">1</div>
-                  <div>
-                    <h4 className="text-sm font-semibold text-text-primary" style={{ marginTop: '3px' }}>Add a subscription</h4>
-                    <p className="text-xs text-text-muted mt-0.5">Track your first recurring cost</p>
+            <div className="py-4 px-2">
+              <div className="space-y-3">
+                {[1, 2, 3].map(i => (
+                  <div key={i} className="flex items-center gap-3">
+                    <div className="w-5 h-5 rounded-full bg-border/40 text-[10px] flex items-center justify-center font-bold text-text-muted">{i}</div>
+                    <div className="flex-1 h-3 bg-border/20 rounded max-w-[120px]" />
                   </div>
-                  <div className="absolute left-[11px] top-6 bottom-[-24px] w-px bg-border z-0"></div>
-                </div>
-                <div className="flex items-start gap-4 relative mt-4">
-                  <div className="w-6 h-6 rounded-full bg-brand-teal/20 text-brand-teal flex items-center justify-center text-xs font-bold leading-none shrink-0 z-10 border border-brand-teal/30">2</div>
-                  <div>
-                    <h4 className="text-sm font-semibold text-text-primary" style={{ marginTop: '3px' }}>Set renewal date</h4>
-                    <p className="text-xs text-text-muted mt-0.5">So we know when to alert you</p>
-                  </div>
-                  <div className="absolute left-[11px] top-6 bottom-[-24px] w-px bg-border z-0"></div>
-                </div>
-                <div className="flex items-start gap-4 relative mt-4 mb-2">
-                  <div className="w-6 h-6 rounded-full bg-status-warning/20 text-status-warning flex items-center justify-center text-xs font-bold leading-none shrink-0 z-10 border border-status-warning/30">3</div>
-                  <div>
-                    <h4 className="text-sm font-semibold text-text-primary" style={{ marginTop: '3px' }}>Get alerts</h4>
-                    <p className="text-xs text-text-muted mt-0.5">Never miss a payment again</p>
-                  </div>
-                </div>
+                ))}
               </div>
             </div>
           ) : (
@@ -420,27 +441,24 @@ export default function DashboardPage() {
               initial="hidden"
               animate="show"
               variants={containerVariants}
-              className="space-y-3"
+              className="space-y-2"
             >
-              {[...subscriptions].sort((a,b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 5).map(sub => (
+              {[...subscriptions].sort((a,b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 4).map(sub => (
                 <motion.div
                   key={sub.id}
                   variants={itemVariants}
-                  whileHover={{ x: 4 }}
-                  className="flex items-center justify-between p-3 rounded-xl hover:bg-bg-elevated transition-colors"
+                  className="flex items-center justify-between p-2 sm:p-2.5 rounded-lg sm:rounded-xl hover:bg-bg-elevated transition-colors"
                 >
-                  <div className="flex items-center gap-3">
-                    <ServiceLogo name={sub.name} size={36} color={sub.color || '#6C63FF'} />
-                    <div>
-                      <p className="text-sm font-medium text-text-primary">{sub.name}</p>
-                      <p className="text-xs text-text-muted">
-                        {sub.category ? (sub.category.charAt(0).toUpperCase() + sub.category.slice(1)) : 'Other'}
-                      </p>
+                  <div className="flex items-center gap-2 sm:gap-3">
+                    <ServiceLogo name={sub.name} size={isMobile ? 28 : 36} color={sub.color || '#6C63FF'} />
+                    <div className="min-w-0">
+                      <p className="text-[13px] font-bold text-text-primary truncate">{sub.name}</p>
+                      <p className="text-[10px] text-text-muted truncate capitalize">{sub.category || 'Other'}</p>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <p className="text-sm font-semibold text-text-primary">{sub.currency || '₹'}{sub.amount}</p>
-                    <StatusBadge status={sub.status} />
+                  <div className="shrink-0 text-right">
+                    <p className="text-[13px] font-black text-text-primary">{sub.currency || '₹'}{sub.amount}</p>
+                    <div className="scale-75 origin-right -mt-1"><StatusBadge status={sub.status} /></div>
                   </div>
                 </motion.div>
               ))}
@@ -453,44 +471,37 @@ export default function DashboardPage() {
 }
 
 function DashboardChecklist({ profile, subscriptions, onDismiss }) {
+  const isMobile = useIsMobile()
   const steps = [
-    { id: 'sub', label: 'Add your first subscription', done: subscriptions.length > 0 },
-    { id: 'budget', label: 'Set your monthly budget', done: Boolean(profile?.monthly_budget) },
-    { id: 'alerts', label: 'Enable renewal alerts', done: profile?.preferences?.email_alerts || profile?.preferences?.push_alerts },
-    { id: 'scanner', label: 'Connect email scanner', done: false },
-    { id: 'invite', label: 'Invite a teammate', done: false }
+    { id: 'sub', label: 'First Sub', done: subscriptions.length > 0 },
+    { id: 'budget', label: 'Budget', done: Boolean(profile?.monthly_budget) },
+    { id: 'alerts', label: 'Alerts', done: profile?.preferences?.email_alerts || profile?.preferences?.push_alerts },
+    { id: 'scanner', label: 'Scanner', done: false },
   ]
   
   const completedCount = steps.filter(s => s.done).length
 
   return (
-    <div className="card bg-gradient-to-r from-bg-surface to-bg-elevated/30 border-brand-purple/20 relative animate-fade-in my-6">
-      <button onClick={onDismiss} className="absolute top-4 right-4 p-1.5 text-text-muted hover:text-white bg-bg-elevated rounded-lg transition-colors">
-        <X size={16} />
+    <div className={`card bg-gradient-to-r from-brand-purple/10 to-transparent border-brand-purple/20 relative animate-fade-in ${isMobile ? 'my-2 p-3' : 'my-6 p-5'}`}>
+      <button onClick={onDismiss} className="absolute top-3 right-3 p-1 text-text-muted hover:text-white bg-bg-elevated rounded transition-colors">
+        <X size={14} />
       </button>
-      <div className="mb-4">
-        <h3 className="text-lg font-bold text-text-primary flex items-center gap-2">
-          <CheckSquare size={18} className="text-brand-purple" /> Get started with SubTrackr
+      <div className={`${isMobile ? 'mb-2' : 'mb-4'}`}>
+        <h3 className="text-sm sm:text-base font-bold text-text-primary flex items-center gap-2">
+          🚀 Get started
         </h3>
-        <p className="text-sm text-text-muted mt-1">{completedCount} of {steps.length} tasks completed</p>
-        
-        <div className="h-1.5 w-full bg-border rounded-full overflow-hidden mt-3 max-w-sm">
-          <div 
-            className="h-full bg-gradient-to-r from-brand-purple to-brand-teal transition-all duration-500 ease-out" 
-            style={{ width: `${(completedCount / steps.length) * 100}%` }}
-          />
-        </div>
+        <p className="text-[10px] sm:text-xs text-text-muted mt-0.5">{completedCount} of {steps.length} done</p>
       </div>
       
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+      <div className={`grid ${isMobile ? 'grid-cols-2 gap-2' : 'grid-cols-4 gap-3'}`}>
         {steps.map((step) => (
-          <div key={step.id} className="flex items-center gap-3 p-3 rounded-xl bg-bg-elevated/50 border border-border">
+          <div key={step.id} className="flex items-center gap-2 p-2 rounded-lg bg-bg-elevated/50 border border-border">
             {step.done ? (
-              <CheckSquare size={18} className="text-brand-teal shrink-0" />
+              <CheckSquare size={14} className="text-brand-teal shrink-0" />
             ) : (
-              <Square size={18} className="text-text-muted/50 shrink-0" />
+              <Square size={14} className="text-text-muted/50 shrink-0" />
             )}
-            <span className={`text-sm ${step.done ? 'text-text-muted line-through' : 'text-text-primary font-medium'}`}>
+            <span className={`text-[10px] sm:text-xs truncate ${step.done ? 'text-text-muted line-through font-normal' : 'text-text-primary font-bold'}`}>
               {step.label}
             </span>
           </div>

@@ -11,6 +11,7 @@ import { Sparkles, RefreshCw, TrendingUp, DollarSign, AlertTriangle } from 'luci
 import toast from 'react-hot-toast'
 import { SkeletonAnalytics, SkeletonBox } from '../../components/Skeleton'
 import { EmptyInsights } from '../../components/EmptyState'
+import { useIsMobile } from '../../hooks/useIsMobile'
 
 const COLORS = ['#6C63FF', '#3ECFCF', '#FFD700', '#FF6363', '#4CFF8F', '#FF63B3', '#63B3FF', '#FF9F63']
 
@@ -39,6 +40,7 @@ export default function AnalyticsPage() {
   const [insights, setInsights] = useState([])
   const [insightsLoading, setInsightsLoading] = useState(false)
 
+  const isMobile = useIsMobile()
   useEffect(() => {
     document.title = 'Analytics — SubTrackr'
   }, [])
@@ -103,23 +105,23 @@ export default function AnalyticsPage() {
   const totalSavings = insights.reduce((sum, i) => sum + (i.saving_amount || 0), 0)
 
   return (
-    <div className="space-y-8 animate-fade-in">
+    <div className={`${isMobile ? 'space-y-4' : 'space-y-8'} animate-fade-in`}>
       <div>
-        <h1 className="text-3xl font-bold text-text-primary">Analytics</h1>
-        <p className="text-text-muted mt-1">Deep dive into your subscription spending</p>
+        <h1 className={`${isMobile ? 'text-2xl' : 'text-3xl'} font-black text-text-primary tracking-tight`}>Analytics</h1>
+        <p className="text-text-muted text-[11px] sm:text-sm font-bold uppercase tracking-widest mt-0.5">Subscription insights</p>
       </div>
 
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="card lg:col-span-2">
-          <h2 className="text-lg font-semibold text-text-primary mb-6">Monthly Spending Trend</h2>
-          <ResponsiveContainer width="100%" height={220}>
-            <BarChart data={trendData} barSize={36}>
+        <div className="card lg:col-span-2 p-4 sm:p-5">
+          <h2 className="text-sm sm:text-lg font-bold text-text-primary mb-6 uppercase tracking-tight">Spending Trend</h2>
+          <ResponsiveContainer width="100%" height={isMobile ? 180 : 220}>
+            <BarChart data={trendData} barSize={isMobile ? 24 : 36}>
               <CartesianGrid strokeDasharray="3 3" stroke="#1E1E2E" vertical={false} />
-              <XAxis dataKey="month" tick={{ fill: '#666680', fontSize: 12 }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fill: '#666680', fontSize: 12 }} axisLine={false} tickLine={false} tickFormatter={v => `${currencySymbol}${v}`} />
+              <XAxis dataKey="month" tick={{ fill: '#666680', fontSize: 10 }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fill: '#666680', fontSize: 10 }} axisLine={false} tickLine={false} tickFormatter={v => `${currencySymbol}${v}`} />
               <Tooltip content={<CustomTooltip currencySymbol={currencySymbol} />} />
-              <Bar dataKey="amount" fill="url(#barGrad2)" radius={[6, 6, 0, 0]} />
+              <Bar dataKey="amount" fill="url(#barGrad2)" radius={[4, 4, 0, 0]} />
               <defs>
                 <linearGradient id="barGrad2" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="0%" stopColor="#6C63FF" />
@@ -130,28 +132,28 @@ export default function AnalyticsPage() {
           </ResponsiveContainer>
         </div>
 
-        <div className="card">
-          <h2 className="text-lg font-semibold text-text-primary mb-4">Spending by Category</h2>
+        <div className="card p-4 sm:p-5">
+          <h2 className="text-sm sm:text-lg font-bold text-text-primary mb-4 uppercase tracking-tight">By Category</h2>
           {categoryData.length === 0 ? (
-            <div className="h-48 flex items-center justify-center text-text-muted text-sm">No data yet</div>
+            <div className="h-48 flex items-center justify-center text-text-muted text-xs uppercase font-bold italic tracking-wide">No data yet</div>
           ) : (
             <>
-              <ResponsiveContainer width="100%" height={180}>
+              <ResponsiveContainer width="100%" height={isMobile ? 150 : 180}>
                 <PieChart>
-                  <Pie data={categoryData} cx="50%" cy="50%" innerRadius={50} outerRadius={75} paddingAngle={4} dataKey="value">
+                  <Pie data={categoryData} cx="50%" cy="50%" innerRadius={isMobile ? 40 : 50} outerRadius={isMobile ? 65 : 75} paddingAngle={4} dataKey="value">
                     {categoryData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
                   </Pie>
                   <Tooltip formatter={v => [`${currencySymbol}${v.toFixed(2)}/mo`]} contentStyle={{ background: '#13131F', border: '1px solid #1E1E2E', borderRadius: '12px', color: '#E8E8F0' }} />
                 </PieChart>
               </ResponsiveContainer>
-              <div className="space-y-2">
-                {categoryData.slice(0, 5).map((item, i) => (
+              <div className="space-y-1 mt-2">
+                {categoryData.slice(0, 4).map((item, i) => (
                   <div key={item.name} className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <div className="w-2.5 h-2.5 rounded-full" style={{ background: COLORS[i % COLORS.length] }} />
-                      <span className="text-xs text-text-secondary">{item.name}</span>
+                      <div className="w-2 h-2 rounded-full" style={{ background: COLORS[i % COLORS.length] }} />
+                      <span className="text-[11px] font-bold text-text-secondary truncate max-w-[80px]">{item.name}</span>
                     </div>
-                    <span className="text-xs font-semibold text-text-primary">{currencySymbol}{item.value.toFixed(0)}/mo</span>
+                    <span className="text-[11px] font-black text-text-primary">{currencySymbol}{item.value.toFixed(0)}</span>
                   </div>
                 ))}
               </div>
@@ -161,58 +163,61 @@ export default function AnalyticsPage() {
       </div>
 
       {/* AI Insights Panel */}
-      <div className="card">
-        <div className="flex items-center justify-between mb-6">
+      <div className={`card ${isMobile ? 'p-4' : 'p-6'}`}>
+        <div className={`flex ${isMobile ? 'flex-col gap-4' : 'items-center justify-between mb-6'}`}>
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl flex items-center justify-center"
+            <div className={`${isMobile ? 'w-8 h-8' : 'w-10 h-10'} rounded-lg sm:rounded-xl flex items-center justify-center`}
               style={{ background: 'linear-gradient(135deg, rgba(108,99,255,0.2), rgba(62,207,207,0.2))', border: '1px solid rgba(108,99,255,0.4)' }}>
-              <Sparkles size={18} className="text-brand-purple" />
+              <Sparkles size={isMobile ? 15 : 18} className="text-brand-purple" />
             </div>
             <div>
-              <h2 className="text-lg font-semibold text-text-primary">AI Spending Insights</h2>
-              <p className="text-text-muted text-xs">Powered by GPT-4o-mini</p>
+              <h2 className="text-base sm:text-lg font-bold text-text-primary tracking-tight">AI Insights</h2>
+              <p className="text-[10px] text-text-muted uppercase font-black tracking-widest leading-none mt-0.5">GPT-4o</p>
             </div>
           </div>
           {isPro && (
-            <button onClick={generateInsights} disabled={insightsLoading}
-              className="btn-secondary flex items-center gap-2 text-sm">
-              <RefreshCw size={15} className={insightsLoading ? 'animate-spin' : ''} />
+            <button 
+              onClick={generateInsights} 
+              disabled={insightsLoading}
+              className={`flex items-center justify-center gap-2 text-xs font-black uppercase tracking-wider py-2 px-4 rounded-xl transition-all ${insightsLoading ? 'bg-bg-elevated text-text-muted cursor-not-allowed' : 'bg-brand-purple/10 text-brand-purple border border-brand-purple/30 hover:bg-brand-purple/20'}`}
+            >
+              <RefreshCw size={14} className={insightsLoading ? 'animate-spin' : ''} />
               {insightsLoading ? 'Analyzing...' : 'Generate Insights'}
             </button>
           )}
         </div>
 
         {!isPro ? (
-          <ProGate feature="AI spending insights" />
+          <div className="mt-6"><ProGate feature="AI spending insights" /></div>
         ) : insightsLoading ? (
-          <div className="space-y-4">
+          <div className="space-y-4 mt-6">
              <SkeletonBox width="100%" height="80px" borderRadius={12} />
              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                {[...Array(3)].map((_, i) => (
-                 <div key={i} className="p-5 rounded-xl border border-border bg-bg-elevated space-y-3">
+                 <div key={i} className="p-4 rounded-xl border border-border bg-bg-elevated space-y-3">
                    <div className="flex gap-3">
-                     <SkeletonBox width="36px" height="36px" borderRadius={10} />
+                     <SkeletonBox width="30px" height="30px" borderRadius={8} />
                      <div className="flex-1 space-y-2">
-                       <SkeletonBox width="50%" height="12px" />
-                       <SkeletonBox width="70%" height="16px" />
+                       <SkeletonBox width="50%" height="10px" />
+                       <SkeletonBox width="80%" height="14px" />
                      </div>
                    </div>
-                   <SkeletonBox width="100%" height="40px" />
+                   <SkeletonBox width="100%" height="30px" />
                  </div>
                ))}
              </div>
           </div>
         ) : insights.length === 0 ? (
-          <EmptyInsights onGenerateClick={generateInsights} />
+          <div className="mt-2"><EmptyInsights onGenerateClick={generateInsights} /></div>
         ) : (
-          <>
+          <div className="mt-6">
             {totalSavings > 0 && (
               <div className="mb-6 p-4 rounded-xl border border-status-savings/30"
                 style={{ background: 'rgba(76,255,143,0.05)' }}>
-                <p className="text-status-savings font-bold text-lg">
-                  💰 Total potential savings: {currencySymbol}{convert(totalSavings, '₹', displayCurrency).toFixed(2)}/month
+                <p className="text-status-savings font-black text-base sm:text-lg tracking-tight">
+                  💰 Savings: {currencySymbol}{convert(totalSavings, '₹', displayCurrency).toFixed(0)}/mo
                 </p>
-                <p className="text-text-muted text-sm">That's {currencySymbol}{(convert(totalSavings, '₹', displayCurrency) * 12).toFixed(0)} per year!</p>
+                <p className="text-text-muted text-[10px] uppercase font-bold tracking-widest mt-0.5">That's {currencySymbol}{(convert(totalSavings, '₹', displayCurrency) * 12).toFixed(0)} per year!</p>
               </div>
             )}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -220,30 +225,30 @@ export default function AnalyticsPage() {
                 const Icon = INSIGHT_ICONS[insight.type] || Sparkles
                 const color = INSIGHT_COLORS[insight.type] || '#6C63FF'
                 return (
-                  <div key={i} className="p-5 rounded-xl border border-border bg-bg-elevated">
-                    <div className="flex items-start gap-3 mb-3">
-                      <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
-                        style={{ background: `${color}18`, border: `1px solid ${color}30` }}>
-                        <Icon size={16} style={{ color }} />
+                  <div key={i} className="p-4 rounded-xl border border-border bg-bg-elevated/40">
+                    <div className="flex items-start gap-3 mb-2">
+                      <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
+                        style={{ background: `${color}12`, border: `1px solid ${color}25` }}>
+                        <Icon size={14} style={{ color }} />
                       </div>
-                      <div>
-                        <span className="text-xs font-semibold uppercase tracking-wider" style={{ color }}>
+                      <div className="min-w-0">
+                        <span className="text-[9px] font-black uppercase tracking-widest" style={{ color }}>
                           {insight.type}
                         </span>
-                        <p className="text-sm font-semibold text-text-primary mt-0.5">{insight.title}</p>
+                        <p className="text-[13px] font-bold text-text-primary mt-0.5 truncate">{insight.title}</p>
                       </div>
                     </div>
-                    <p className="text-xs text-text-muted mb-3">{insight.explanation}</p>
+                    <p className="text-[11px] text-text-secondary leading-relaxed mb-3 line-clamp-3">{insight.explanation}</p>
                     {insight.saving_amount > 0 && (
-                      <p className="text-status-savings text-sm font-bold">
-                        Save {currencySymbol}{convert(insight.saving_amount, '₹', displayCurrency).toFixed(2)}/mo
-                      </p>
+                      <div className="pt-2 border-t border-border/40 font-black text-[12px] text-status-savings italic">
+                        SAVE {currencySymbol}{convert(insight.saving_amount, '₹', displayCurrency).toFixed(0)}/MO
+                      </div>
                     )}
                   </div>
                 )
               })}
             </div>
-          </>
+          </div>
         )}
       </div>
     </div>

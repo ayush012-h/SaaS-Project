@@ -18,6 +18,7 @@ import { Download, History, Tag as TagIcon, FileText } from 'lucide-react'
 import { saveAs } from 'file-saver'
 import jsPDF from 'jspdf'
 import 'jspdf-autotable'
+import { useIsMobile } from '../../hooks/useIsMobile'
 
 const CATEGORIES = ['All', 'Entertainment', 'Productivity', 'Health & Fitness', 'News & Media',
   'Cloud Storage', 'Gaming', 'Education', 'Finance', 'Music', 'Design', 'Developer Tools', 'Other']
@@ -29,6 +30,7 @@ export default function SubscriptionsPage() {
   useEffect(() => {
     document.title = 'My Subscriptions — SubTrackr'
   }, [])
+  const isMobile = useIsMobile()
   const [search, setSearch] = useState('')
   const [category, setCategory] = useState('All')
   const [addOpen, setAddOpen] = useState(false)
@@ -133,34 +135,32 @@ export default function SubscriptionsPage() {
   }
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className={`${isMobile ? 'space-y-4' : 'space-y-6'} animate-fade-in`}>
       {/* Header */}
-      <div className="flex items-center justify-between flex-wrap gap-4">
+      <div className="flex items-center justify-between flex-wrap gap-3 sm:gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-text-primary">Subscriptions</h1>
-          <p className="text-text-muted mt-1">
+          <h1 className={`${isMobile ? 'text-2xl' : 'text-3xl'} font-black text-text-primary tracking-tight`}>Subscriptions</h1>
+          <p className="text-text-muted text-[11px] sm:text-sm font-bold uppercase tracking-widest mt-0.5">
             {subscriptions.length} total
-            {!isPro && <span className="ml-2 text-status-warning">{subscriptions.length}/{FREE_LIMIT} free</span>}
+            {!isPro && <span className="ml-2 text-status-warning/80">{subscriptions.length}/{FREE_LIMIT}</span>}
           </p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
           <div className="relative">
             <button
               onClick={() => isPro ? setShowExportOptions(!showExportOptions) : null}
-              className={`btn-secondary flex items-center gap-2 ${!isPro ? 'opacity-50 cursor-not-allowed' : ''}`}
+              className={`p-2 sm:px-4 sm:py-2 rounded-xl flex items-center gap-2 border border-border bg-bg-elevated/50 text-text-primary hover:bg-bg-hover transition-colors ${!isPro ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
-              <Download size={18} />
-              Export
+              <Download size={isMobile ? 16 : 18} />
+              {!isMobile && <span className="text-sm font-bold italic tracking-wide">Export</span>}
             </button>
             {showExportOptions && isPro && (
               <div className="absolute right-0 mt-2 w-48 bg-bg-elevated border border-border rounded-xl shadow-xl z-20 overflow-hidden animate-slide-up">
-                <button onClick={handleExportCSV} className="w-full text-left px-4 py-3 text-sm text-text-primary hover:bg-bg-hover flex items-center gap-2 border-b border-border">
-                  <FileText size={16} className="text-brand-purple" />
-                  Export as CSV
+                <button onClick={handleExportCSV} className="w-full text-left px-4 py-3 text-sm text-text-primary hover:bg-bg-hover flex items-center gap-2 border-b border-border font-bold italic">
+                  <FileText size={16} className="text-brand-purple" /> CSV Export
                 </button>
-                <button onClick={handleExportPDF} className="w-full text-left px-4 py-3 text-sm text-text-primary hover:bg-bg-hover flex items-center gap-2">
-                  <CreditCard size={16} className="text-brand-teal" />
-                  Export as PDF
+                <button onClick={handleExportPDF} className="w-full text-left px-4 py-3 text-sm text-text-primary hover:bg-bg-hover flex items-center gap-2 font-bold italic">
+                  <CreditCard size={16} className="text-brand-teal" /> PDF Export
                 </button>
               </div>
             )}
@@ -172,9 +172,10 @@ export default function SubscriptionsPage() {
           </div>
           <button
             onClick={() => canAdd ? setAddOpen(true) : redirectToCheckout()}
-            className="btn-primary flex items-center gap-2">
-            <Plus size={18} />
-            Add Subscription
+            className="p-2 sm:px-4 sm:py-2.5 rounded-xl bg-gradient-to-r from-brand-purple to-brand-teal text-white shadow-lg hover:opacity-90 transition-all flex items-center gap-2 border-none cursor-pointer"
+          >
+            <Plus size={isMobile ? 18 : 18} strokeWidth={3} />
+            <span className={`${isMobile ? 'hidden sm:inline' : ''} text-sm font-black uppercase tracking-tight`}>Add New</span>
           </button>
         </div>
       </div>
@@ -182,20 +183,24 @@ export default function SubscriptionsPage() {
       {isPro && <DuplicateDetector userPlan="pro" isEmbedded={true} />}
 
       {/* Filters */}
-      <div className="card p-4 space-y-4">
+      <div className={`card ${isMobile ? 'p-3' : 'p-4'} space-y-4`}>
         <div className="relative">
-          <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-text-muted" />
-          <input className="input pl-10" placeholder="Search subscriptions..." value={search}
-            onChange={e => setSearch(e.target.value)} />
+          <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-text-muted" />
+          <input 
+            className={`w-full bg-bg-elevated border border-border rounded-xl text-text-primary outline-none focus:border-brand-purple/50 transition-all ${isMobile ? 'py-2 px-9 text-sm' : 'py-2.5 px-10'}`} 
+            placeholder="Search subscriptions..." 
+            value={search}
+            onChange={e => setSearch(e.target.value)} 
+          />
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className={`flex items-center gap-2 overflow-x-auto no-scrollbar py-1 -mx-1 px-1`}>
           {CATEGORIES.map(cat => (
             <button key={cat}
               onClick={() => setCategory(cat)}
-              className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all duration-200 ${
+              className={`px-3 py-1.5 rounded-full text-[10px] sm:text-xs font-black uppercase tracking-wider transition-all duration-200 shrink-0 border border-transparent ${
                 category === cat
-                  ? 'text-white shadow-glow-purple'
-                  : 'bg-bg-elevated text-text-muted border border-border hover:border-brand-purple/40'
+                  ? 'text-white shadow-glow-purple border-brand-purple/30'
+                  : 'bg-bg-elevated/60 text-text-muted hover:text-text-primary border-border/60 hover:border-brand-purple/40'
               }`}
               style={category === cat ? { background: 'linear-gradient(135deg, #6C63FF, #3ECFCF)' } : {}}>
               {cat}
@@ -204,19 +209,71 @@ export default function SubscriptionsPage() {
         </div>
       </div>
 
-      {/* Table */}
-      <div className="card p-0 overflow-hidden">
+      {/* Content */}
+      <div className={isMobile ? "space-y-3" : "card p-0 overflow-hidden"}>
         {loading ? (
           <div className="divide-y divide-border">
             {[...Array(6)].map((_, i) => <SkeletonSubscriptionRow key={i} />)}
           </div>
         ) : filtered.length === 0 ? (
-          search || category !== 'All' ? (
-            <EmptySearch searchTerm={search || category} onClearSearch={() => { setSearch(''); setCategory('All'); }} />
-          ) : (
-            <EmptySubscriptions onAddClick={() => setAddOpen(true)} />
-          )
+          <div className="card">
+            {search || category !== 'All' ? (
+              <EmptySearch searchTerm={search || category} onClearSearch={() => { setSearch(''); setCategory('All'); }} />
+            ) : (
+              <EmptySubscriptions onAddClick={() => setAddOpen(true)} />
+            )}
+          </div>
+        ) : isMobile ? (
+          /* Mobile Card List */
+          filtered.map(sub => (
+            <motion.div
+              layout
+              key={sub.id}
+              onClick={() => setSelectedSub(sub)}
+              className="card p-3 flex flex-col gap-3 relative overflow-hidden"
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="relative">
+                    <ServiceLogo name={sub.name} size={40} color={sub.color || '#6C63FF'} />
+                    <div className="absolute -bottom-1 -right-1">
+                      <StatusBadge status={sub.status} />
+                    </div>
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[15px] font-black tracking-tight text-text-primary truncate">{sub.name}</p>
+                    <p className="text-[10px] text-text-muted font-bold uppercase tracking-widest">{sub.category || 'Other'}</p>
+                  </div>
+                </div>
+                <div className="text-right shrink-0">
+                  <p className="text-lg font-black text-brand-teal line-clamp-1">{sub.currency || '₹'}{Number(sub.amount).toFixed(0)}</p>
+                  <p className="text-[9px] text-text-muted font-black uppercase tracking-tighter -mt-1">{sub.billing_cycle}</p>
+                </div>
+              </div>
+              
+              <div className="flex items-center justify-between pt-2 border-t border-border/40">
+                <div className="flex flex-wrap gap-1">
+                  {sub.tags?.slice(0, 2).map(tag => (
+                    <span key={tag} className="px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-tighter bg-brand-purple/10 text-brand-purple border border-brand-purple/20">
+                      #{tag}
+                    </span>
+                  ))}
+                  {sub.tags?.length > 2 && <span className="text-[9px] text-text-muted italic px-1">+{sub.tags.length - 2}</span>}
+                </div>
+                <div className="flex items-center gap-1.5 text-text-muted">
+                  <Calendar size={12} strokeWidth={2.5} />
+                  <span className="text-[10px] font-black uppercase tracking-tighter">
+                    {sub.next_renewal_date ? format(new Date(sub.next_renewal_date), 'MMM d') : 'NO DATE'}
+                  </span>
+                </div>
+              </div>
+
+              {/* Decorative accent */}
+              <div className="absolute top-0 right-0 w-12 h-12 bg-gradient-to-bl from-brand-purple/5 to-transparent pointer-events-none" />
+            </motion.div>
+          ))
         ) : (
+          /* Desktop Table */
           <table className="w-full">
             <thead>
               <tr className="border-b border-border bg-bg-elevated/50">
@@ -251,8 +308,8 @@ export default function SubscriptionsPage() {
                       </div>
                     </div>
                   </td>
-                  <td className="table-cell text-text-secondary">
-                    {sub.category ? (sub.category.charAt(0).toUpperCase() + sub.category.slice(1)) : '—'}
+                  <td className="table-cell text-text-secondary capitalize">
+                    {sub.category || 'Other'}
                   </td>
                   <td className="table-cell font-semibold text-text-primary">{sub.currency || '₹'}{Number(sub.amount).toFixed(2)}</td>
                   <td className="table-cell text-text-secondary capitalize">{sub.billing_cycle}</td>
