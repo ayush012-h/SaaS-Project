@@ -26,7 +26,6 @@ import YearlyReport from './pages/YearlyReport'
 import DuplicateDetector from './pages/DuplicateDetector'
 import CalendarView from './pages/CalendarView'
 import Export from './pages/Export'
-import FeedbackWidget from './components/FeedbackWidget'
 import PageTransition, { AnimatePresence } from './components/PageTransition'
 import { useLocation } from 'react-router-dom'
 
@@ -105,7 +104,6 @@ function App() {
             <div style={{ color: 'white' }}>
               <Toaster position="top-right" />
               <AppRoutes />
-              <FeedbackWidget />
             </div>
           </UserProvider>
         </AuthProvider>

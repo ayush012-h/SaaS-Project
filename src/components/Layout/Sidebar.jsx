@@ -2,7 +2,8 @@ import { NavLink, useNavigate } from 'react-router-dom'
 import {
   LayoutDashboard, CreditCard, BarChart3, Bell,
   ScanText, Settings, LogOut, Zap, TrendingUp, HelpCircle,
-  Menu, ChevronUp, Lock, User as UserIcon
+  Menu, ChevronUp, Lock, User as UserIcon, Crown,
+  Calendar, FileText, Copy, MessageSquare
 } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -14,19 +15,24 @@ import { redirectToCheckout } from '../../lib/razorpay'
 import { useUser } from '../../context/UserContext'
 import Avatar from '../Avatar'
 
-const navItems = [
-  { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-  { to: '/subscriptions', icon: CreditCard, label: 'Subscriptions' },
-  { to: '/analytics', icon: BarChart3, label: 'Analytics' },
-  { to: '/alerts', icon: Bell, label: 'Alerts' },
-  { to: '/scanner', icon: ScanText, label: 'Email Scanner', pro: true },
-  { to: '/cancel-guide', icon: HelpCircle, label: 'Cancel Guide', pro: true },
-  { to: '/budget', icon: CreditCard, label: 'Budget', pro: true },
-  { to: '/yearly-report', icon: BarChart3, label: 'Yearly Report', pro: true },
-  { to: '/duplicate-detector', icon: ScanText, label: 'Duplicate Detector', pro: true },
-  { to: '/calendar-view', icon: LayoutDashboard, label: 'Calendar View', pro: true },
-  { to: '/export', icon: LayoutDashboard, label: 'Export', pro: true },
-  { to: '/settings', icon: Settings, label: 'Settings' },
+// Main nav — shown to all users
+const mainNavItems = [
+  { to: '/dashboard',     icon: LayoutDashboard, label: 'Dashboard' },
+  { to: '/subscriptions', icon: CreditCard,       label: 'Subscriptions' },
+  { to: '/analytics',     icon: BarChart3,        label: 'Analytics' },
+  { to: '/alerts',        icon: Bell,             label: 'Alerts' },
+  { to: '/settings',      icon: Settings,         label: 'Settings' },
+]
+
+// Pro nav — shown in a separate section
+const proNavItems = [
+  { to: '/scanner',            icon: ScanText,        label: 'Email Scanner' },
+  { to: '/cancel-guide',       icon: HelpCircle,      label: 'Cancel Guide' },
+  { to: '/budget',             icon: TrendingUp,      label: 'Budget' },
+  { to: '/yearly-report',      icon: BarChart3,       label: 'Yearly Report' },
+  { to: '/duplicate-detector', icon: Copy,            label: 'Duplicates' },
+  { to: '/calendar-view',      icon: Calendar,        label: 'Calendar View' },
+  { to: '/export',             icon: FileText,        label: 'Export' },
 ]
 
 function Tooltip({ children, content, isCollapsed }) {
@@ -51,6 +57,28 @@ function Tooltip({ children, content, isCollapsed }) {
   )
 }
 
+// Thin wrapper that shows FeedbackWidget as a centered modal
+import FeedbackWidget from '../FeedbackWidget'
+function FeedbackModal({ onClose }) {
+  return (
+    <>
+      <div
+        onClick={onClose}
+        style={{
+          position: 'fixed', inset: 0, zIndex: 9998,
+          background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(4px)',
+        }}
+      />
+      <div style={{
+        position: 'fixed', top: '50%', left: '50%', zIndex: 9999,
+        transform: 'translate(-50%, -50%)',
+      }}>
+        <FeedbackWidget _asModal onModalClose={onClose} />
+      </div>
+    </>
+  )
+}
+
 export default function Sidebar({ style, isCollapsed, setIsCollapsed }) {
   const { user, signOut } = useAuth()
   const { profile, isPro } = useUser()
@@ -58,6 +86,7 @@ export default function Sidebar({ style, isCollapsed, setIsCollapsed }) {
   const navigate = useNavigate()
   const [helpOpen, setHelpOpen] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
+  const [feedbackOpen, setFeedbackOpen] = useState(false)
   const menuRef = useRef(null)
 
   useEffect(() => {
@@ -106,9 +135,11 @@ export default function Sidebar({ style, isCollapsed, setIsCollapsed }) {
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 p-3 space-y-1 overflow-y-auto custom-scrollbar overflow-x-hidden">
-        {navItems.map(({ to, icon: Icon, label, pro }) => (
-          <Tooltip key={to} content={pro && !isPro ? 'Upgrade to Pro' : label} isCollapsed={isCollapsed}>
+      <nav className="flex-1 p-3 overflow-y-auto custom-scrollbar overflow-x-hidden" style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+
+        {/* ── Main nav items ── */}
+        {mainNavItems.map(({ to, icon: Icon, label }) => (
+          <Tooltip key={to} content={label} isCollapsed={isCollapsed}>
             <div>
               <NavLink
                 to={to}
@@ -116,10 +147,40 @@ export default function Sidebar({ style, isCollapsed, setIsCollapsed }) {
               >
                 <Icon size={isCollapsed ? 20 : 18} className="shrink-0" />
                 {!isCollapsed && <span className="truncate">{label}</span>}
-                {pro && !isPro && !isCollapsed && (
-                  <Lock size={14} className="ml-auto text-brand-purple opacity-70 shrink-0" />
+              </NavLink>
+            </div>
+          </Tooltip>
+        ))}
+
+        {/* ── Pro Features divider ── */}
+        {!isCollapsed ? (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '12px 4px 6px', marginTop: 4 }}>
+            <Crown size={11} style={{ color: '#FFD700', flexShrink: 0 }} />
+            <span style={{ fontSize: 10, fontWeight: 800, color: '#555570', textTransform: 'uppercase', letterSpacing: '0.08em', whiteSpace: 'nowrap' }}>
+              Pro Features
+            </span>
+            <div style={{ flex: 1, height: 1, background: '#1E1E2E' }} />
+          </div>
+        ) : (
+          <div style={{ margin: '8px 0', display: 'flex', justifyContent: 'center' }}>
+            <Crown size={12} style={{ color: '#FFD700', opacity: 0.6 }} />
+          </div>
+        )}
+
+        {/* ── Pro nav items ── */}
+        {proNavItems.map(({ to, icon: Icon, label }) => (
+          <Tooltip key={to} content={!isPro ? 'Upgrade to Pro' : label} isCollapsed={isCollapsed}>
+            <div>
+              <NavLink
+                to={to}
+                className={({ isActive }) => `flex items-center rounded-xl transition-all duration-200 ${isCollapsed ? 'justify-center p-3' : 'px-3 py-2.5 gap-3'} ${isActive ? 'bg-brand-purple/10 text-brand-purple font-semibold shadow-[inset_3px_0_0_#6C63FF]' : !isPro ? 'text-text-muted/40 hover:bg-bg-hover/50' : 'text-text-muted hover:bg-bg-hover hover:text-text-primary'}`}
+              >
+                <Icon size={isCollapsed ? 20 : 18} className="shrink-0" />
+                {!isCollapsed && <span className="truncate">{label}</span>}
+                {!isPro && !isCollapsed && (
+                  <Lock size={12} className="ml-auto text-brand-purple opacity-60 shrink-0" />
                 )}
-                {pro && !isPro && isCollapsed && (
+                {!isPro && isPro && isCollapsed && (
                   <div className="absolute top-2 right-2 w-2 h-2 rounded-full bg-brand-purple shadow-[0_0_6px_#6C63FF]" />
                 )}
               </NavLink>
@@ -189,8 +250,14 @@ export default function Sidebar({ style, isCollapsed, setIsCollapsed }) {
               <button onClick={() => { navigate('/settings'); setMenuOpen(false) }} className="w-full flex items-center gap-2 px-4 py-2 text-sm text-text-primary hover:bg-bg-hover transition-colors">
                 <UserIcon size={16} /> Profile
               </button>
-              <button onClick={() => { navigate('/settings'); setMenuOpen(false) }} className="w-full flex items-center gap-2 px-4 py-2 text-sm text-text-primary hover:bg-bg-hover transition-colors border-b border-border">
+              <button onClick={() => { navigate('/settings'); setMenuOpen(false) }} className="w-full flex items-center gap-2 px-4 py-2 text-sm text-text-primary hover:bg-bg-hover transition-colors">
                 <Settings size={16} /> Settings
+              </button>
+              <button
+                onClick={() => { setFeedbackOpen(true); setMenuOpen(false) }}
+                className="w-full flex items-center gap-2 px-4 py-2 text-sm text-text-primary hover:bg-bg-hover transition-colors border-b border-border"
+              >
+                <MessageSquare size={16} style={{ color: '#6C63FF' }} /> Send Feedback
               </button>
               <button onClick={handleSignOut} className="w-full flex items-center gap-2 px-4 py-2.5 text-sm font-semibold text-status-danger hover:bg-status-danger/10 transition-colors mt-1">
                 <LogOut size={16} /> Sign Out
@@ -202,6 +269,11 @@ export default function Sidebar({ style, isCollapsed, setIsCollapsed }) {
     </aside>
 
     <HelpPanel open={helpOpen} onClose={() => setHelpOpen(false)} />
+
+    {/* Feedback modal — triggered from user menu */}
+    {feedbackOpen && (
+      <FeedbackModal onClose={() => setFeedbackOpen(false)} />
+    )}
     </>
   )
 }

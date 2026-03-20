@@ -16,7 +16,7 @@ const FEEDBACK_TYPES = [
   { icon: '🙏', label: 'Request', value: 'request' },
 ]
 
-export default function FeedbackWidget({ darkMode = true }) {
+export default function FeedbackWidget({ darkMode = true, _asModal = false, onModalClose }) {
   const [isOpen, setIsOpen] = useState(false)
   const [step, setStep] = useState(1) // 1=type, 2=rating, 3=message, 4=success
   const [feedbackType, setFeedbackType] = useState(null)
@@ -44,6 +44,7 @@ export default function FeedbackWidget({ darkMode = true }) {
   function handleClose() {
     setIsOpen(false)
     setTimeout(resetWidget, 300)
+    if (onModalClose) onModalClose()
   }
 
   async function handleSubmit() {
@@ -105,40 +106,42 @@ export default function FeedbackWidget({ darkMode = true }) {
 
   return (
     <>
-      {/* Floating Trigger Button */}
-      <button
-        onClick={() => setIsOpen(true)}
-        style={{
-          position: 'fixed',
-          top: 24,
-          right: 32,
-          zIndex: 1000,
-          background: 'linear-gradient(135deg, #6C63FF, #3ECFCF)',
-          border: 'none',
-          borderRadius: 50,
-          padding: '12px 20px',
-          color: '#fff',
-          fontWeight: 700,
-          fontSize: 13,
-          cursor: 'pointer',
-          display: 'flex',
-          alignItems: 'center',
-          gap: 8,
-          boxShadow: '0 8px 32px rgba(108,99,255,0.4)',
-          transition: 'transform 0.2s, box-shadow 0.2s',
-        }}
-        onMouseEnter={e => {
-          e.currentTarget.style.transform = 'translateY(-2px)'
-          e.currentTarget.style.boxShadow = '0 12px 40px rgba(108,99,255,0.5)'
-        }}
-        onMouseLeave={e => {
-          e.currentTarget.style.transform = 'translateY(0)'
-          e.currentTarget.style.boxShadow = '0 8px 32px rgba(108,99,255,0.4)'
-        }}
-      >
-        <span style={{ fontSize: 16 }}>💬</span>
-        Feedback
-      </button>
+      {/* Floating Trigger Button — hidden when used as modal */}
+      {!_asModal && (
+        <button
+          onClick={() => setIsOpen(true)}
+          style={{
+            position: 'fixed',
+            top: 24,
+            right: 32,
+            zIndex: 1000,
+            background: 'linear-gradient(135deg, #6C63FF, #3ECFCF)',
+            border: 'none',
+            borderRadius: 50,
+            padding: '12px 20px',
+            color: '#fff',
+            fontWeight: 700,
+            fontSize: 13,
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
+            boxShadow: '0 8px 32px rgba(108,99,255,0.4)',
+            transition: 'transform 0.2s, box-shadow 0.2s',
+          }}
+          onMouseEnter={e => {
+            e.currentTarget.style.transform = 'translateY(-2px)'
+            e.currentTarget.style.boxShadow = '0 12px 40px rgba(108,99,255,0.5)'
+          }}
+          onMouseLeave={e => {
+            e.currentTarget.style.transform = 'translateY(0)'
+            e.currentTarget.style.boxShadow = '0 8px 32px rgba(108,99,255,0.4)'
+          }}
+        >
+          <span style={{ fontSize: 16 }}>💬</span>
+          Feedback
+        </button>
+      )}
 
       {/* Backdrop */}
       {isOpen && (
@@ -155,13 +158,13 @@ export default function FeedbackWidget({ darkMode = true }) {
         />
       )}
 
-      {/* Widget Panel */}
-      {isOpen && (
+      {/* Widget Panel — always visible in modal mode */}
+      {(_asModal || isOpen) && (
         <div style={{
-          position: 'fixed',
-          top: 80,
-          right: 32,
-          zIndex: 1001,
+          position: _asModal ? 'relative' : 'fixed',
+          top: _asModal ? 'auto' : 80,
+          right: _asModal ? 'auto' : 32,
+          zIndex: _asModal ? 1 : 1001,
           width: 360,
           background: bg,
           border: `1px solid ${border}`,
