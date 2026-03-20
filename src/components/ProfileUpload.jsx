@@ -61,41 +61,42 @@ export default function ProfileUpload() {
     const loadingToast = toast.loading('Optimizing & uploading...')
     
     try {
-      // 1. Compress Image
-      const compressedBlob = await compressImage(file)
-      
-      // 2. Upload to Storage with Dual-Bucket Strategy
-      const fileName = `${profile.id}-v${Date.now()}.jpg`
-      let uploadError = null
-      let finalBucket = 'avatars'
-      
-      // Attempt 1: plural 'avatars'
-      const res1 = await supabase.storage.from('avatars').upload(fileName, compressedBlob, { upsert: true })
-      uploadError = res1.error
+      // 1. Get authenticated user's ID (used as folder for RLS)
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) throw new Error('Not authenticated')
 
-      // Attempt 2: 'avatars' retry with different upsert flag
-      if (uploadError && (uploadError.message.includes('not found') || uploadError.error === 'Bucket not found')) {
-         const res2 = await supabase.storage.from('avatars').upload(fileName, compressedBlob, { upsert: false })
-         uploadError = res2.error
-         finalBucket = 'avatars'
-      }
+      // 2. Compress Image
+      const compressedBlob = await compressImage(file)
+
+      // 3. Upload to Storage — path MUST be {userId}/filename to satisfy RLS:
+      //    policy: auth.uid()::text = (storage.foldername(name))[1]
+      const filePath = `${user.id}/avatar.jpg`   // overwrite in place each time
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(filePath, compressedBlob, {
+          upsert: true,          // overwrite existing avatar
+          contentType: 'image/jpeg',
+        })
 
       if (uploadError) throw uploadError
 
-      // 3. Get Public URL
+      // 4. Get Public URL
       const { data: { publicUrl } } = supabase.storage
-        .from(finalBucket)
-        .getPublicUrl(fileName)
+        .from('avatars')
+        .getPublicUrl(filePath)
 
-      // 4. Update Profile Table
-      await updateProfile({ avatar_url: publicUrl })
+      // Bust cache by appending a timestamp query param
+      const avatarUrl = `${publicUrl}?t=${Date.now()}`
+
+      // 5. Update Profile Table
+      await updateProfile({ avatar_url: avatarUrl })
       
       toast.dismiss(loadingToast)
-      toast.success('Identity verified! Profile updated ✨')
+      toast.success('Profile picture updated ✨')
     } catch (err) {
-      console.error('Upload flow failed:', err)
+      console.error('Upload failed:', err)
       toast.dismiss(loadingToast)
-      toast.error(err.message || 'Check storage permissions')
+      toast.error(err.message || 'Upload failed — check storage permissions')
     } finally {
       setUploading(false)
     }
