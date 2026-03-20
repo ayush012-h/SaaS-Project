@@ -1,6 +1,5 @@
-import { sendProUpgradeEmail } from './emails'
-
 import { supabase } from './supabase'
+import { sendProUpgradeEmail } from './emails'
 
 export async function redirectToCheckout() {
   try {
@@ -16,13 +15,20 @@ export async function redirectToCheckout() {
     const user = session?.user
     if (!user) throw new Error('Please login first')
 
-    // Create subscription order via your edge function
+    // Get user profile for name
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('full_name')
+      .eq('id', user.id)
+      .single()
+
+    // Create subscription order via edge function
     const { data, error: invokeError } = await supabase.functions.invoke('create-razorpay-order', {
       body: { user_id: user.id, email: user.email }
     })
 
     if (invokeError) throw new Error(invokeError.message || 'Failed to create order')
-    
+
     const { subscription_id } = data
     if (!subscription_id) throw new Error('No subscription ID returned')
 
@@ -41,16 +47,22 @@ export async function redirectToCheckout() {
         color: '#6C63FF'
       },
       handler: async function() {
-        // Payment successful
-        // Update user plan in Supabase
+        // ── PAYMENT SUCCESSFUL ──────────────────────────
+
+        // 1. Update user plan in Supabase
         await supabase
           .from('profiles')
           .update({ plan: 'pro' })
           .eq('id', user.id)
 
-        window.location.href = '/dashboard?upgraded=true'
-        await sendProUpgradeEmail(user.email, profile?.full_name || 'there')
+        // 2. Send Pro upgrade email (non-blocking)
+        sendProUpgradeEmail(
+          user.email,
+          profile?.full_name || 'there'
+        ).catch(console.error)
 
+        // 3. Redirect to dashboard
+        window.location.href = '/dashboard?upgraded=true'
       }
     }
 

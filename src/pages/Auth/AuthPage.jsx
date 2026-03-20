@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useAuth } from '../../contexts/AuthContext'
 import { useTheme } from '../../contexts/ThemeContext'
 import toast from 'react-hot-toast'
+import { sendWelcomeEmail } from '../../lib/emails'  // ← ADDED
 
 /* ─── Rotating taglines ─── */
 const QUOTES = [
@@ -209,6 +210,7 @@ export default function AuthPage({ initialMode = 'login' }) {
     return () => clearInterval(t)
   }, [])
 
+  // ── LOGIN ──────────────────────────────────────────────
   async function handleLogin(e) {
     e.preventDefault()
     setLoginLoading(true); setLoginErr(false)
@@ -222,6 +224,7 @@ export default function AuthPage({ initialMode = 'login' }) {
     } finally { setLoginLoading(false) }
   }
 
+  // ── REGISTER ───────────────────────────────────────────
   async function handleRegister(e) {
     e.preventDefault()
     if (regPass.length < 6) {
@@ -232,6 +235,11 @@ export default function AuthPage({ initialMode = 'login' }) {
     setRegLoading(true); setRegErr(false)
     try {
       await signUp(regEmail, regPass, regName)
+
+      // ── Send welcome email (non-blocking) ──────────── ADDED
+      sendWelcomeEmail(regEmail, regName).catch(console.error)
+      // ──────────────────────────────────────────────────
+
       toast.success('Account created! Check your email to confirm.')
       navigate('/dashboard')
     } catch (err) {
@@ -240,10 +248,27 @@ export default function AuthPage({ initialMode = 'login' }) {
     } finally { setRegLoading(false) }
   }
 
+  // ── GOOGLE ─────────────────────────────────────────────
   async function handleGoogle() {
     setGoogleLoad(true)
-    try { await signInWithGoogle() }
-    catch (err) { toast.error(err.message || 'Google login failed'); setGoogleLoad(false) }
+    try {
+      const result = await signInWithGoogle()
+
+      // ── Send welcome email for new Google signups ──── ADDED
+      if (result?.user) {
+        const googleName =
+          result.user.user_metadata?.full_name ||
+          result.user.user_metadata?.name ||
+          result.user.email?.split('@')[0] ||
+          'there'
+        sendWelcomeEmail(result.user.email, googleName).catch(console.error)
+      }
+      // ──────────────────────────────────────────────────
+
+    } catch (err) {
+      toast.error(err.message || 'Google login failed')
+      setGoogleLoad(false)
+    }
   }
 
   const isLogin = mode === 'login'
