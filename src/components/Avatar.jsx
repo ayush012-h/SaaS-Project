@@ -11,8 +11,8 @@ export default function Avatar({
   overlayText = "Change",
   isPro = false
 }) {
-  const initials = name
-    ? name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
+  const initials = typeof name === 'string' && name.trim()
+    ? name.split(' ').map(n => n?.[0] || '').join('').toUpperCase().slice(0, 2)
     : '?'
 
   const containerStyle = {

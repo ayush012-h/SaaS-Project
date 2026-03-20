@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
-import { Plus, Search, Pencil, Trash2, Filter, CreditCard, ChevronRight } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { Plus, Search, Pencil, Trash2, Filter, CreditCard, ChevronRight, Calendar } from 'lucide-react'
 import { useSubscriptions } from '../../hooks/useSubscriptions'
 import { useAuth } from '../../contexts/AuthContext'
 import StatusBadge from '../../components/UI/StatusBadge'
@@ -24,7 +25,7 @@ const CATEGORIES = ['All', 'Entertainment', 'Productivity', 'Health & Fitness', 
   'Cloud Storage', 'Gaming', 'Education', 'Finance', 'Music', 'Design', 'Developer Tools', 'Other']
 
 export default function SubscriptionsPage() {
-  const { subscriptions, loading, addSubscription, updateSubscription, deleteSubscription } = useSubscriptions()
+  const { subscriptions, loading, error, addSubscription, updateSubscription, deleteSubscription } = useSubscriptions()
   const { isPro } = useAuth()
 
   useEffect(() => {
@@ -45,8 +46,9 @@ export default function SubscriptionsPage() {
   const filtered = subscriptions
     .filter(s => category === 'All' || s.category?.toLowerCase() === category?.toLowerCase())
     .filter(s => {
-      const matchesSearch = s.name.toLowerCase().includes(search.toLowerCase()) || 
-                           (s.tags && s.tags.some(t => t.toLowerCase().includes(search.toLowerCase())))
+      const sName = s.name || ''
+      const matchesSearch = sName.toLowerCase().includes(search.toLowerCase()) || 
+                           (Array.isArray(s.tags) && s.tags.some(t => t?.toLowerCase?.().includes(search.toLowerCase())))
       return matchesSearch
     })
 
@@ -258,12 +260,12 @@ export default function SubscriptionsPage() {
               
               <div className="flex items-center justify-between pt-2 border-t border-border/40">
                 <div className="flex flex-wrap gap-1">
-                  {sub.tags?.slice(0, 2).map(tag => (
+                  {Array.isArray(sub.tags) && sub.tags.slice(0, 2).map(tag => (
                     <span key={tag} className="px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-tighter bg-brand-purple/10 text-brand-purple border border-brand-purple/20">
                       #{tag}
                     </span>
                   ))}
-                  {sub.tags?.length > 2 && <span className="text-[9px] text-text-muted italic px-1">+{sub.tags.length - 2}</span>}
+                  {Array.isArray(sub.tags) && sub.tags.length > 2 && <span className="text-[9px] text-text-muted italic px-1">+{sub.tags.length - 2}</span>}
                 </div>
                 <div className="flex items-center gap-1.5 text-text-muted">
                   <Calendar size={12} strokeWidth={2.5} />
@@ -304,7 +306,7 @@ export default function SubscriptionsPage() {
                       <div>
                         <p className="font-medium text-text-primary">{sub.name}</p>
                         <div className="flex flex-wrap gap-1 mt-1">
-                          {sub.tags?.map(tag => (
+                          {Array.isArray(sub.tags) && sub.tags.map(tag => (
                             <span key={tag} className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-brand-purple/10 text-brand-purple border border-brand-purple/20">
                               {tag}
                             </span>

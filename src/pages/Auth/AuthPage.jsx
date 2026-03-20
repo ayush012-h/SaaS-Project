@@ -191,18 +191,8 @@ export default function AuthPage({ initialMode = 'login' }) {
 
   const passStrength = Math.min(100, (regPass.length / 12) * 100)
 
-  // Sync URL ↔ mode
-  useEffect(() => {
-    if (location.pathname === '/register' && mode === 'login') setMode('register')
-    if (location.pathname === '/login' && mode === 'register') setMode('login')
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [location.pathname])
-
-  useEffect(() => {
-    if (mode === 'login' && location.pathname !== '/login') navigate('/login', { replace: true })
-    if (mode === 'register' && location.pathname !== '/register') navigate('/register', { replace: true })
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mode])
+  // URL syncing logic natively handled by React Router.
+  // Removed dangerous useEffect navigates to prevent redirect loops.
 
   // Rotating quotes
   useEffect(() => {
@@ -216,7 +206,8 @@ export default function AuthPage({ initialMode = 'login' }) {
     setLoginLoading(true); setLoginErr(false)
     try {
       await signIn(loginEmail, loginPass)
-      navigate('/dashboard')
+      // Removal of manual navigate — PublicRoute handles the redirect 
+      // once currentSession is set in AuthProvider.
     } catch (err) {
       toast.error(err.message || 'Login failed')
       setLoginErr(true)
@@ -241,7 +232,7 @@ export default function AuthPage({ initialMode = 'login' }) {
       // ──────────────────────────────────────────────────
 
       toast.success('Account created! Check your email to confirm.')
-      navigate('/dashboard')
+      // Navigation will be handled by PublicRoute redirect
     } catch (err) {
       toast.error(err.message || 'Registration failed')
       setRegErr(true); setTimeout(() => setRegErr(false), 600)

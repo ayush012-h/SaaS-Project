@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
 import { useTheme } from '../../contexts/ThemeContext'
 import {
@@ -273,8 +273,15 @@ const driftCards = [...Array(8)].map(() => ({
 
 export default function LandingPage() {
   const { session } = useAuth()
+  const navigate = useNavigate()
   const { theme, toggleTheme } = useTheme()
   const mousePos = useMouseParallax(0.5);
+
+  useEffect(() => {
+    if (session) {
+      navigate('/dashboard', { replace: true })
+    }
+  }, [session, navigate])
 
 
   useEffect(() => {

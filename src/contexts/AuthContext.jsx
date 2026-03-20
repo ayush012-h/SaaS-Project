@@ -31,70 +31,79 @@ export function AuthProvider({ children }) {
     }
   }, [])
 
+  const handleAuthChange = useCallback(async (currentSession) => {
+    try {
+      if (currentSession?.user) {
+        await fetchProfile(currentSession.user.id)
+        setSession(currentSession)
+        setUser(currentSession.user)
+      } else {
+        setSession(null)
+        setUser(null)
+        setProfile(null)
+      }
+    } catch (err) {
+      console.error('Auth sync error:', err)
+    } finally {
+      setLoading(false)
+    }
+  }, [fetchProfile])
+
   useEffect(() => {
     let mounted = true
     let initialCheckDone = false
 
-    // Robust loading timer - slightly longer for mobile
-    const timer = setTimeout(() => {
+    // Emergency timer
+    const emergencyTimer = setTimeout(() => {
       if (mounted && loading) {
-        console.warn('Auth fallback: Loading timed out')
+        console.warn('Auth check timed out')
         setLoading(false)
       }
-    }, 6000)
+    }, 8000)
 
-    const initAuth = async () => {
-      try {
-        const { data: { session: initialSession }, error } = await supabase.auth.getSession()
-        if (!mounted) return
-        
-        if (initialSession) {
-          setSession(initialSession)
-          setUser(initialSession.user)
-          await fetchProfile(initialSession.user.id)
-        }
-      } catch (err) {
-        console.error('Session init error:', err)
-      } finally {
-        if (mounted) {
-          initialCheckDone = true
-          setLoading(false)
-        }
+    // 1. Initial manual check
+    supabase.auth.getSession().then(({ data: { session: initialSession } }) => {
+      if (!mounted) return
+      if (initialSession) {
+        initialCheckDone = true
+        handleAuthChange(initialSession)
+      } else {
+        // Give listener a moment to fire if this is a redirect
+        setTimeout(() => {
+          if (mounted && !initialCheckDone) setLoading(false)
+        }, 1500)
       }
-    }
+    })
 
-    initAuth()
-
+    // 2. Continuous listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
       if (!mounted) return
+      
+      console.log('Auth event:', event)
 
-      // Ignore redundant initial session if we already did it
-      if (event === 'INITIAL_SESSION' && initialCheckDone) return
-
-      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || (event === 'INITIAL_SESSION' && currentSession)) {
-        setSession(currentSession)
-        setUser(currentSession?.user ?? null)
-        if (currentSession?.user) {
-          await fetchProfile(currentSession.user.id)
-        }
-        setLoading(false)
+      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION') {
+        initialCheckDone = true
+        await handleAuthChange(currentSession)
       } else if (event === 'SIGNED_OUT') {
+        initialCheckDone = true
         setSession(null)
         setUser(null)
         setProfile(null)
         setLoading(false)
       } else if (event === 'USER_UPDATED') {
-        setUser(currentSession?.user ?? null)
-        if (currentSession?.user) fetchProfile(currentSession.user.id)
+        if (currentSession?.user) {
+          setUser(currentSession.user)
+          fetchProfile(currentSession.user.id).catch(() => {})
+        }
       }
     })
 
     return () => {
       mounted = false
-      clearTimeout(timer)
+      clearTimeout(emergencyTimer)
       subscription?.unsubscribe()
     }
-  }, [fetchProfile])
+  }, [fetchProfile, handleAuthChange])
 
   async function signUp(email, password, fullName) {
     const { data, error } = await supabase.auth.signUp({ email, password })
@@ -105,6 +114,8 @@ export function AuthProvider({ children }) {
         email,
         full_name: fullName,
       })
+      // Manually trigger state update to avoid race condition with onAuthStateChange
+      if (data.session) await handleAuthChange(data.session)
     }
     return data
   }
@@ -112,6 +123,8 @@ export function AuthProvider({ children }) {
   async function signIn(email, password) {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password })
     if (error) throw error
+    // Manually trigger state update to avoid race condition with onAuthStateChange
+    if (data.session) await handleAuthChange(data.session)
     return data
   }
 

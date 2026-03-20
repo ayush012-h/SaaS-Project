@@ -38,8 +38,8 @@ export default function GlobalSearch() {
   if (!isOpen) return null
 
   const filteredSubs = subscriptions.filter(s => 
-    s.name.toLowerCase().includes(query.toLowerCase()) || 
-    (s.category && s.category.toLowerCase().includes(query.toLowerCase()))
+    String(s.name || '').toLowerCase().includes(query.toLowerCase()) || 
+    String(s.category || '').toLowerCase().includes(query.toLowerCase())
   ).slice(0, 5) // Limit to 5 results
 
   return (

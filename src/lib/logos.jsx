@@ -57,7 +57,7 @@ const domainMap = {
 
 export function getServiceLogo(name) {
   if (!name) return null;
-  const lowerName = name.toLowerCase().trim();
+  const lowerName = String(name).toLowerCase().trim();
 
   // Direct match
   if (domainMap[lowerName]) return `https://logo.clearbit.com/${domainMap[lowerName]}`;

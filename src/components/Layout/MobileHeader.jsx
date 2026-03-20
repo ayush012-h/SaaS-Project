@@ -4,27 +4,27 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   Menu, X, TrendingUp, LayoutDashboard, CreditCard, BarChart3,
   Bell, ScanText, Settings, HelpCircle, Zap, Lock, LogOut,
-  User as UserIcon, Crown, Calendar, FileText, Copy
+  Crown, Calendar, FileText, Copy
 } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import Avatar from '../Avatar'
 import { redirectToCheckout } from '../../lib/razorpay'
 import toast from 'react-hot-toast'
 
-// Page title map
+// ── Page title map ────────────────────────────────────────
 const PAGE_TITLES = {
-  '/dashboard': 'Dashboard',
-  '/subscriptions': 'Subscriptions',
-  '/analytics': 'Analytics',
-  '/alerts': 'Alerts',
-  '/scanner': 'Email Scanner',
-  '/cancel-guide': 'Cancel Guide',
-  '/budget': 'Budget',
-  '/yearly-report': 'Yearly Report',
+  '/dashboard':          'Dashboard',
+  '/subscriptions':      'Subscriptions',
+  '/analytics':          'Analytics',
+  '/alerts':             'Alerts',
+  '/scanner':            'Email Scanner',
+  '/cancel-guide':       'Cancel Guide',
+  '/budget':             'Budget',
+  '/yearly-report':      'Yearly Report',
   '/duplicate-detector': 'Duplicates',
-  '/calendar-view': 'Calendar',
-  '/export': 'Export',
-  '/settings': 'Settings',
+  '/calendar-view':      'Calendar',
+  '/export':             'Export',
+  '/settings':           'Settings',
 }
 
 const MAIN_NAV = [
@@ -37,14 +37,68 @@ const MAIN_NAV = [
 ]
 
 const PRO_NAV = [
-  { to: '/cancel-guide',       icon: HelpCircle,     label: 'Cancel Guide' },
-  { to: '/budget',             icon: TrendingUp,     label: 'Budget' },
-  { to: '/yearly-report',      icon: BarChart3,      label: 'Yearly Report' },
-  { to: '/duplicate-detector', icon: Copy,           label: 'Duplicates' },
-  { to: '/calendar-view',      icon: Calendar,       label: 'Calendar View' },
-  { to: '/export',             icon: FileText,       label: 'Export' },
+  { to: '/cancel-guide',       icon: HelpCircle, label: 'Cancel Guide' },
+  { to: '/budget',             icon: TrendingUp, label: 'Budget' },
+  { to: '/yearly-report',      icon: BarChart3,  label: 'Yearly Report' },
+  { to: '/duplicate-detector', icon: Copy,       label: 'Duplicates' },
+  { to: '/calendar-view',      icon: Calendar,   label: 'Calendar View' },
+  { to: '/export',             icon: FileText,   label: 'Export' },
 ]
 
+// ── NavItem defined OUTSIDE component ────────────────────
+// This is the fix — defining inside caused re-creation on
+// every render which crashed React Router's NavLink
+function NavItem({ to, icon: Icon, label, pro, isPro, pathname, onClose }) {
+  const isActive = pathname === to
+  const locked = pro && !isPro
+
+  return (
+    <NavLink
+      to={to}
+      onClick={onClose}
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 12,
+        padding: '11px 16px',
+        borderRadius: 12,
+        textDecoration: 'none',
+        color: isActive ? '#6C63FF' : locked ? '#444460' : '#9999BB',
+        background: isActive ? 'rgba(108,99,255,0.1)' : 'transparent',
+        fontWeight: isActive ? 700 : 500,
+        fontSize: 14,
+        transition: 'all 0.15s',
+        marginBottom: 2,
+        borderLeft: isActive ? '3px solid #6C63FF' : '3px solid transparent',
+      }}
+    >
+      <Icon
+        size={18}
+        style={{
+          flexShrink: 0,
+          color: isActive ? '#6C63FF' : locked ? '#333348' : '#666680',
+        }}
+      />
+      <span style={{ flex: 1 }}>{label}</span>
+      {locked && (
+        <Lock size={12} style={{ color: '#6C63FF', opacity: 0.6 }} />
+      )}
+      {pro && isPro && (
+        <span style={{
+          fontSize: 9, fontWeight: 800, color: '#FFD700',
+          background: 'rgba(255,215,0,0.1)',
+          border: '1px solid rgba(255,215,0,0.3)',
+          borderRadius: 4, padding: '2px 5px',
+          letterSpacing: '0.05em',
+        }}>
+          PRO
+        </span>
+      )}
+    </NavLink>
+  )
+}
+
+// ── Main Component ────────────────────────────────────────
 export default function MobileHeader() {
   const [drawerOpen, setDrawerOpen] = useState(false)
   const location = useLocation()
@@ -53,7 +107,9 @@ export default function MobileHeader() {
 
   const currentTitle = PAGE_TITLES[location.pathname] || 'SubTrackr'
 
-  const closeDrawer = () => setDrawerOpen(false)
+  function closeDrawer() {
+    setDrawerOpen(false)
+  }
 
   async function handleSignOut() {
     try {
@@ -65,46 +121,9 @@ export default function MobileHeader() {
     }
   }
 
-  const NavItem = ({ to, icon: Icon, label, pro }) => {
-    const isActive = location.pathname === to
-    const locked = pro && !isPro
-    return (
-      <NavLink
-        to={to}
-        onClick={closeDrawer}
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 12,
-          padding: '11px 16px',
-          borderRadius: 12,
-          textDecoration: 'none',
-          color: isActive ? '#6C63FF' : locked ? '#444460' : '#9999BB',
-          background: isActive ? 'rgba(108,99,255,0.1)' : 'transparent',
-          fontWeight: isActive ? 700 : 500,
-          fontSize: 14,
-          transition: 'all 0.15s',
-          marginBottom: 2,
-          borderLeft: isActive ? '3px solid #6C63FF' : '3px solid transparent',
-        }}
-      >
-        <Icon size={18} style={{ flexShrink: 0, color: isActive ? '#6C63FF' : locked ? '#333348' : '#666680' }} />
-        <span style={{ flex: 1 }}>{label}</span>
-        {locked && <Lock size={12} style={{ color: '#6C63FF', opacity: 0.6 }} />}
-        {pro && isPro && (
-          <span style={{
-            fontSize: 9, fontWeight: 800, color: '#FFD700',
-            background: 'rgba(255,215,0,0.1)', border: '1px solid rgba(255,215,0,0.3)',
-            borderRadius: 4, padding: '2px 5px', letterSpacing: '0.05em'
-          }}>PRO</span>
-        )}
-      </NavLink>
-    )
-  }
-
   return (
     <>
-      {/* ─── Sticky Mobile Header ─── */}
+      {/* ── Sticky Mobile Header ─────────────────────────── */}
       <header style={{
         position: 'sticky',
         top: 0,
@@ -127,29 +146,30 @@ export default function MobileHeader() {
             width: 28, height: 28, borderRadius: 8, flexShrink: 0,
             background: 'linear-gradient(135deg, #6C63FF, #3ECFCF)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            boxShadow: '0 0 12px rgba(108,99,255,0.4)'
+            boxShadow: '0 0 12px rgba(108,99,255,0.4)',
           }}>
             <TrendingUp size={14} color="#fff" />
           </div>
-          <span style={{ fontSize: 15, fontWeight: 800, color: '#E8E8F0', letterSpacing: '-0.3px' }}>
+          <span style={{
+            fontSize: 15, fontWeight: 800,
+            color: '#E8E8F0', letterSpacing: '-0.3px',
+          }}>
             SubTrackr
           </span>
         </div>
 
-        {/* Current page title */}
+        {/* Current page title — centered */}
         <span style={{
-          fontSize: 14,
-          fontWeight: 700,
-          color: '#9999BB',
-          position: 'absolute',
-          left: '50%',
+          fontSize: 14, fontWeight: 700, color: '#9999BB',
+          position: 'absolute', left: '50%',
           transform: 'translateX(-50%)',
           pointerEvents: 'none',
+          whiteSpace: 'nowrap',
         }}>
           {currentTitle}
         </span>
 
-        {/* Hamburger */}
+        {/* Hamburger button */}
         <button
           onClick={() => setDrawerOpen(true)}
           style={{
@@ -158,8 +178,7 @@ export default function MobileHeader() {
             borderRadius: 10,
             width: 38, height: 38,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            cursor: 'pointer',
-            color: '#9999BB',
+            cursor: 'pointer', color: '#9999BB',
           }}
           aria-label="Open menu"
         >
@@ -167,7 +186,7 @@ export default function MobileHeader() {
         </button>
       </header>
 
-      {/* ─── Drawer + Backdrop ─── */}
+      {/* ── Drawer + Backdrop ────────────────────────────── */}
       <AnimatePresence>
         {drawerOpen && (
           <>
@@ -180,21 +199,24 @@ export default function MobileHeader() {
               transition={{ duration: 0.2 }}
               onClick={closeDrawer}
               style={{
-                position: 'fixed',
-                inset: 0,
+                position: 'fixed', inset: 0,
                 background: 'rgba(0,0,0,0.65)',
                 backdropFilter: 'blur(4px)',
                 zIndex: 1100,
               }}
             />
 
-            {/* Drawer */}
+            {/* Drawer panel */}
             <motion.aside
               key="drawer-panel"
               initial={{ x: -280 }}
               animate={{ x: 0 }}
               exit={{ x: -280 }}
-              transition={{ type: 'spring', damping: 26, stiffness: 300, duration: 0.3 }}
+              transition={{
+                type: 'spring',
+                damping: 26,
+                stiffness: 300,
+              }}
               style={{
                 position: 'fixed',
                 top: 0, left: 0, bottom: 0,
@@ -221,11 +243,13 @@ export default function MobileHeader() {
                     width: 32, height: 32, borderRadius: 10,
                     background: 'linear-gradient(135deg, #6C63FF, #3ECFCF)',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    boxShadow: '0 0 14px rgba(108,99,255,0.4)'
+                    boxShadow: '0 0 14px rgba(108,99,255,0.4)',
                   }}>
                     <TrendingUp size={16} color="#fff" />
                   </div>
-                  <span style={{ fontSize: 17, fontWeight: 800, color: '#E8E8F0' }}>SubTrackr</span>
+                  <span style={{ fontSize: 17, fontWeight: 800, color: '#E8E8F0' }}>
+                    SubTrackr
+                  </span>
                 </div>
                 <button
                   onClick={closeDrawer}
@@ -247,9 +271,7 @@ export default function MobileHeader() {
               <div style={{
                 padding: '14px 16px',
                 borderBottom: '1px solid #1E1E2E',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 12,
+                display: 'flex', alignItems: 'center', gap: 12,
                 background: 'rgba(108,99,255,0.03)',
               }}>
                 <Avatar
@@ -259,10 +281,17 @@ export default function MobileHeader() {
                   isPro={isPro}
                 />
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: '#E8E8F0', marginBottom: 2 }}>
+                  <div style={{
+                    fontSize: 14, fontWeight: 700,
+                    color: '#E8E8F0', marginBottom: 2,
+                  }}>
                     {profile?.full_name || 'User'}
                   </div>
-                  <div style={{ fontSize: 11, color: '#666680', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  <div style={{
+                    fontSize: 11, color: '#666680',
+                    overflow: 'hidden', textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                  }}>
                     {user?.email}
                   </div>
                 </div>
@@ -283,10 +312,22 @@ export default function MobileHeader() {
               </div>
 
               {/* Nav Content */}
-              <div style={{ flex: 1, padding: '12px 12px', overflowY: 'auto' }}>
-                {/* Main nav */}
+              <div style={{ flex: 1, padding: '12px', overflowY: 'auto' }}>
+
+                {/* Main nav items */}
                 <div style={{ marginBottom: 8 }}>
-                  {MAIN_NAV.map(item => <NavItem key={item.to} {...item} />)}
+                  {MAIN_NAV.map(item => (
+                    <NavItem
+                      key={item.to}
+                      to={item.to}
+                      icon={item.icon}
+                      label={item.label}
+                      pro={item.pro}
+                      isPro={isPro}
+                      pathname={location.pathname}
+                      onClose={closeDrawer}
+                    />
+                  ))}
                 </div>
 
                 {/* Pro section divider */}
@@ -295,13 +336,28 @@ export default function MobileHeader() {
                   padding: '8px 4px', marginBottom: 4,
                 }}>
                   <Crown size={12} style={{ color: '#FFD700' }} />
-                  <span style={{ fontSize: 10, fontWeight: 800, color: '#666680', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                  <span style={{
+                    fontSize: 10, fontWeight: 800, color: '#666680',
+                    textTransform: 'uppercase', letterSpacing: '0.08em',
+                  }}>
                     Pro Features
                   </span>
                   <div style={{ flex: 1, height: 1, background: '#1E1E2E' }} />
                 </div>
 
-                {PRO_NAV.map(item => <NavItem key={item.to} {...item} pro={true} />)}
+                {/* Pro nav items */}
+                {PRO_NAV.map(item => (
+                  <NavItem
+                    key={item.to}
+                    to={item.to}
+                    icon={item.icon}
+                    label={item.label}
+                    pro={true}
+                    isPro={isPro}
+                    pathname={location.pathname}
+                    onClose={closeDrawer}
+                  />
+                ))}
 
                 {/* Upgrade button for free users */}
                 {!isPro && (
@@ -313,17 +369,18 @@ export default function MobileHeader() {
                       border: 'none', borderRadius: 12,
                       color: '#fff', fontWeight: 800, fontSize: 14,
                       cursor: 'pointer',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                      display: 'flex', alignItems: 'center',
+                      justifyContent: 'center', gap: 8,
                       boxShadow: '0 4px 20px rgba(108,99,255,0.3)',
                     }}
                   >
-                    <Zap size={16} /> Get Pro — ₹199/mo
+                    <Zap size={16} /> Get Pro — ₹499/mo
                   </button>
                 )}
               </div>
 
               {/* Sign out footer */}
-              <div style={{ padding: '12px 12px', borderTop: '1px solid #1E1E2E' }}>
+              <div style={{ padding: '12px', borderTop: '1px solid #1E1E2E' }}>
                 <button
                   onClick={handleSignOut}
                   style={{

@@ -27,6 +27,16 @@ import CalendarView from './pages/CalendarView'
 import Export from './pages/Export'
 import PageTransition, { AnimatePresence } from './components/PageTransition'
 import { useLocation } from 'react-router-dom'
+import { ErrorBoundary } from 'react-error-boundary'
+
+function ErrorFallback({ error }) {
+  return (
+    <div style={{ padding: 20, color: 'white', background: 'red', height: '100vh', width: '100vw' }}>
+      <h1>Crash!</h1>
+      <pre style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>{error.message}</pre>
+    </div>
+  )
+}
 
 function ProtectedRoute({ children }) {
   const { session, loading } = useAuth()
@@ -60,9 +70,10 @@ function AppRoutes() {
   const userPlan = profile?.plan || 'free'
 
   return (
-    <AnimatePresence mode="wait">
-      <Routes location={location} key={location.pathname}>
-        <Route path="/" element={<PageTransition><LandingPage /></PageTransition>} />
+    <ErrorBoundary FallbackComponent={ErrorFallback}>
+      <AnimatePresence mode="wait">
+        <Routes location={location} key={location.pathname}>
+          <Route path="/" element={<PageTransition><LandingPage /></PageTransition>} />
         <Route path="/features" element={<PageTransition><FeaturesPage /></PageTransition>} />
         <Route path="/how-it-works" element={<PageTransition><HowItWorksPage /></PageTransition>} />
         <Route path="/pricing" element={<PageTransition><PricingPage /></PageTransition>} />
@@ -88,6 +99,7 @@ function AppRoutes() {
         <Route path="*" element={<NotFound />} />
       </Routes>
     </AnimatePresence>
+    </ErrorBoundary>
   )
 }
 

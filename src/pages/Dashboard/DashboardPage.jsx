@@ -56,7 +56,7 @@ const itemVariants = {
 }
 
 const CustomTooltip = ({ active, payload, label, currencySymbol }) => {
-  if (active && payload?.length) {
+  if (active && payload && payload.length > 0) {
     return (
       <div className="bg-bg-elevated border border-border rounded-xl px-4 py-3 shadow-xl">
         <p className="text-text-muted text-xs mb-1">{label}</p>
@@ -149,7 +149,7 @@ export default function DashboardPage() {
       <div className="flex items-end justify-between">
         <div>
           <h1 className={`${isMobile ? 'text-xl' : 'text-3xl'} font-black text-text-primary tracking-tight`}>
-            Good {new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 18 ? 'afternoon' : 'evening'}{profile?.full_name ? `, ${profile.full_name.split(' ')[0]}` : ''}! 👋
+            Good {new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 18 ? 'afternoon' : 'evening'}{profile?.full_name ? `, ${String(profile.full_name).split(' ')[0]}` : ''}! 👋
           </h1>
           <p className={`${isMobile ? 'text-[10px]' : 'text-text-muted mt-1'} uppercase font-bold tracking-widest text-text-muted`}>Subscription overview</p>
         </div>

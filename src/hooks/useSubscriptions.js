@@ -22,7 +22,7 @@ export function useSubscriptions() {
     if (error) setError(error.message)
     else setSubscriptions(data || [])
     setLoading(false)
-  }, [user])
+  }, [user?.id])
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
