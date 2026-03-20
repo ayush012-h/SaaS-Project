@@ -1,3 +1,5 @@
+import { sendProUpgradeEmail } from './emails'
+
 import { supabase } from './supabase'
 
 export async function redirectToCheckout() {
@@ -47,6 +49,8 @@ export async function redirectToCheckout() {
           .eq('id', user.id)
 
         window.location.href = '/dashboard?upgraded=true'
+        await sendProUpgradeEmail(user.email, profile?.full_name || 'there')
+
       }
     }
 
