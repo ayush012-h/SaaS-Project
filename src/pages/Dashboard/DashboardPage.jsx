@@ -285,7 +285,7 @@ export default function DashboardPage() {
         className="grid grid-cols-1 lg:grid-cols-3 gap-6"
       >
         {/* Monthly Trend */}
-        <motion.div variants={itemVariants} whileHover={{ y: -4 }} className="card lg:col-span-2">
+        <motion.div variants={itemVariants} whileHover={{ y: -4 }} className="card lg:col-span-2" style={{ minWidth: 0 }}>
           <h2 className="text-lg font-semibold text-text-primary mb-6">Monthly Spending Trend</h2>
           {trendData.every(d => d.amount === 0) ? (
             <div className="h-52 flex flex-col items-center justify-center text-text-muted text-center p-4 rounded-xl border border-dashed border-border/50 bg-bg-elevated/20">
@@ -321,7 +321,7 @@ export default function DashboardPage() {
         </motion.div>
 
         {/* Category Breakdown */}
-        <motion.div variants={itemVariants} whileHover={{ y: -4 }} className="card">
+        <motion.div variants={itemVariants} whileHover={{ y: -4 }} className="card" style={{ minWidth: 0 }}>
           <h2 className="text-lg font-semibold text-text-primary mb-6">By Category</h2>
           {categoryChartData.length === 0 ? (
             <div className="h-48 flex flex-col justify-center items-center">
