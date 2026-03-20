@@ -1,5 +1,5 @@
 /* eslint-disable react-refresh/only-export-components */
-import { createContext, useContext, useEffect, useState } from 'react'
+import { createContext, useContext, useEffect, useState, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
 
 const AuthContext = createContext({})
@@ -10,72 +10,91 @@ export function AuthProvider({ children }) {
   const [profile, setProfile] = useState(null)
   const [loading, setLoading] = useState(true)
 
-  console.log('AuthProvider: Initializing...')
-
-  // Robust timeout to prevent hanging loading state
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (loading) {
-        console.warn('Auth fallback: Loading timed out after 2.5s')
-        setLoading(false)
-      }
-    }, 2500)
-    return () => clearTimeout(timer)
-  }, [loading])
-
-  async function fetchProfile(userId) {
+  const fetchProfile = useCallback(async (userId) => {
+    if (!userId) {
+      setProfile(null)
+      return
+    }
     try {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', userId)
         .single()
+      
+      if (error) throw error
       setProfile(data)
+      return data
     } catch (error) {
       console.error('Error fetching profile:', error)
       setProfile(null)
-    } finally {
-      setLoading(false)
     }
-  }
+  }, [])
 
   useEffect(() => {
-    // Initial check
-    const checkSession = async () => {
+    let mounted = true
+    let initialCheckDone = false
+
+    // Robust loading timer - slightly longer for mobile
+    const timer = setTimeout(() => {
+      if (mounted && loading) {
+        console.warn('Auth fallback: Loading timed out')
+        setLoading(false)
+      }
+    }, 6000)
+
+    const initAuth = async () => {
       try {
-        const { data: { session }, error } = await supabase.auth.getSession()
-        if (error) throw error
+        const { data: { session: initialSession }, error } = await supabase.auth.getSession()
+        if (!mounted) return
         
-        if (session) {
-          setSession(session)
-          setUser(session.user)
-          await fetchProfile(session.user.id)
-        } else {
-          setLoading(false)
+        if (initialSession) {
+          setSession(initialSession)
+          setUser(initialSession.user)
+          await fetchProfile(initialSession.user.id)
         }
       } catch (err) {
-        console.error('Initial session check failed:', err)
-        setLoading(false)
+        console.error('Session init error:', err)
+      } finally {
+        if (mounted) {
+          initialCheckDone = true
+          setLoading(false)
+        }
       }
     }
 
-    checkSession()
+    initAuth()
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session)
-      setUser(session?.user ?? null)
-      if (session?.user) fetchProfile(session.user.id)
-      else {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
+      if (!mounted) return
+
+      // Ignore redundant initial session if we already did it
+      if (event === 'INITIAL_SESSION' && initialCheckDone) return
+
+      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || (event === 'INITIAL_SESSION' && currentSession)) {
+        setSession(currentSession)
+        setUser(currentSession?.user ?? null)
+        if (currentSession?.user) {
+          await fetchProfile(currentSession.user.id)
+        }
+        setLoading(false)
+      } else if (event === 'SIGNED_OUT') {
+        setSession(null)
+        setUser(null)
         setProfile(null)
         setLoading(false)
+      } else if (event === 'USER_UPDATED') {
+        setUser(currentSession?.user ?? null)
+        if (currentSession?.user) fetchProfile(currentSession.user.id)
       }
     })
 
     return () => {
+      mounted = false
+      clearTimeout(timer)
       subscription?.unsubscribe()
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [fetchProfile])
 
   async function signUp(email, password, fullName) {
     const { data, error } = await supabase.auth.signUp({ email, password })
@@ -108,9 +127,13 @@ export function AuthProvider({ children }) {
   async function signOut() {
     const { error } = await supabase.auth.signOut()
     if (error) throw error
+    setSession(null)
+    setUser(null)
+    setProfile(null)
   }
 
   async function updateProfile(updates) {
+    if (!user) return
     const { data, error } = await supabase
       .from('profiles')
       .update(updates)

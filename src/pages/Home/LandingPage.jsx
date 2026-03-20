@@ -4,8 +4,9 @@ import { useAuth } from '../../contexts/AuthContext'
 import { useTheme } from '../../contexts/ThemeContext'
 import {
   TrendingUp, BarChart3, Bell, Zap, Shield, ScanText,
-  ArrowRight, ChevronDown, Star, DollarSign, Check, Sun, Moon
+  ArrowRight, ChevronDown, Star, DollarSign, Check, Sun, Moon, MessageSquare
 } from 'lucide-react'
+import FeedbackWidget from '../../components/FeedbackWidget'
 
 const FEATURES = [
   { icon: BarChart3, title: 'Smart Dashboard', desc: 'Visualize all your subscriptions with beautiful charts and real-time spending insights.', color: '#6C63FF', glow: 'rgba(108,99,255,0.3)' },
@@ -1013,6 +1014,22 @@ export default function LandingPage() {
           </div>
         </footer>
       </div>
+
+      {/* Floating Feedback Button — Home Page Only */}
+      <div style={{ position: 'fixed', bottom: '32px', right: '32px', zIndex: 1000 }}>
+        <FeedbackWidget />
+      </div>
+      
+      <style>{`
+        /* Avoid showing the default top-right button on Landing Page; our wrapper handles placement */
+        .landing-page ~ div button[style*="top: 24px"] {
+          top: auto !important;
+          bottom: 0 !important;
+          right: 0 !important;
+          position: relative !important;
+          box-shadow: 0 12px 48px rgba(108,99,255,0.4) !important;
+        }
+      `}</style>
     </>
   )
 }

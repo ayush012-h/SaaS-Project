@@ -14,7 +14,7 @@ import {
   CropIcon
 } from 'lucide-react'
 import { supabase } from '../lib/supabase'
-import { useUser } from '../context/UserContext'
+import { useAuth } from '../contexts/AuthContext'
 import Avatar from './Avatar'
 import toast from 'react-hot-toast'
 import { redirectToCheckout } from '../lib/razorpay'
@@ -202,7 +202,7 @@ const ctrlBtn = {
 // Main ProfileUpload component
 // ─────────────────────────────────────────────────────────
 export default function ProfileUpload() {
-  const { profile, updateProfile, loading: profileLoading } = useUser()
+  const { user, profile, isPro, updateProfile, loading: profileLoading } = useAuth()
   const [uploading, setUploading] = useState(false)
   const [name, setName] = useState('')
   const [isEditingName, setIsEditingName] = useState(false)

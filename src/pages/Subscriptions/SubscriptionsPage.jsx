@@ -211,7 +211,12 @@ export default function SubscriptionsPage() {
 
       {/* Content */}
       <div className={isMobile ? "space-y-3" : "card p-0 overflow-hidden"}>
-        {loading ? (
+        {error ? (
+          <div className="p-8 text-center text-status-danger bg-status-danger/5 rounded-xl border border-status-danger/20">
+            <p className="font-bold mb-2">Failed to load subscriptions</p>
+            <p className="text-sm opacity-80">{error}</p>
+          </div>
+        ) : loading ? (
           <div className="divide-y divide-border">
             {[...Array(6)].map((_, i) => <SkeletonSubscriptionRow key={i} />)}
           </div>

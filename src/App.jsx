@@ -1,7 +1,6 @@
 import React from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { ThemeProvider } from './contexts/ThemeContext'
-import { UserProvider } from './context/UserContext'
 import { Toaster } from 'react-hot-toast'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
 import AppLayout from './components/Layout/AppLayout'
@@ -100,12 +99,10 @@ function App() {
     <ThemeProvider>
       <BrowserRouter>
         <AuthProvider>
-          <UserProvider>
-            <div style={{ color: 'white' }}>
-              <Toaster position="top-right" />
-              <AppRoutes />
-            </div>
-          </UserProvider>
+          <div style={{ color: 'white' }}>
+            <Toaster position="top-right" />
+            <AppRoutes />
+          </div>
         </AuthProvider>
       </BrowserRouter>
     </ThemeProvider>

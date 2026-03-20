@@ -138,17 +138,7 @@ export default function YearlyReport({ userPlan }) {
     <div style={{ maxWidth: '900px', margin: '0 auto', padding: '40px 20px' }}>
       {/* Year Selector */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px', marginBottom: '40px' }}>
-  {/* Only show years from the earliest subscription year up to current year */}
-        {Array.from({ length: currentYear - 2025 + 1 }, (_, i) => 2025 + i)
-          .filter(y => {
-            // Only include a year if there's at least one subscription created in or before that year
-            const hasSubs = subscriptions.some(sub => {
-              const created = new Date(sub.created_at || sub.start_date)
-              return created.getFullYear() <= y
-            })
-            return hasSubs
-          })
-          .map(y => (
+        {[currentYear].map(y => (
           <button 
             key={y}
             onClick={() => setSelectedYear(y)}

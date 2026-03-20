@@ -7,7 +7,6 @@ import {
   User as UserIcon, Crown, Calendar, FileText, Copy
 } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
-import { useUser } from '../../context/UserContext'
 import Avatar from '../Avatar'
 import { redirectToCheckout } from '../../lib/razorpay'
 import toast from 'react-hot-toast'
@@ -50,8 +49,7 @@ export default function MobileHeader() {
   const [drawerOpen, setDrawerOpen] = useState(false)
   const location = useLocation()
   const navigate = useNavigate()
-  const { user, signOut } = useAuth()
-  const { profile, isPro } = useUser()
+  const { user, profile, isPro, signOut } = useAuth()
 
   const currentTitle = PAGE_TITLES[location.pathname] || 'SubTrackr'
 

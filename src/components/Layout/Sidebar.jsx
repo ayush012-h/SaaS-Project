@@ -12,7 +12,6 @@ import toast from 'react-hot-toast'
 import { useState, useRef, useEffect } from 'react'
 import HelpPanel from '../HelpPanel'
 import { redirectToCheckout } from '../../lib/razorpay'
-import { useUser } from '../../context/UserContext'
 import Avatar from '../Avatar'
 
 // Main nav — shown to all users
@@ -80,8 +79,7 @@ function FeedbackModal({ onClose }) {
 }
 
 export default function Sidebar({ style, isCollapsed, setIsCollapsed }) {
-  const { user, signOut } = useAuth()
-  const { profile, isPro } = useUser()
+  const { user, profile, isPro, signOut } = useAuth()
   const { theme } = useTheme()
   const navigate = useNavigate()
   const [helpOpen, setHelpOpen] = useState(false)

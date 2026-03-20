@@ -30,7 +30,6 @@ import toast from 'react-hot-toast'
 import { useTheme } from '../../contexts/ThemeContext'
 import { motion, AnimatePresence } from 'framer-motion'
 import ProfileUpload from '../../components/ProfileUpload'
-import { useUser } from '../../context/UserContext'
 import { sendNewsletterToAllUsers } from '../../lib/emails'  // ← ADDED
 
 const TABS = [
@@ -46,8 +45,7 @@ const TABS = [
 const FOUNDER_EMAIL = 'ayushkumar00467@gmail.com'
 
 export default function SettingsPage() {
-  const { user, profile, isPro, signOut } = useAuth()
-  const { updateProfile } = useUser()
+  const { user, profile, isPro, signOut, updateProfile } = useAuth()
   const { theme, toggleTheme } = useTheme()
   const [activeTab, setActiveTab] = useState('profile')
   const [saving, setSaving] = useState(false)
