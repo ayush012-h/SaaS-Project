@@ -8,7 +8,7 @@ import {
 } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import Avatar from '../Avatar'
-import { redirectToCheckout } from '../../lib/razorpay'
+import { smartCheckout } from '../../lib/payment'
 import toast from 'react-hot-toast'
 
 // ── Page title map ────────────────────────────────────────
@@ -362,7 +362,7 @@ export default function MobileHeader() {
                 {/* Upgrade button for free users */}
                 {!isPro && (
                   <button
-                    onClick={() => { redirectToCheckout(); closeDrawer() }}
+                    onClick={() => { smartCheckout().catch(err => toast.error(err.message)); closeDrawer() }}
                     style={{
                       width: '100%', marginTop: 16, padding: '12px 0',
                       background: 'linear-gradient(135deg, #6C63FF, #3ECFCF)',
@@ -374,7 +374,7 @@ export default function MobileHeader() {
                       boxShadow: '0 4px 20px rgba(108,99,255,0.3)',
                     }}
                   >
-                    <Zap size={16} /> Get Pro — ₹499/mo
+                    <Zap size={16} /> Get Pro — ₹49/mo
                   </button>
                 )}
               </div>

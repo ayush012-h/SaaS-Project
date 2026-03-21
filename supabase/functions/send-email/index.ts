@@ -218,7 +218,7 @@ function onboardingDay7Template(
         <div style="margin-top:16px;text-align:center;">
           <a href="${appUrl}/billing"
             style="display:inline-block;background:linear-gradient(135deg,#6C63FF,#3ECFCF);color:#fff;text-decoration:none;padding:12px 28px;border-radius:10px;font-weight:800;font-size:14px;">
-            Upgrade to Pro — ₹499/month →
+            Upgrade to Pro — ₹49/month →
           </a>
         </div>
       </div>

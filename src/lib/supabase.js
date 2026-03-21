@@ -1,11 +1,17 @@
 import { createClient } from '@supabase/supabase-js'
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://placeholder.supabase.co'
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'placeholder-key'
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
 
-// Create a mock client if environment variables are not set
-if (!import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_ANON_KEY) {
-  console.warn('Supabase environment variables not found. Running in development mode with mock client.')
+if (!supabaseUrl || !supabaseAnonKey) {
+  console.error('Missing Supabase environment variables. Check your .env file.')
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    autoRefreshToken: true,      // refreshes token before it expires
+    persistSession: true,        // keeps session in localStorage
+    detectSessionInUrl: true,    // handles Google OAuth redirects
+    storageKey: 'subtrackr-auth', // named key prevents conflicts
+  },
+})

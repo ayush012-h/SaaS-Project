@@ -24,7 +24,7 @@ import {
 } from 'lucide-react'
 import { SUPPORTED_CURRENCIES } from '../../hooks/useCurrencyRates'
 import { useAuth } from '../../contexts/AuthContext'
-import { redirectToCheckout } from '../../lib/razorpay'
+import { smartCheckout } from '../../lib/payment'
 import { supabase } from '../../lib/supabase'
 import toast from 'react-hot-toast'
 import { useTheme } from '../../contexts/ThemeContext'
@@ -95,7 +95,7 @@ export default function SettingsPage() {
   }
 
   function handleUpgrade() {
-    redirectToCheckout()
+    smartCheckout().catch(err => toast.error(err.message))
   }
 
   // ── Send newsletter to all users ─────────────────────────
@@ -469,7 +469,7 @@ export default function SettingsPage() {
                   <span style={{ background: isPro ? 'rgba(108, 99, 255, 0.1)' : 'rgba(102, 102, 128, 0.1)', color: isPro ? '#6C63FF' : '#666680', fontSize: '11px', fontWeight: '900', padding: '6px 12px', borderRadius: '8px', textTransform: 'uppercase' }}>
                     Current Plan: {isPro ? 'Pro' : 'Free'}
                   </span>
-                  <h3 style={{ fontSize: '32px', fontWeight: '900', marginTop: '16px' }}>₹{isPro ? '199' : '0'}/mo</h3>
+                  <h3 style={{ fontSize: '32px', fontWeight: '900', marginTop: '16px' }}>₹{isPro ? '49' : '0'}/mo</h3>
                   {isPro && <p style={{ color: '#9999BB', fontSize: '14px' }}>Next payment: {new Date(new Date().setMonth(new Date().getMonth() + 1)).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</p>}
                 </div>
                 {!isPro && <button onClick={handleUpgrade} disabled={upgrading} className="btn-primary">Upgrade</button>}

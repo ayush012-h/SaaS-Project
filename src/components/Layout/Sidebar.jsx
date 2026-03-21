@@ -11,7 +11,7 @@ import { useTheme } from '../../contexts/ThemeContext'
 import toast from 'react-hot-toast'
 import { useState, useRef, useEffect } from 'react'
 import HelpPanel from '../HelpPanel'
-import { redirectToCheckout } from '../../lib/razorpay'
+import { smartCheckout } from '../../lib/payment'
 import Avatar from '../Avatar'
 
 // Main nav — shown to all users
@@ -192,11 +192,11 @@ export default function Sidebar({ style, isCollapsed, setIsCollapsed }) {
         <div className="p-3">
           <Tooltip content="Upgrade to Pro" isCollapsed={isCollapsed}>
             <button 
-              onClick={() => redirectToCheckout()}
+              onClick={() => smartCheckout().catch(err => toast.error(err.message))}
               className={`w-full flex items-center justify-center gap-2 text-xs font-bold text-white py-2.5 rounded-xl transition-all hover:opacity-90 border-none bg-gradient-to-r from-brand-purple to-brand-teal`}
             >
               <Zap size={16} className="shrink-0" />
-              {!isCollapsed && <span className="truncate">Get Pro — ₹199/mo</span>}
+              {!isCollapsed && <span className="truncate">Get Pro — ₹49/mo</span>}
             </button>
           </Tooltip>
         </div>

@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
+import { getLocalPrice } from '../../lib/payment'
 import { TrendingUp, Check, ArrowRight, Zap, Shield, Star, ChevronDown } from 'lucide-react'
 
 const FREE_FEATURES = [
@@ -35,7 +36,7 @@ const COMPARE_ROWS = [
 const TESTIMONIALS = [
   { name: 'Sarah K.', role: 'Freelance Designer', text: 'Found 3 subscriptions I forgot about. Saved ₹3,900 in the first week.', stars: 5 },
   { name: 'Marcus T.', role: 'Software Engineer', text: 'The AI scanner is unreal. Pasted my bank statement and it found everything.', stars: 5 },
-  { name: 'Priya M.', role: 'Marketing Manager', text: 'Worth every penny. The ROI is insane — ₹199/month to save ₹5,000+.', stars: 5 },
+  { name: 'Priya M.', role: 'Marketing Manager', text: 'Worth every penny. The ROI is insane — ₹49/month to save ₹5,000+.', stars: 5 },
 ]
 
 function CheckIcon({ value, isProCol }) {
@@ -49,8 +50,17 @@ function CheckIcon({ value, isProCol }) {
 
 export default function PricingPage() {
   const [annual, setAnnual] = useState(false)
-  const proPrice = annual ? '166' : '199'
   const proSavings = annual ? 'Save ₹396/year' : null
+  
+  const [price, setPrice] = useState({
+    amount: '₹49',
+    period: '/month',
+    flag: '🇮🇳'
+  })
+
+  useEffect(() => {
+    getLocalPrice().then(setPrice)
+  }, [])
 
   return (
     <div className="landing-page">
@@ -133,8 +143,22 @@ export default function PricingPage() {
               <div className="pricing-name" style={{ margin: 0 }}>Pro</div>
               <Zap size={16} style={{ color: '#6C63FF' }} />
             </div>
-            <div className="pricing-price">
-              ₹{proPrice}<span className="pricing-period">/month</span>
+            <div style={{ textAlign: 'center', marginBottom: 8 }}>
+              <span style={{
+                fontSize: 11, color: '#9999BB',
+                background: '#1A1A2A',
+                borderRadius: 20,
+                padding: '4px 12px',
+                display: 'inline-block',
+              }}>
+                {price.flag} Showing price for your region
+              </span>
+            </div>
+            <div style={{ fontSize: 42, fontWeight: 900 }}>
+              {price.amount}
+              <span style={{ fontSize: 16, color: '#666680' }}>
+                {price.period}
+              </span>
               {proSavings && <span style={{ fontSize: 11, color: '#4CFF8F', marginLeft: 8, fontWeight: 600 }}>{proSavings}</span>}
             </div>
             <p style={{ color: '#9999BB', fontSize: 13, marginBottom: '1.25rem', lineHeight: 1.6 }}>
@@ -236,7 +260,7 @@ export default function PricingPage() {
           { q: 'Can I cancel Pro at any time?', a: 'Yes. Cancel anytime from your settings page. You\'ll keep Pro features until the end of your billing period.' },
           { q: 'How does the AI work?', a: 'We use OpenAI\'s GPT-4o models to analyze your subscriptions and detect patterns, overlaps, and savings opportunities.' },
           { q: 'Is my financial data safe?', a: 'Absolutely. We never store bank credentials. You only paste text — no direct bank connections. Data is encrypted with RLS.' },
-          { q: 'What if I have more than 5 subscriptions?', a: 'Upgrade to Pro for unlimited subscriptions. At ₹199/month, you only need to find one forgotten subscription to break even.' },
+          { q: 'What if I have more than 5 subscriptions?', a: 'Upgrade to Pro for unlimited subscriptions. At ₹49/month, you only need to find one forgotten subscription to break even.' },
         ].map((faq, i) => <PricingFaq key={i} faq={faq} />)}
       </div>
 

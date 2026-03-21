@@ -37,7 +37,7 @@ export async function redirectToCheckout() {
       key: import.meta.env.VITE_RAZORPAY_KEY_ID,
       subscription_id: subscription_id,
       name: 'SubTrackr',
-      description: 'Pro Plan — ₹199/month · Unlimited Subscription Tracking',
+      description: 'Pro Plan — ₹49/month · Unlimited Subscription Tracking',
       currency: 'INR',
       image: '/logo.png',
       prefill: {

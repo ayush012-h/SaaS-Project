@@ -42,7 +42,7 @@ We reserve the right to terminate accounts that violate these terms.`,
     title: '5. Free Plan & Pro Plan',
     content: `**Free Plan:** Allows tracking of up to 5 subscriptions with basic features including dashboard, charts, and renewal alerts. No credit card required.
 
-**Pro Plan:** Paid subscription (₹199/month) providing unlimited subscriptions, AI spending insights, email scanner, and advanced analytics.
+**Pro Plan:** Paid subscription (₹49/month) providing unlimited subscriptions, AI spending insights, email scanner, and advanced analytics.
 
 **Billing:** Pro plan billing is handled by Razorpay. By subscribing, you authorize us to charge your payment method on a recurring monthly basis.
 

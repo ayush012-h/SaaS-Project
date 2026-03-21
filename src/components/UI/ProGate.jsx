@@ -1,12 +1,12 @@
 import { Zap } from 'lucide-react'
-import { redirectToCheckout } from '../../lib/razorpay'
+import { smartCheckout } from '../../lib/payment'
 import React from 'react'
 
 export default function ProGate({ feature = 'this feature' }) {
   const [upgrading, setUpgrading] = React.useState(false)
 
   const handleUpgrade = () => {
-    redirectToCheckout()
+    smartCheckout()
   }
 
   return (
@@ -32,7 +32,7 @@ export default function ProGate({ feature = 'this feature' }) {
           textDecoration: 'none',
           opacity: upgrading ? 0.7 : 1
         }}>
-        {upgrading ? 'Connecting...' : 'Upgrade to Pro — ₹199/month'}
+        {upgrading ? 'Connecting...' : 'Upgrade to Pro — ₹49/month'}
       </button>
       <p className="text-text-muted text-xs mt-4">Cancel anytime. No hidden fees.</p>
     </div>

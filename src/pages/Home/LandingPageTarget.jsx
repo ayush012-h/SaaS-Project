@@ -29,7 +29,7 @@ const PRICING = [
     cta: 'Get Started Free', highlight: false,
   },
   {
-    name: 'Pro', price: '₹199', period: '/month',
+    name: 'Pro', price: '₹49', period: '/month',
     features: ['Unlimited subscriptions', 'AI spending insights', 'Email scanner', 'Advanced analytics', 'Priority support', 'Cancellation guides'],
     cta: 'Start Pro', highlight: true,
   },

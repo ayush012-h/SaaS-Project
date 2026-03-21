@@ -17,7 +17,7 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 import Avatar from './Avatar'
 import toast from 'react-hot-toast'
-import { redirectToCheckout } from '../lib/razorpay'
+import { smartCheckout } from '../lib/payment'
 
 // ─────────────────────────────────────────────────────────
 // Image Crop Modal — pure canvas, no external deps
@@ -405,7 +405,7 @@ export default function ProfileUpload() {
                 </div>
                 {profile?.plan !== 'pro' && (
                   <button
-                    onClick={() => redirectToCheckout()}
+                    onClick={() => smartCheckout().catch(err => toast.error(err.message))}
                     className="text-xs text-brand-purple hover:underline font-semibold bg-transparent border-none p-0 cursor-pointer"
                   >
                     Upgrade

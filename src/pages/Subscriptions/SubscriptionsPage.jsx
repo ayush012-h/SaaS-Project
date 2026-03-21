@@ -14,7 +14,7 @@ import { EmptySubscriptions, EmptySearch } from '../../components/EmptyState'
 import DuplicateDetector from '../DuplicateDetector'
 import SubscriptionHistory from '../../components/SubscriptionHistory'
 import ProGate from '../../components/UI/ProGate'
-import { redirectToCheckout } from '../../lib/razorpay'
+import { smartCheckout } from '../../lib/payment'
 import { Download, History, Tag as TagIcon, FileText } from 'lucide-react'
 import { saveAs } from 'file-saver'
 import jsPDF from 'jspdf'
@@ -173,7 +173,7 @@ export default function SubscriptionsPage() {
             )}
           </div>
           <button
-            onClick={() => canAdd ? setAddOpen(true) : redirectToCheckout()}
+            onClick={() => canAdd ? setAddOpen(true) : smartCheckout().catch(err => toast.error(err.message))}
             className="p-2 sm:px-4 sm:py-2.5 rounded-xl bg-gradient-to-r from-brand-purple to-brand-teal text-white shadow-lg hover:opacity-90 transition-all flex items-center gap-2 border-none cursor-pointer"
           >
             <Plus size={isMobile ? 18 : 18} strokeWidth={3} />

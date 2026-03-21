@@ -128,7 +128,7 @@ const FEATURES = [
     ],
     preview: [
       { label: 'Avg Save', value: '₹3,900/mo', sub: 'Per Pro user', color: '#4CFF8F' },
-      { label: 'ROI', value: '1859%', sub: 'vs ₹199/mo Pro cost', color: '#FF63B3' },
+      { label: 'ROI', value: '1859%', sub: 'vs ₹49/mo Pro cost', color: '#FF63B3' },
       { label: 'Year 1', value: '₹46,800', sub: 'Avg annual savings', color: '#FFD700' },
     ]
   },

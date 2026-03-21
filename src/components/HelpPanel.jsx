@@ -25,7 +25,7 @@ const FAQS = [
   },
   {
     q: 'What is the free plan limit?',
-    a: 'The free plan lets you track up to 5 subscriptions. Upgrade to Pro (₹199/month) for unlimited subscriptions, AI insights, and the email scanner.',
+    a: 'The free plan lets you track up to 5 subscriptions. Upgrade to Pro (₹49/month) for unlimited subscriptions, AI insights, and the email scanner.',
   },
 ]
 

@@ -1,6 +1,6 @@
 import React from 'react'
 import { Lock, Sparkles, ChevronRight } from 'lucide-react'
-import { redirectToCheckout } from '../lib/razorpay'
+import { smartCheckout } from '../lib/payment'
 
 export default function ProGate({ featureName, children }) {
   const [upgrading, setUpgrading] = React.useState(false)
@@ -8,7 +8,7 @@ export default function ProGate({ featureName, children }) {
   const handleUpgrade = async () => {
     setUpgrading(true)
     try {
-      await redirectToCheckout()
+      await smartCheckout()
     } finally {
       setUpgrading(false)
     }
