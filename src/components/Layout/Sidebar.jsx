@@ -3,7 +3,7 @@ import {
   LayoutDashboard, CreditCard, BarChart3, Bell,
   ScanText, Settings, LogOut, Zap, TrendingUp, HelpCircle,
   Menu, ChevronUp, Lock, User as UserIcon, Crown,
-  Calendar, FileText, Copy, MessageSquare
+  Calendar, FileText, Copy, MessageSquare, Sun, Moon
 } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -80,7 +80,7 @@ function FeedbackModal({ onClose }) {
 
 export default function Sidebar({ style, isCollapsed, setIsCollapsed }) {
   const { user, profile, isPro, signOut } = useAuth()
-  const { theme } = useTheme()
+  const { theme, toggleTheme } = useTheme()
   const navigate = useNavigate()
   const [helpOpen, setHelpOpen] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
@@ -250,6 +250,13 @@ export default function Sidebar({ style, isCollapsed, setIsCollapsed }) {
               </button>
               <button onClick={() => { navigate('/settings'); setMenuOpen(false) }} className="w-full flex items-center gap-2 px-4 py-2 text-sm text-text-primary hover:bg-bg-hover transition-colors">
                 <Settings size={16} /> Settings
+              </button>
+              <button
+                onClick={(e) => { e.stopPropagation(); toggleTheme(); setMenuOpen(false) }}
+                className="w-full flex items-center gap-2 px-4 py-2 text-sm text-text-primary hover:bg-bg-hover transition-colors"
+              >
+                {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
+                {theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
               </button>
               <button
                 onClick={() => { setFeedbackOpen(true); setMenuOpen(false) }}

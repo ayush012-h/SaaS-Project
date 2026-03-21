@@ -21,13 +21,13 @@ const AboutPage       = lazy(() => import('./pages/Home/AboutPage'))
 const PrivacyPage     = lazy(() => import('./pages/Legal/PrivacyPage'))
 const TermsPage       = lazy(() => import('./pages/Legal/TermsPage'))
 
-// Dashboard pages
-const DashboardPage     = lazy(() => import('./pages/Dashboard/DashboardPage'))
-const SubscriptionsPage = lazy(() => import('./pages/Subscriptions/SubscriptionsPage'))
-const AnalyticsPage     = lazy(() => import('./pages/Analytics/AnalyticsPage'))
-const AlertsPage        = lazy(() => import('./pages/Alerts/AlertsPage'))
-const SettingsPage      = lazy(() => import('./pages/Settings/SettingsPage'))
-const EmailScannerPage  = lazy(() => import('./pages/Scanner/EmailScannerPage'))
+// Dashboard pages (Eager load for instant navigation performance)
+import DashboardPage from './pages/Dashboard/DashboardPage'
+import SubscriptionsPage from './pages/Subscriptions/SubscriptionsPage'
+import AnalyticsPage from './pages/Analytics/AnalyticsPage'
+import AlertsPage from './pages/Alerts/AlertsPage'
+import SettingsPage from './pages/Settings/SettingsPage'
+import EmailScannerPage from './pages/Scanner/EmailScannerPage'
 
 // Pro feature pages — heaviest, load only when needed
 const CancelGuide       = lazy(() => import('./pages/CancelGuide'))

@@ -1,20 +1,47 @@
 import { supabase } from './supabase'
 
-// Cache country detection
+// Cache country detection result
 let cachedCountry = null
 
+// ── Country Detection ─────────────────────────────────────
 async function detectCountry() {
   if (cachedCountry) return cachedCountry
-  try {
-    const res = await fetch('https://ipapi.co/json/', {
-      signal: AbortSignal.timeout(3000)
-    })
-    const data = await res.json()
-    cachedCountry = data.country_code
-    return cachedCountry
-  } catch {
-    return 'UNKNOWN'
+
+  // Try multiple IP detection services as fallback
+  const services = [
+    'https://ipapi.co/json/',
+    'https://api.country.is/',
+    'https://ipwho.is/',
+  ]
+
+  for (const service of services) {
+    try {
+      const res = await fetch(service, {
+        signal: AbortSignal.timeout(4000),
+      })
+      const data = await res.json()
+
+      // Different services use different field names
+      const country =
+        data.country_code ||   // ipapi.co
+        data.country ||        // api.country.is
+        data.country_code2     // ipwho.is
+
+      if (country && country.length === 2) {
+        cachedCountry = country.toUpperCase()
+        console.log(`Country detected: ${cachedCountry} (via ${service})`)
+        return cachedCountry
+      }
+    } catch (err) {
+      console.warn(`Country detection failed for ${service}:`, err.message)
+      continue
+    }
   }
+
+  // All services failed — default to UNKNOWN
+  console.warn('All country detection services failed — defaulting to international')
+  cachedCountry = 'UNKNOWN'
+  return cachedCountry
 }
 
 export async function isIndianUser() {
@@ -22,11 +49,18 @@ export async function isIndianUser() {
   return country === 'IN'
 }
 
-// Dodo Payments checkout for international users
+// Reset cache (useful for testing)
+export function resetCountryCache() {
+  cachedCountry = null
+}
+
+// ── Dodo Payments checkout (International) ────────────────
 async function dodoCheckout() {
   try {
     const { data: { session } } = await supabase.auth.getSession()
     if (!session) throw new Error('Please login first')
+
+    console.log('Creating Dodo checkout...')
 
     const res = await fetch(
       `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-dodo-checkout`,
@@ -39,12 +73,40 @@ async function dodoCheckout() {
       }
     )
 
-    const data = await res.json()
+    // Log raw response for debugging
+    const responseText = await res.text()
+    console.log('Dodo checkout raw response:', responseText)
+
+    let data
+    try {
+      data = JSON.parse(responseText)
+    } catch {
+      throw new Error(`Invalid response from checkout: ${responseText}`)
+    }
+
+    if (!res.ok) {
+      throw new Error(data?.error || `Checkout failed with status ${res.status}`)
+    }
+
     if (data.error) throw new Error(data.error)
-    if (!data.url) throw new Error('No checkout URL returned')
+
+    // Check all possible URL field names Dodo might return
+    const checkoutUrl =
+      data.url ||
+      data.checkout_url ||
+      data.payment_url ||
+      data.link ||
+      data.payment_link
+
+    if (!checkoutUrl) {
+      console.error('Full Dodo response:', JSON.stringify(data))
+      throw new Error('No checkout URL returned from Dodo. Check edge function logs.')
+    }
+
+    console.log('Dodo checkout URL:', checkoutUrl)
 
     // Redirect to Dodo hosted checkout
-    window.location.href = data.url
+    window.location.href = checkoutUrl
 
   } catch (error) {
     console.error('Dodo checkout error:', error.message)
@@ -52,16 +114,18 @@ async function dodoCheckout() {
   }
 }
 
-// Smart checkout — auto picks payment based on location
+// ── Smart checkout — auto picks payment ───────────────────
 export async function smartCheckout() {
   try {
     const india = await isIndianUser()
+    console.log('Is Indian user:', india)
+
     if (india) {
-      console.log('Indian user → Razorpay')
+      console.log('→ Razorpay (Indian user)')
       const { redirectToCheckout } = await import('./razorpay')
       return redirectToCheckout()
     } else {
-      console.log('International user → Dodo Payments')
+      console.log('→ Dodo Payments (International user)')
       return dodoCheckout()
     }
   } catch (error) {
@@ -70,11 +134,22 @@ export async function smartCheckout() {
   }
 }
 
-// Show correct price based on location
+// ── Show correct price based on location ──────────────────
 export async function getLocalPrice() {
   const india = await isIndianUser()
   return india
-    ? { amount: '₹49', period: '/month', flag: '🇮🇳', currency: 'INR' }
-    : { amount: '$1',   period: '/month', flag: '🌍', currency: 'USD' }
+    ? {
+        amount:   '₹49',
+        period:   '/month',
+        flag:     '🇮🇳',
+        currency: 'INR',
+        trial:    '3 days free',
+      }
+    : {
+        amount:   '$1',
+        period:   '/month',
+        flag:     '🌍',
+        currency: 'USD',
+        trial:    '3 days free',
+      }
 }
-

@@ -899,9 +899,7 @@ export default function LandingPage() {
             <Link to="/about">About</Link>
           </div>
           <div className="nav-actions">
-            <button onClick={toggleTheme} className="btn-glass" style={{ padding: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
-            </button>
+
             <Link to="/login" className="nav-signin">Sign in</Link>
             <MagneticButton isLink={true} to="/register" className="btn-glass">
               Get Started Free

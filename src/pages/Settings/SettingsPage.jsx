@@ -134,24 +134,24 @@ export default function SettingsPage() {
           <Icon size={24} />
         </div>
         <div>
-          <h2 style={{ fontSize: '24px', fontWeight: '800', color: '#E8E8F0', margin: 0 }}>{title}</h2>
-          <p style={{ color: '#9999BB', fontSize: '14px', margin: '4px 0 0 0' }}>{subtitle}</p>
+          <h2 className="text-2xl font-extrabold text-text-primary m-0">{title}</h2>
+          <p className="text-sm text-text-muted mt-1 mb-0">{subtitle}</p>
         </div>
       </div>
     </div>
   )
 
   const Toggle = ({ enabled, setEnabled, label, sublabel }) => (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px', background: '#13131F', borderRadius: '16px', border: '1px solid #1E1E2E' }}>
+    <div className="flex items-center justify-between p-5 bg-bg-elevated border border-border rounded-2xl">
       <div>
-        <p style={{ color: '#E8E8F0', fontWeight: '700', fontSize: '15px', margin: 0 }}>{label}</p>
-        <p style={{ color: '#666680', fontSize: '12px', margin: '4px 0 0 0' }}>{sublabel}</p>
+        <p className="font-bold text-[15px] text-text-primary m-0">{label}</p>
+        <p className="text-xs text-text-muted mt-1 mb-0">{sublabel}</p>
       </div>
       <button
         onClick={() => setEnabled(!enabled)}
         style={{
           width: '48px', height: '26px', borderRadius: '100px', padding: '3px', cursor: 'pointer', border: 'none',
-          backgroundColor: enabled ? '#6C63FF' : '#2A2A3E',
+          backgroundColor: enabled ? '#6C63FF' : (theme === 'dark' ? '#2A2A3E' : '#e5e7eb'),
           transition: 'background 0.3s ease', position: 'relative'
         }}
       >
@@ -169,10 +169,10 @@ export default function SettingsPage() {
     switch(activeTab) {
       case 'profile':
         return (
-          <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-6">
+          <motion.div initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.15 }} className="space-y-6">
             <ProfileUpload />
 
-            <div style={{ background: '#13131F', borderRadius: '24px', border: '1px solid #1E1E2E', padding: '32px' }}>
+            <div className="bg-bg-elevated border border-border rounded-[24px] p-8">
               <SectionHeader icon={Shield} title="Extended Profile" subtitle="Biography and public info" />
               <div className="space-y-6">
                 <div>
@@ -403,10 +403,10 @@ export default function SettingsPage() {
 
       case 'preferences':
         return (
-          <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-6">
+          <motion.div initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.15 }} className="space-y-6">
             <SectionHeader icon={Layout} title="App Preferences" subtitle="Customize your experience" />
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
-              <div style={{ background: '#13131F', borderRadius: '24px', border: '1px solid #1E1E2E', padding: '32px' }}>
+              <div className="bg-bg-elevated border border-border rounded-[24px] p-8">
                 <h3 style={{ fontSize: '16px', fontWeight: '800', marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '10px' }}><Globe size={18} color="#6C63FF" /> Localization</h3>
                 <div className="space-y-4">
                   <div>
@@ -424,7 +424,7 @@ export default function SettingsPage() {
                   </div>
                 </div>
               </div>
-              <div style={{ background: '#13131F', borderRadius: '24px', border: '1px solid #1E1E2E', padding: '32px' }}>
+              <div className="bg-bg-elevated border border-border rounded-[24px] p-8">
                 <h3 style={{ fontSize: '16px', fontWeight: '800', marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '10px' }}><SettingsIcon size={18} color="#3ECFCF" /> Interface</h3>
                 <div className="space-y-4">
                   <Toggle enabled={theme === 'dark'} setEnabled={toggleTheme} label="Dark Mode" sublabel="Saves battery on OLED" />
@@ -437,12 +437,12 @@ export default function SettingsPage() {
 
       case 'notifications':
         return (
-          <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-6">
+          <motion.div initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.15 }} className="space-y-6">
             <SectionHeader icon={Bell} title="Notifications" subtitle="Stay ahead of renewals" />
-            <div style={{ background: '#13131F', borderRadius: '24px', border: '1px solid #1E1E2E', padding: '32px' }} className="space-y-6">
+            <div className="bg-bg-elevated border border-border rounded-[24px] p-8 space-y-6">
               <Toggle enabled={emailAlerts} setEnabled={setEmailAlerts} label="Email Renewal Alerts" sublabel="Receive detailed info via email" />
               <Toggle enabled={pushAlerts} setEnabled={setPushAlerts} label="Push Notifications" sublabel="Alerts on your browser/phone" />
-              <div style={{ paddingTop: '24px', borderTop: '1px solid #1E1E2E' }}>
+              <div style={{ paddingTop: '24px', borderTop: '1px solid var(--color-border)' }}>
                 <label className="label">Alert Timing</label>
                 <select className="select" value={daysBefore} onChange={e => setDaysBefore(e.target.value)}>
                   <option value="1">1 day before</option>
@@ -457,13 +457,9 @@ export default function SettingsPage() {
 
       case 'billing':
         return (
-          <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-6">
+          <motion.div initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.15 }} className="space-y-6">
             <SectionHeader icon={CreditCard} title="Billing & Plans" subtitle="Subscription status and invoices" />
-            <div style={{
-              background: isPro ? 'linear-gradient(135deg, #1A1A2A, #0A0A0F)' : '#13131F',
-              borderRadius: '24px', border: isPro ? '2px solid #6C63FF' : '1px solid #1E1E2E',
-              padding: '32px', position: 'relative', overflow: 'hidden'
-            }}>
+            <div className={`${isPro ? 'bg-gradient-to-br from-bg-elevated to-bg-surface border-2 border-brand-purple' : 'bg-bg-elevated border border-border'} rounded-[24px] p-8 relative overflow-hidden`}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                 <div>
                   <span style={{ background: isPro ? 'rgba(108, 99, 255, 0.1)' : 'rgba(102, 102, 128, 0.1)', color: isPro ? '#6C63FF' : '#666680', fontSize: '11px', fontWeight: '900', padding: '6px 12px', borderRadius: '8px', textTransform: 'uppercase' }}>
@@ -482,7 +478,7 @@ export default function SettingsPage() {
         return (
           <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-6">
             <SectionHeader icon={Shield} title="Security & Data" subtitle="Protect your account and data" />
-            <div style={{ background: '#13131F', borderRadius: '24px', border: '1px solid #1E1E2E', padding: '32px' }} className="space-y-8">
+            <div className="bg-bg-elevated border border-border rounded-[24px] p-8 space-y-8">
               <button className="btn-secondary" style={{ width: '100%' }}>Change Password</button>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                 <button className="btn-secondary">Download Export</button>
@@ -506,16 +502,16 @@ export default function SettingsPage() {
             <SectionHeader icon={HelpCircle} title="Frequently Asked Questions" subtitle="Quick answers to common doubts" />
             <div className="grid grid-cols-1 gap-4">
               {faqs.map((f, i) => (
-                <div key={i} style={{ background: '#13131F', border: '1px solid #1E1E2E', borderRadius: '20px', padding: '24px' }}>
-                  <h3 style={{ fontSize: '16px', fontWeight: '800', color: '#E8E8F0', marginBottom: '12px', display: 'flex', gap: '10px' }}>
-                    <span style={{ color: '#6C63FF' }}>Q.</span> {f.q}
+                <div key={i} className="bg-bg-elevated border border-border rounded-[20px] p-6">
+                  <h3 className="text-base font-extrabold text-text-primary flex gap-2.5 mb-3">
+                    <span className="text-brand-purple">Q.</span> {f.q}
                   </h3>
-                  <p style={{ fontSize: '14px', color: '#9999BB', lineHeight: '1.6', margin: 0 }}>{f.a}</p>
+                  <p className="text-sm text-text-muted leading-relaxed m-0">{f.a}</p>
                 </div>
               ))}
             </div>
-            <div style={{ padding: '24px', background: 'rgba(108, 99, 255, 0.05)', border: '1px dashed rgba(108, 99, 255, 0.3)', borderRadius: '20px', textAlign: 'center' }}>
-              <p style={{ color: '#E8E8F0', fontSize: '14px', margin: '0 0 12px 0' }}>Still have questions?</p>
+            <div className="p-6 bg-brand-purple/5 border border-brand-purple/30 border-dashed rounded-[20px] text-center">
+              <p className="text-sm text-text-primary mb-3">Still have questions?</p>
               <button className="btn-secondary" style={{ border: 'none', background: 'white', color: 'black' }}>Contact Support</button>
             </div>
           </motion.div>
