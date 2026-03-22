@@ -24,6 +24,7 @@ export function ThemeProvider({ children }) {
     // Update local storage and document attribute
     localStorage.setItem('theme', theme)
     document.documentElement.setAttribute('data-theme', theme)
+    document.documentElement.classList.toggle('dark', theme === 'dark')
   }, [theme])
 
   const toggleTheme = () => {

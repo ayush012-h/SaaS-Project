@@ -127,6 +127,8 @@ export function ServiceLogo({ name, size = 36, color = '#6C63FF' }) {
         <img
           src={logoUrl}
           alt={name}
+          loading="lazy"
+          decoding="async"
           style={imgStyle}
           onLoad={() => setImgLoaded(true)}
           onError={() => {

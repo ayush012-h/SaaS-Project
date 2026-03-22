@@ -1,7 +1,8 @@
 import { useMemo, useEffect, useState } from 'react'
 import { DollarSign, CreditCard, TrendingUp, Bell, Calendar, AlertCircle, MessageSquare } from 'lucide-react'
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
 import { format, subMonths } from 'date-fns'
+import React, { lazy, Suspense } from 'react'
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
 import { useSubscriptions } from '../../hooks/useSubscriptions'
 import { useAuth } from '../../contexts/AuthContext'
 import { useCurrencyRates, getCurrencySymbol } from '../../hooks/useCurrencyRates'
@@ -16,6 +17,48 @@ import { CheckSquare, Square, X } from 'lucide-react'
 import WhatsNewBanner from '../../components/WhatsNewBanner'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import FeedbackWidget from '../../components/FeedbackWidget'
+
+const SubscriptionRow = React.memo(function SubscriptionRow({ sub, isMobile, days, type = 'renewal' }) {
+  if (type === 'renewal') {
+    return (
+      <motion.div
+        variants={itemVariants}
+        className="flex items-center justify-between p-2 sm:p-3 rounded-lg sm:rounded-xl bg-bg-elevated/40 border border-border/50"
+      >
+        <div className="flex items-center gap-2 sm:gap-3">
+          <ServiceLogo name={sub.name} size={isMobile ? 28 : 36} color={sub.color || '#6C63FF'} />
+          <div className="min-w-0">
+            <p className="text-[13px] font-bold text-text-primary truncate">{sub.name}</p>
+            <p className="text-[10px] text-text-muted truncate">{sub.currency || '₹'}{sub.amount}</p>
+          </div>
+        </div>
+        <div className="shrink-0 text-right">
+          <span className={`text-[11px] font-black uppercase ${days <= 2 ? 'text-status-danger' : days <= 5 ? 'text-status-warning' : 'text-text-secondary'}`}>
+            {days === 0 ? 'Today' : `${days}d`}
+          </span>
+        </div>
+      </motion.div>
+    )
+  }
+  return (
+    <motion.div
+      variants={itemVariants}
+      className="flex items-center justify-between p-2 sm:p-2.5 rounded-lg sm:rounded-xl hover:bg-bg-elevated transition-colors"
+    >
+      <div className="flex items-center gap-2 sm:gap-3">
+        <ServiceLogo name={sub.name} size={isMobile ? 28 : 36} color={sub.color || '#6C63FF'} />
+        <div className="min-w-0">
+          <p className="text-[13px] font-bold text-text-primary truncate">{sub.name}</p>
+          <p className="text-[10px] text-text-muted truncate capitalize">{sub.category || 'Other'}</p>
+        </div>
+      </div>
+      <div className="shrink-0 text-right">
+        <p className="text-[13px] font-black text-text-primary">{sub.currency || '₹'}{sub.amount}</p>
+        <div className="scale-75 origin-right -mt-1"><StatusBadge status={sub.status} /></div>
+      </div>
+    </motion.div>
+  )
+})
 
 function FeedbackModal({ onClose }) {
   return (
@@ -52,7 +95,8 @@ const containerVariants = {
 
 const itemVariants = {
   hidden: { opacity: 0, y: 20 },
-  show: { opacity: 1, y: 0 }
+  show: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 100 } },
+  style: { willChange: 'transform, opacity' }
 }
 
 const CustomTooltip = ({ active, payload, label, currencySymbol }) => {
@@ -394,26 +438,7 @@ export default function DashboardPage() {
             >
               {upcomingRenewals.slice(0, 4).map(sub => {
                 const days = Math.ceil((new Date(sub.next_renewal_date) - new Date()) / (1000 * 60 * 60 * 24))
-                return (
-                  <motion.div
-                    key={sub.id}
-                    variants={itemVariants}
-                    className="flex items-center justify-between p-2 sm:p-3 rounded-lg sm:rounded-xl bg-bg-elevated/40 border border-border/50"
-                  >
-                    <div className="flex items-center gap-2 sm:gap-3">
-                      <ServiceLogo name={sub.name} size={isMobile ? 28 : 36} color={sub.color || '#6C63FF'} />
-                      <div className="min-w-0">
-                        <p className="text-[13px] font-bold text-text-primary truncate">{sub.name}</p>
-                        <p className="text-[10px] text-text-muted truncate">{sub.currency || '₹'}{sub.amount}</p>
-                      </div>
-                    </div>
-                    <div className="shrink-0 text-right">
-                      <span className={`text-[11px] font-black uppercase ${days <= 2 ? 'text-status-danger' : days <= 5 ? 'text-status-warning' : 'text-text-secondary'}`}>
-                        {days === 0 ? 'Today' : `${days}d`}
-                      </span>
-                    </div>
-                  </motion.div>
-                )
+                return <SubscriptionRow key={sub.id} sub={sub} isMobile={isMobile} days={days} type="renewal" />
               })}
             </motion.div>
           )}
@@ -444,23 +469,7 @@ export default function DashboardPage() {
               className="space-y-2"
             >
               {[...subscriptions].sort((a,b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 4).map(sub => (
-                <motion.div
-                  key={sub.id}
-                  variants={itemVariants}
-                  className="flex items-center justify-between p-2 sm:p-2.5 rounded-lg sm:rounded-xl hover:bg-bg-elevated transition-colors"
-                >
-                  <div className="flex items-center gap-2 sm:gap-3">
-                    <ServiceLogo name={sub.name} size={isMobile ? 28 : 36} color={sub.color || '#6C63FF'} />
-                    <div className="min-w-0">
-                      <p className="text-[13px] font-bold text-text-primary truncate">{sub.name}</p>
-                      <p className="text-[10px] text-text-muted truncate capitalize">{sub.category || 'Other'}</p>
-                    </div>
-                  </div>
-                  <div className="shrink-0 text-right">
-                    <p className="text-[13px] font-black text-text-primary">{sub.currency || '₹'}{sub.amount}</p>
-                    <div className="scale-75 origin-right -mt-1"><StatusBadge status={sub.status} /></div>
-                  </div>
-                </motion.div>
+                <SubscriptionRow key={sub.id} sub={sub} isMobile={isMobile} type="recent" />
               ))}
             </motion.div>
           )}

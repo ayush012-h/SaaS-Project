@@ -7,41 +7,49 @@ let cachedCountry = null
 async function detectCountry() {
   if (cachedCountry) return cachedCountry
 
-  // Try multiple IP detection services as fallback
   const services = [
-    'https://ipapi.co/json/',
-    'https://api.country.is/',
-    'https://ipwho.is/',
+    async () => {
+      const r = await fetch('https://ipapi.co/json/', { signal: AbortSignal.timeout(3000) })
+      const d = await r.json()
+      return d.country_code
+    },
+    async () => {
+      const r = await fetch('https://api.country.is/', { signal: AbortSignal.timeout(3000) })
+      const d = await r.json()
+      return d.country
+    },
+    async () => {
+      const r = await fetch('https://ipwho.is/', { signal: AbortSignal.timeout(3000) })
+      const d = await r.json()
+      return d.country_code
+    },
+    async () => {
+      const r = await fetch('https://freeipapi.com/api/json', { signal: AbortSignal.timeout(3000) })
+      const d = await r.json()
+      return d.countryCode
+    },
   ]
 
   for (const service of services) {
     try {
-      const res = await fetch(service, {
-        signal: AbortSignal.timeout(4000),
-      })
-      const data = await res.json()
-
-      // Different services use different field names
-      const country =
-        data.country_code ||   // ipapi.co
-        data.country ||        // api.country.is
-        data.country_code2     // ipwho.is
-
-      if (country && country.length === 2) {
-        cachedCountry = country.toUpperCase()
-        console.log(`Country detected: ${cachedCountry} (via ${service})`)
+      const code = await service()
+      if (code && code.length === 2) {
+        cachedCountry = code.toUpperCase()
         return cachedCountry
       }
-    } catch (err) {
-      console.warn(`Country detection failed for ${service}:`, err.message)
-      continue
-    }
+    } catch { continue }
   }
-
-  // All services failed — default to UNKNOWN
-  console.warn('All country detection services failed — defaulting to international')
+  
   cachedCountry = 'UNKNOWN'
   return cachedCountry
+}
+
+export function forceInternational() {
+  cachedCountry = 'US'
+}
+
+export function forceIndia() {
+  cachedCountry = 'IN'
 }
 
 export async function isIndianUser() {

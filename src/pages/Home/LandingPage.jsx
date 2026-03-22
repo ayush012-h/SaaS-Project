@@ -1,1040 +1,806 @@
-import { useEffect, useRef, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
-import { useAuth } from '../../contexts/AuthContext'
-import { useTheme } from '../../contexts/ThemeContext'
-import {
-  TrendingUp, BarChart3, Bell, Zap, Shield, ScanText,
-  ArrowRight, ChevronDown, Star, DollarSign, Check, Sun, Moon, MessageSquare
-} from 'lucide-react'
-import FeedbackWidget from '../../components/FeedbackWidget'
+import React, { useState, useEffect, useRef } from 'react';
+import { motion, useScroll, useTransform, AnimatePresence, useSpring } from 'framer-motion';
+import { Bot, Bell, XCircle, Check, Play, ChevronDown, CheckCircle2, ShieldCheck, Zap, ArrowRight, Target, Users, LayoutDashboard, Calendar as CalendarIcon, FileText } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
 
-const FEATURES = [
-  { icon: BarChart3, title: 'Smart Dashboard', desc: 'Visualize all your subscriptions with beautiful charts and real-time spending insights.', color: '#6C63FF', glow: 'rgba(108,99,255,0.3)' },
-  { icon: Zap, title: 'AI Spending Insights', desc: 'GPT-4o analyzes your subscriptions to find overlaps, unused services & downgrade opportunities.', color: '#3ECFCF', glow: 'rgba(62,207,207,0.3)' },
-  { icon: Bell, title: 'Renewal Alerts', desc: 'Never get surprised by a charge again. Get notified days before any subscription renews.', color: '#FFD700', glow: 'rgba(255,215,0,0.3)' },
-  { icon: ScanText, title: 'Email Scanner', desc: 'Paste your bank statement. Our AI extracts all subscriptions automatically in seconds.', color: '#4CFF8F', glow: 'rgba(76,255,143,0.3)' },
-  { icon: Shield, title: 'Secure & Private', desc: 'Bank-level security with Supabase RLS. Your data is yours — never sold or shared.', color: '#FF6363', glow: 'rgba(255,99,99,0.3)' },
-  { icon: DollarSign, title: 'Save Real Money', desc: 'Our users find an average of ₹3,900/month in forgotten or duplicate subscriptions.', color: '#FF63B3', glow: 'rgba(255,99,179,0.3)' },
-]
-
-const STATS = [
-  { value: '₹3,900', label: 'avg. savings/month' },
-  { value: '2M+', label: 'subscriptions tracked' },
-  { value: '99.9%', label: 'uptime' },
-  { value: '4.9★', label: 'user rating' },
-]
-
-const PRICING = [
-  {
-    name: 'Free', price: '₹0', period: '/month',
-    features: ['Up to 5 subscriptions', 'Dashboard & charts', 'Renewal alerts', 'Basic analytics'],
-    cta: 'Get Started Free', highlight: false,
-  },
-  {
-    name: 'Pro', price: '₹49', period: '/month',
-    features: ['Unlimited subscriptions', 'AI spending insights', 'Email scanner', 'Advanced analytics', 'Priority support', 'Cancellation guides'],
-    cta: 'Start Pro', highlight: true,
-  },
-]
-
-// Example subscriptions for the demo table
-const DEMO_SUBS = [
-  { name: 'Netflix', category: 'Streaming', amount: 649, cycle: 'Monthly', status: 'Active', statusColor: '#4CFF8F', dot: '#E50914', renewal: 'Mar 14' },
-  { name: 'Spotify', category: 'Music', amount: 179, cycle: 'Monthly', status: 'Active', statusColor: '#4CFF8F', dot: '#1DB954', renewal: 'Mar 18' },
-  { name: 'Adobe CC', category: 'Software', amount: 4490, cycle: 'Monthly', status: '⚠ Overlap', statusColor: '#FFD700', dot: '#FF0000', renewal: 'Mar 22' },
-  { name: 'ChatGPT Plus', category: 'AI', amount: 1699, cycle: 'Monthly', status: 'Active', statusColor: '#4CFF8F', dot: '#10A37F', renewal: 'Mar 25' },
-  { name: 'GitHub Pro', category: 'Dev Tools', amount: 336, cycle: 'Monthly', status: 'Active', statusColor: '#4CFF8F', dot: '#6C63FF', renewal: 'Apr 1' },
-  { name: 'Notion', category: 'Productivity', amount: 660, cycle: 'Monthly', status: '💡 Downgrade', statusColor: '#3ECFCF', dot: '#ffffff', renewal: 'Apr 3' },
-  { name: 'YouTube Premium', category: 'Streaming', amount: 189, cycle: 'Monthly', status: '⚠ Overlap', statusColor: '#FFD700', dot: '#FF0000', renewal: 'Apr 7' },
-  { name: 'iCloud 200GB', category: 'Storage', amount: 75, cycle: 'Monthly', status: 'Active', statusColor: '#4CFF8F', dot: '#007AFF', renewal: 'Apr 10' },
-]
-
-// Mouse parallax hook
-function useMouseParallax(sensitivity = 1) {
-  const [pos, setPos] = useState({ x: 0, y: 0 })
+// --- Custom Hooks ---
+function useInView(options = {}) {
+  const [ref, setRef] = useState(null);
+  const [inView, setInView] = useState(false);
   useEffect(() => {
-    function handle(e) {
-      setPos({
-        x: (e.clientX / window.innerWidth - 0.5) * 50 * sensitivity,
-        y: (e.clientY / window.innerHeight - 0.5) * 50 * sensitivity
-      })
-    }
-    window.addEventListener('mousemove', handle)
-    return () => window.removeEventListener('mousemove', handle)
-  }, [sensitivity])
-  return pos
-}
-
-// Custom Cursor
-function CustomCursor() {
-  const [pos, setPos] = useState({ x: -100, y: -100 })
-  const [hovered, setHovered] = useState(false)
-
-  useEffect(() => {
-    const handleMove = (e) => setPos({ x: e.clientX, y: e.clientY })
-    const handleOver = (e) => {
-      if (e.target.tagName?.toLowerCase() === 'a' || e.target.tagName?.toLowerCase() === 'button' || e.target.closest('a') || e.target.closest('button')) {
-        setHovered(true)
-      } else {
-        setHovered(false)
+    if (!ref) return;
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) {
+        setInView(true);
+        if (options.once) observer.disconnect();
+      } else if (!options.once) {
+        setInView(false);
       }
-    }
-    window.addEventListener('mousemove', handleMove)
-    window.addEventListener('mouseover', handleOver)
-    return () => {
-      window.removeEventListener('mousemove', handleMove)
-      window.removeEventListener('mouseover', handleOver)
-    }
-  }, [])
-
-  return (
-    <div
-      className="custom-cursor"
-      style={{
-        translate: `${pos.x - 10}px ${pos.y - 10}px`,
-        scale: hovered ? 2 : 1,
-        background: hovered ? 'rgba(108, 99, 255, 0.2)' : 'rgba(255, 255, 255, 0.4)',
-        borderColor: hovered ? 'rgba(108, 99, 255, 0.5)' : 'rgba(255, 255, 255, 0.2)',
-      }}
-    />
-  )
+    }, { rootMargin: options.margin || '-100px', ...options });
+    observer.observe(ref);
+    return () => observer.disconnect();
+  }, [ref, options]);
+  return [setRef, inView];
 }
 
-function FeatureCard({ feature, index }) {
-  const cardRef = useRef(null)
-  const [tilt, setTilt] = useState({ x: 0, y: 0 })
-  const [hovered, setHovered] = useState(false)
+// --- Magnetic Button Component ---
+const MagneticButton = ({ children, className, onClick, ...props }) => {
+  const ref = useRef(null);
+  const [position, setPosition] = useState({ x: 0, y: 0 });
 
-  function handleMouseMove(e) {
-    if(!cardRef.current) return;
-    const rect = cardRef.current.getBoundingClientRect()
-    const x = ((e.clientX - rect.left) / rect.width - 0.5) * 18
-    const y = ((e.clientY - rect.top) / rect.height - 0.5) * -18
-    setTilt({ x, y })
-  }
+  const handleMouse = (e) => {
+    const { clientX, clientY } = e;
+    const { left, top, width, height } = ref.current.getBoundingClientRect();
+    const x = clientX - (left + width / 2);
+    const y = clientY - (top + height / 2);
+    setPosition({ x: x * 0.3, y: y * 0.3 });
+  };
+
+  const reset = () => setPosition({ x: 0, y: 0 });
 
   return (
-    <div
-      ref={cardRef}
-      onMouseMove={handleMouseMove}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => { setTilt({ x: 0, y: 0 }); setHovered(false) }}
-      className={`feature-card ${hovered ? 'hovered' : ''}`}
-      style={{
-        transform: `perspective(1000px) rotateY(${tilt.x}deg) rotateX(${tilt.y}deg) translateY(${hovered ? -8 : 0}px)`,
-        boxShadow: hovered ? `0 20px 60px ${feature.glow}` : '0 10px 30px rgba(0,0,0,0.2)',
-        borderColor: hovered ? feature.color : 'rgba(255,255,255,0.05)',
-        transition: hovered ? 'transform 0.1s ease' : 'transform 0.5s ease, box-shadow 0.5s ease',
-        animationDelay: `${index * 80}ms`
-      }}
+    <motion.button
+      ref={ref}
+      onMouseMove={handleMouse}
+      onMouseLeave={reset}
+      animate={{ x: position.x, y: position.y }}
+      transition={{ type: 'spring', stiffness: 150, damping: 15, mass: 0.1 }}
+      className={className}
+      onClick={onClick}
+      {...props}
     >
-      <div className="feature-shimmer" />
-      <div className="feature-icon" style={{ background: `${feature.color}15`, border: `1px solid ${feature.color}30` }}>
-        <feature.icon size={22} style={{ color: feature.color }} />
-      </div>
-      <h3 className="feature-title">{feature.title}</h3>
-      <p className="feature-desc">{feature.desc}</p>
-      <div className="feature-line" style={{ background: `linear-gradient(90deg, ${feature.color}, transparent)` }} />
-    </div>
-  )
-}
-
-function DemoTable() {
-  const [offset, setOffset] = useState(0)
-  const animRef = useRef(null)
-  const rowH = 52 // px per row
-  const totalHeight = DEMO_SUBS.length * rowH
-
-  useEffect(() => {
-    let start = null
-    const speed = 28 // px per second
-
-    function step(ts) {
-      if (start === null) start = ts
-      const elapsed = (ts - start) / 1000
-      setOffset((elapsed * speed) % totalHeight)
-      animRef.current = requestAnimationFrame(step)
-    }
-
-    animRef.current = requestAnimationFrame(step)
-    return () => cancelAnimationFrame(animRef.current)
-  }, [totalHeight])
-
-  // Duplicate for seamless loop
-  const rows = [...DEMO_SUBS, ...DEMO_SUBS]
-
-  return (
-    <div className="demo-table-wrapper cinematic-card" style={{ background: 'var(--landing-card-bg)', border: '1px solid var(--landing-card-border)', borderRadius: '24px', overflow: 'hidden' }}>
-      {/* Header */}
-      <div className="demo-table-header">
-        <span style={{ flex: 2 }}>Service</span>
-        <span style={{ flex: 1.2 }}>Category</span>
-        <span style={{ flex: 1, textAlign: 'right' }}>Amount</span>
-        <span style={{ flex: 1, textAlign: 'center' }}>Renewal</span>
-        <span style={{ flex: 1.3, textAlign: 'right' }}>Status</span>
-      </div>
-      {/* Scrolling rows */}
-      <div className="demo-table-scroll-area">
-        <div style={{ transform: `translateY(-${offset}px)`, willChange: 'transform' }}>
-          {rows.map((sub, i) => (
-            <div key={i} className="demo-table-row" style={{ display: 'flex', padding: '16px 24px', borderBottom: '1px solid var(--landing-card-border)' }}>
-              <span style={{ flex: 2, display: 'flex', alignItems: 'center', gap: 10 }}>
-                <span style={{
-                  width: 28, height: 28, borderRadius: 8,
-                  background: sub.dot === '#ffffff' ? 'var(--landing-glass-btn-bg)' : `${sub.dot}22`,
-                  border: `1px solid ${sub.dot}44`,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: 11, fontWeight: 700, color: sub.dot === '#ffffff' ? 'var(--landing-text)' : sub.dot,
-                  flexShrink: 0,
-                }}>
-                  {sub.name[0]}
-                </span>
-                <span style={{ fontWeight: 500, color: 'var(--landing-text)', fontSize: 13, fontFamily: "'Cabinet Grotesk', sans-serif" }}>{sub.name}</span>
-              </span>
-              <span style={{ flex: 1.2, color: 'var(--landing-text-muted-dark)', fontSize: 12 }}>{sub.category}</span>
-              <span style={{ flex: 1, textAlign: 'right', color: 'var(--landing-text)', fontWeight: 600, fontSize: 13, fontFamily: "'JetBrains Mono', monospace" }}>
-                ₹{sub.amount.toLocaleString('en-IN')}
-              </span>
-              <span style={{ flex: 1, textAlign: 'center', color: 'var(--landing-text-muted)', fontSize: 12 }}>{sub.renewal}</span>
-              <span style={{ flex: 1.3, textAlign: 'right' }}>
-                <span style={{
-                  display: 'inline-flex', alignItems: 'center', gap: 4,
-                  padding: '3px 10px', borderRadius: 100,
-                  background: `${sub.statusColor}14`,
-                  border: `1px solid ${sub.statusColor}28`,
-                  color: sub.statusColor, fontSize: 11, fontWeight: 600,
-                  whiteSpace: 'nowrap',
-                }}>
-                  {sub.status}
-                </span>
-              </span>
-            </div>
-          ))}
-        </div>
-        {/* Fade-out at bottom */}
-        <div className="demo-table-fade" style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '80px', background: 'linear-gradient(to top, var(--landing-card-bg) 20%, transparent)' }} />
-      </div>
-      {/* Footer summary */}
-      <div className="demo-table-footer" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 24px', background: 'var(--landing-table-bg)', borderTop: '1px solid var(--landing-card-border)' }}>
-        <span style={{ color: 'var(--landing-text-muted-dark)', fontSize: 12 }}>8 subscriptions tracked</span>
-        <span style={{ color: 'var(--landing-text)', fontWeight: 700, fontSize: 13, fontFamily: "'JetBrains Mono', monospace" }}>
-          ₹8,277<span style={{ color: 'var(--landing-text-muted-dark)', fontWeight: 400, fontSize: 11 }}>/mo</span>
-        </span>
-        <span style={{ color: '#4CFF8F', fontSize: 12, fontWeight: 600 }}>💡 Save ₹2,300 with AI</span>
-      </div>
-    </div>
-  )
-}
-
-function MagneticButton({ children, className, onClick, to, isLink, style: customStyle }) {
-  const btnRef = useRef(null);
-  const [pos, setPos] = useState({ x: 0, y: 0 });
-
-  const handleMouseMove = (e) => {
-    if(!btnRef.current) return;
-    const { left, top, width, height } = btnRef.current.getBoundingClientRect();
-    const x = (e.clientX - left - width / 2) * 0.3;
-    const y = (e.clientY - top - height / 2) * 0.3;
-    setPos({ x, y });
-  };
-
-  const reset = () => {
-    setPos({ x: 0, y: 0 });
-  };
-
-  const style = {
-    ...customStyle,
-    transform: `translate(${pos.x}px, ${pos.y}px)`,
-    transition: pos.x === 0 && pos.y === 0 ? 'transform 0.5s cubic-bezier(0.76, 0, 0.24, 1)' : 'none'
-  };
-
-  if (isLink) {
-    return (
-      <Link ref={btnRef} to={to} className={`magnetic-btn-wrapper ${className}`} onMouseMove={handleMouseMove} onMouseLeave={reset} style={style}>
-        {children}
-      </Link>
-    );
-  }
-
-  return (
-    <button ref={btnRef} className={`magnetic-btn-wrapper ${className}`} onMouseMove={handleMouseMove} onMouseLeave={reset} onClick={onClick} style={style}>
       {children}
-    </button>
+    </motion.button>
   );
-}
+};
 
-const driftCards = [...Array(8)].map(() => ({
-  left: `${10 + Math.random() * 80}%`,
-  width: `${140 + Math.random() * 80}px`,
-  height: `${70 + Math.random() * 40}px`,
-  animationDelay: `${Math.random() * -20}s`,
-  animationDuration: `${20 + Math.random() * 10}s`
-}));
+// --- Animations ---
+const fadeInUp = {
+  hidden: { opacity: 0, y: 40 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] } }
+};
+
+const staggerContainer = {
+  hidden: { opacity: 0 },
+  show: { opacity: 1, transition: { staggerChildren: 0.1, delayChildren: 0.2 } }
+};
 
 export default function LandingPage() {
-  const { session } = useAuth()
-  const navigate = useNavigate()
-  const { theme, toggleTheme } = useTheme()
-  const mousePos = useMouseParallax(0.5);
+  const { session } = useAuth();
+  const { scrollYProgress } = useScroll();
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+  const cursorSpringX = useSpring(0, { stiffness: 500, damping: 50 });
+  const cursorSpringY = useSpring(0, { stiffness: 500, damping: 50 });
 
   useEffect(() => {
-    if (session) {
-      navigate('/dashboard', { replace: true })
-    }
-  }, [session, navigate])
-
-
-  useEffect(() => {
-    // Reveal animation
-    const reveals = document.querySelectorAll('.reveal');
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add('active');
-        }
-      });
-    }, { threshold: 0.1 });
-
-    reveals.forEach(el => observer.observe(el));
-    return () => observer.disconnect();
+    const handleScroll = () => setIsScrolled(window.scrollY > 20);
+    const handleMouseMove = (e) => {
+      cursorSpringX.set(e.clientX);
+      cursorSpringY.set(e.clientY);
+      setMousePos({ x: e.clientX, y: e.clientY });
+    };
+    window.addEventListener('scroll', handleScroll);
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('mousemove', handleMouseMove);
+    };
   }, []);
 
   return (
-    <>
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Cabinet+Grotesk:wght@100..900&family=JetBrains+Mono:wght@400;700&display=swap');
+    <div className="min-h-screen bg-[#080810] text-[#E8E8F0] font-sans selection:bg-[#6C63FF]/30 selection:text-white cursor-none overflow-x-hidden">
+      {/* --- Cursor Effects --- */}
+      <motion.div 
+        style={{ x: cursorSpringX, y: cursorSpringY }}
+        className="fixed top-0 left-0 w-2 h-2 bg-[#6C63FF] rounded-full pointer-events-none z-[100] translate-x-[-50%] translate-y-[-50%]" 
+      />
+      <motion.div 
+        animate={{ x: mousePos.x, y: mousePos.y }}
+        transition={{ type: 'spring', damping: 20, stiffness: 250, mass: 0.5 }}
+        className="fixed top-0 left-0 w-10 h-10 border border-[#6C63FF]/30 rounded-full pointer-events-none z-[99] translate-x-[-50%] translate-y-[-50%] backdrop-blur-[2px]" 
+      />
 
-        :root, [data-theme="dark"] {
-          --color-deep-violet: #0D0015;
-          --color-electric-indigo: #1A0040;
-          --color-teal-black: #001A1A;
-          --color-brand-primary: #6C63FF;
-          --color-brand-secondary: #3ECFCF;
-          --font-hero: 'Playfair Display', serif;
-          --font-body: 'Cabinet Grotesk', system-ui, sans-serif;
-          --font-mono: 'JetBrains Mono', monospace;
-          
-          --landing-text: #E8E8F0;
-          --landing-text-muted: rgba(255,255,255,0.7);
-          --landing-text-muted-dark: rgba(255,255,255,0.5);
-          --landing-nav-bg: rgba(10, 0, 30, 0.4);
-          --landing-card-bg: rgba(15, 15, 25, 0.5);
-          --landing-card-border: rgba(255, 255, 255, 0.05);
-          --landing-footer-bg: rgba(0,0,0,0.4);
-          --landing-glass-btn-bg: rgba(255,255,255,0.05);
-          --landing-glass-btn-border: rgba(255,255,255,0.1);
-          --landing-drift-card-bg: rgba(255, 255, 255, 0.02);
-          --landing-table-bg: rgba(15, 15, 25, 0.4);
-        }
+      {/* --- Progress Bar --- */}
+      <motion.div className="fixed top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-[#6C63FF] to-[#3ECFCF] origin-left z-[101]" style={{ scaleX: scrollYProgress }} />
 
-        [data-theme="light"] {
-          --color-deep-violet: #f8f9fa;
-          --color-electric-indigo: #e3e6ff;
-          --color-teal-black: #e0f8f8;
-          
-          --landing-text: #1a1a24;
-          --landing-text-muted: #495057;
-          --landing-text-muted-dark: #6C757D;
-          --landing-nav-bg: rgba(255, 255, 255, 0.8);
-          --landing-card-bg: rgba(255, 255, 255, 0.8);
-          --landing-card-border: rgba(0, 0, 0, 0.1);
-          --landing-footer-bg: rgba(248, 249, 250, 0.8);
-          --landing-glass-btn-bg: rgba(0, 0, 0, 0.04);
-          --landing-glass-btn-border: rgba(0, 0, 0, 0.1);
-          --landing-drift-card-bg: rgba(0, 0, 0, 0.03);
-          --landing-table-bg: rgba(255, 255, 255, 0.8);
-        }
-
-        body {
-          margin: 0;
-          background-color: var(--color-deep-violet) !important;
-          color: var(--landing-text) !important;
-          font-family: var(--font-body);
-          -webkit-font-smoothing: antialiased;
-          cursor: none; /* Hide default cursor */
-          transition: background-color 0.3s ease, color 0.3s ease;
-        }
-
-        .cinematic-bg {
-          background-color: var(--color-deep-violet) !important;
-        }
+      {/* --- Background System --- */}
+      <div className="fixed inset-0 pointer-events-none z-0">
+        <div className="absolute top-[-20%] left-[-10%] w-[60vw] h-[60vw] rounded-full bg-[radial-gradient(circle,rgba(108,99,255,0.15)_0%,transparent_70%)] animate-aurora-1" />
+        <div className="absolute bottom-[-10%] right-[-5%] w-[50vw] h-[50vw] rounded-full bg-[radial-gradient(circle,rgba(62,207,207,0.1)_0%,transparent_70%)] animate-aurora-2" />
+        <div className="absolute top-[30%] left-[40%] w-[40vw] h-[40vh] rounded-full bg-[radial-gradient(circle,rgba(255,99,179,0.08)_0%,transparent_70%)] animate-aurora-3" />
         
-        a, button, input {
-            cursor: none;
-        }
+        {/* Grid Pattern */}
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:60px_60px] [mask-image:radial-gradient(ellipse_60%_60%_at_50%_40%,#000_20%,transparent_100%)]" />
 
-        .custom-cursor {
-          position: fixed;
-          top: 0;
-          left: 0;
-          width: 20px;
-          height: 20px;
-          border-radius: 50%;
-          border: 1px solid rgba(255, 255, 255, 0.2);
-          pointer-events: none;
-          z-index: 9999;
-          transform-origin: center;
-          transition: scale 0.15s ease-out, background 0.15s ease, border-color 0.15s ease;
-          mix-blend-mode: difference;
-        }
-
-        .landing-page {
-          position: relative;
-          min-height: 100vh;
-          overflow-x: hidden;
-        }
-
-        /* ── Animated Deep Space / Aurora Borealis Background ── */
-        .cinematic-bg {
-          position: fixed;
-          inset: 0;
-          z-index: -2;
-          background: var(--color-deep-violet);
-          overflow: hidden;
-        }
-
-        .aurora-blob {
-          position: absolute;
-          filter: blur(140px);
-          opacity: 0.6;
-          mix-blend-mode: screen;
-          border-radius: 50%;
-          animation: breathe 20s ease-in-out infinite alternate;
-          will-change: transform, opacity;
-        }
-
-        .aurora-1 {
-          background: radial-gradient(circle, var(--color-electric-indigo) 0%, transparent 70%);
-          width: 80vw;
-          height: 80vh;
-          top: -20%;
-          left: -10%;
-          animation-delay: 0s;
-        }
-
-        .aurora-2 {
-          background: radial-gradient(circle, var(--color-teal-black) 0%, rgba(62,207,207,0.15) 50%, transparent 70%);
-          width: 70vw;
-          height: 70vh;
-          bottom: -10%;
-          right: -10%;
-          animation-delay: -5s;
-        }
-
-        .aurora-3 {
-          background: radial-gradient(circle, rgba(108,99,255,0.1) 0%, transparent 70%);
-          width: 60vw;
-          height: 60vh;
-          top: 30%;
-          left: 30%;
-          animation-delay: -10s;
-        }
-
-        [data-theme="light"] .aurora-1 {
-          background: radial-gradient(circle, rgba(108,99,255,0.1) 0%, transparent 70%);
-        }
-        [data-theme="light"] .aurora-2 {
-          background: radial-gradient(circle, rgba(62,207,207,0.1) 0%, transparent 70%);
-        }
-        [data-theme="light"] .aurora-3 {
-          background: radial-gradient(circle, rgba(255,99,179,0.05) 0%, transparent 70%);
-        }
-
-        @keyframes breathe {
-          0% { transform: scale(1) translate(0px, 0px); opacity: 0.5; }
-          100% { transform: scale(1.1) translate(40px, -40px); opacity: 0.8; }
-        }
-
-        /* Fine noise/grain overlay */
-        .noise-overlay {
-          position: fixed;
-          inset: 0;
-          z-index: -1;
-          background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opactiy='0.08'/%3E%3C/svg%3E");
-          opacity: 0.04;
-          pointer-events: none;
-        }
-
-        /* Nav */
-        .cinematic-nav {
-          position: sticky;
-          top: 0;
-          z-index: 100;
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          padding: 1.25rem 5vw;
-          background: rgba(10, 0, 30, 0.4);
-          backdrop-filter: blur(20px);
-          -webkit-backdrop-filter: blur(20px);
-          border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-          transition: all 0.3s ease;
-        }
-
-        .nav-logo {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-          font-size: 1.3rem;
-          font-weight: 800;
-          font-family: var(--font-body);
-          color: var(--landing-text);
-          text-decoration: none;
-          letter-spacing: -0.02em;
-        }
-
-        .nav-logo-icon {
-          width: 32px; height: 32px;
-          border-radius: 8px;
-          background: linear-gradient(135deg, var(--color-brand-primary), var(--color-brand-secondary));
-          display: flex; align-items: center; justify-content: center;
-          box-shadow: 0 0 15px rgba(108,99,255,0.4);
-        }
-
-        .nav-links { display: flex; gap: 2.5rem; }
-        .nav-links a {
-          color: var(--landing-text-muted);
-          text-decoration: none;
-          font-size: 0.95rem;
-          font-weight: 500;
-          transition: color 0.2s;
-        }
-        .nav-links a:hover { color: var(--landing-text); }
-
-        .nav-actions { display: flex; align-items: center; gap: 1.5rem; }
-        .nav-signin { color: var(--landing-text-muted); text-decoration: none; font-weight: 500; font-size: 0.95rem; transition: color 0.2s; }
-        .nav-signin:hover { color: var(--landing-text); }
-
-        .btn-glass {
-          background: var(--landing-glass-btn-bg);
-          border: 1px solid var(--landing-glass-btn-border);
-          color: var(--landing-text);
-          padding: 10px 24px;
-          border-radius: 100px;
-          font-weight: 600;
-          font-size: 0.95rem;
-          text-decoration: none;
-          transition: all 0.3s ease;
-          backdrop-filter: blur(10px);
-        }
-        .btn-glass:hover {
-          background: var(--landing-glass-btn-border);
-          transform: translateY(-2px);
-          box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-        }
-
-        /* Hero */
-        .cinematic-hero {
-          position: relative;
-          min-height: 90vh;
-          display: flex;
-          align-items: center;
-          padding: 4rem 5vw;
-          max-width: 1400px;
-          margin: 0 auto;
-        }
-
-        .hero-left {
-          flex: 1.2;
-          z-index: 10;
-        }
-        
-        .hero-right {
-          flex: 1;
-          position: relative;
-          z-index: 5;
-        }
-
-        .cinematic-nav {
-          position: sticky;
-          top: 0;
-          z-index: 100;
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          padding: 1.25rem 5vw;
-          background: var(--landing-nav-bg);
-          backdrop-filter: blur(20px);
-          -webkit-backdrop-filter: blur(20px);
-          border-bottom: 1px solid var(--landing-card-border);
-          transition: all 0.3s ease;
-        }
-
-        .hero-badge {
-          display: inline-flex;
-          align-items: center;
-          gap: 8px;
-          background: var(--landing-glass-btn-bg);
-          border: 1px solid var(--landing-glass-btn-border);
-          padding: 8px 18px;
-          border-radius: 100px;
-          font-size: 0.85rem;
-          font-weight: 600;
-          color: var(--landing-text);
-          margin-bottom: 2rem;
-          backdrop-filter: blur(10px);
-          box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-        }
-
-        .cinematic-title {
-          font-family: var(--font-hero);
-          font-size: clamp(3.5rem, 6vw, 6rem);
-          line-height: 1.05;
-          margin: 0 0 1.5rem;
-          font-weight: 500;
-          letter-spacing: -0.01em;
-          position: relative;
-          color: var(--landing-text);
-        }
-
-        .title-glow {
-          position: absolute;
-          inset: 0;
-          background: radial-gradient(circle at 50% 50%, rgba(108,99,255,0.3), transparent 60%);
-          filter: blur(50px);
-          z-index: -1;
-        }
-
-        .gradient-shimmer {
-          background: linear-gradient(to right, var(--color-brand-primary), var(--color-brand-secondary), #FF63B3, var(--color-brand-primary));
-          background-size: 200% auto;
-          color: transparent;
-          -webkit-background-clip: text;
-          background-clip: text;
-          animation: shine 4s linear infinite;
-        }
-
-        @keyframes shine {
-          to { background-position: 200% center; }
-        }
-
-        .cinematic-subtitle {
-          font-size: 1.25rem;
-          line-height: 1.6;
-          color: var(--landing-text-muted);
-          max-width: 600px;
-          margin-bottom: 3.5rem;
-          font-weight: 400;
-        }
-
-        .hero-actions { display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; }
-
-        .btn-primary-cinematic {
-          background: linear-gradient(135deg, var(--color-brand-primary), var(--color-brand-secondary));
-          color: #FFF;
-          padding: 18px 36px;
-          border-radius: 100px;
-          font-weight: 600;
-          font-size: 1.05rem;
-          text-decoration: none;
-          display: inline-flex;
-          align-items: center;
-          gap: 12px;
-          border: none;
-          cursor: pointer;
-          position: relative;
-          overflow: hidden;
-          transition: all 0.3s ease;
-          box-shadow: 0 10px 40px rgba(108,99,255,0.4);
-        }
-
-        .btn-primary-cinematic::before {
-          content: '';
-          position: absolute;
-          top: 0; left: -100%;
-          width: 50%; height: 100%;
-          background: linear-gradient(to right, transparent, rgba(255,255,255,0.4), transparent);
-          transform: skewX(-20deg);
-          transition: left 0.5s ease;
-        }
-        
-        .btn-primary-cinematic::after {
-            content: '';
-            position: absolute;
-            inset: 0;
-            border-radius: 100px;
-            box-shadow: 0 0 20px rgba(108,99,255,0) inset;
-            transition: box-shadow 0.3s ease;
-        }
-
-        .btn-primary-cinematic:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 15px 50px rgba(108,99,255,0.6);
-        }
-
-        .btn-primary-cinematic:hover::before { left: 150%; }
-        .btn-primary-cinematic:hover::after { box-shadow: 0 0 20px rgba(255,255,255,0.2) inset; }
-
-        /* Floating Cards Background */
-        .drifting-cards {
-          position: absolute;
-          inset: 0;
-          pointer-events: none;
-          z-index: -1;
-          overflow: hidden;
-        }
-
-        .drift-card {
-          position: absolute;
-          background: var(--landing-drift-card-bg);
-          border: 1px solid var(--landing-card-border);
-          border-radius: 16px;
-          padding: 16px;
-          backdrop-filter: blur(8px);
-          animation: floatUp 25s linear infinite;
-          opacity: 0;
-        }
-
-        @keyframes floatUp {
-          0% { transform: translateY(110vh) rotate(0deg); opacity: 0; }
-          10% { opacity: 1; }
-          90% { opacity: 1; }
-          100% { transform: translateY(-20vh) rotate(15deg); opacity: 0; }
-        }
-
-        /* Feature Cards Cinematic */
-        .cinematic-section {
-          padding: 10rem 5vw;
-          position: relative;
-          z-index: 10;
-        }
-
-        .section-header-cinematic {
-          text-align: center;
-          margin-bottom: 6rem;
-        }
-
-        .section-title-cinematic {
-          font-family: var(--font-hero);
-          font-size: clamp(3rem, 5vw, 4.5rem);
-          font-weight: 500;
-          color: #FFF;
-          margin: 0 0 1rem;
-        }
-
-        .features-grid {
-          display: grid;
-          grid-template-columns: repeat(3, 1fr);
-          gap: 2rem;
-          max-width: 1400px;
-          margin: 0 auto;
-        }
-
-        .feature-card {
-          background: var(--landing-card-bg);
-          border: 1px solid var(--landing-card-border);
-          border-radius: 28px;
-          padding: 3rem;
-          position: relative;
-          overflow: hidden;
-          backdrop-filter: blur(24px);
-          will-change: transform, box-shadow;
-        }
-        
-        .feature-icon {
-            width: 56px; height: 56px;
-            border-radius: 16px;
-            display: flex; align-items: center; justify-content: center;
-            margin-bottom: 2rem;
-            position: relative;
-            z-index: 2;
-        }
-        
-        .feature-title { font-size: 1.25rem; font-weight: 600; color: var(--landing-text); margin: 0 0 1rem; font-family: var(--font-body); position: relative; z-index: 2;}
-        .feature-desc { font-size: 1rem; color: var(--landing-text-muted); line-height: 1.7; margin: 0; position: relative; z-index: 2;}
-
-        .feature-shimmer {
-          position: absolute;
-          inset: 0;
-          background: linear-gradient(105deg, transparent, var(--landing-card-border), transparent);
-          transform: translateX(-100%);
-          transition: transform 0.6s ease;
-          pointer-events: none;
-        }
-
-        .feature-card.hovered .feature-shimmer {
-          transform: translateX(100%);
-        }
-
-        /* Pricing Card Cinematic */
-        .pricing-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 2.5rem;
-            max-width: 800px;
-            margin: 0 auto;
-        }
-        
-        .pricing-card {
-            border-radius: 28px;
-        }
-        
-        .pricing-card-pro-cinematic {
-          position: relative;
-          border-radius: 28px;
-          background: var(--landing-card-bg);
-          backdrop-filter: blur(24px);
-        }
-
-        .pricing-card-pro-cinematic::before {
-          content: "";
-          position: absolute;
-          inset: 0;
-          border-radius: 28px;
-          padding: 2px;
-          background: linear-gradient(135deg, var(--color-brand-primary), var(--color-brand-secondary), var(--color-brand-primary));
-          background-size: 200% auto;
-          -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-          -webkit-mask-composite: xor;
-          mask-composite: exclude;
-          pointer-events: none;
-          animation: shine-border 4s linear infinite;
-        }
-        
-        .pricing-card-pro-cinematic::after {
-          content: "";
-          position: absolute;
-          inset: -1px;
-          border-radius: 29px;
-          background: linear-gradient(135deg, rgba(108,99,255,0.6), rgba(62,207,207,0.6));
-          filter: blur(20px);
-          z-index: -1;
-          opacity: 0.6;
-          animation: pulse-glow 3s ease-in-out infinite alternate;
-        }
-
-        @keyframes shine-border {
-          to { background-position: 200% center; }
-        }
-        
-        @keyframes pulse-glow {
-          0% { opacity: 0.4; filter: blur(15px); }
-          100% { opacity: 0.8; filter: blur(25px); }
-        }
-        
-        .pricing-inner {
-          background: var(--landing-card-bg);
-          border-radius: 28px;
-          padding: 4rem 3rem;
-          height: 100%;
-          display: flex;
-          flex-direction: column;
-        }
-
-        .pricing-price-cinematic {
-          font-family: var(--font-mono);
-          font-size: 4rem;
-          font-weight: 700;
-          color: var(--landing-text);
-          margin: 1.5rem 0;
-        }
-        
-        .pricing-features {
-            list-style: none; padding: 0; margin: 0 0 2.5rem; flex: 1;
-        }
-
-        /* Reveal animations */
-        .reveal {
-          opacity: 0;
-          transform: translateY(40px);
-          transition: opacity 0.8s cubic-bezier(0.5, 0, 0, 1), transform 0.8s cubic-bezier(0.5, 0, 0, 1);
-        }
-        .reveal.active {
-          opacity: 1;
-          transform: translateY(0);
-        }
-
-        /* Magnetic button wrapper */
-        .magnetic-btn-wrapper {
-          display: inline-block;
-          text-decoration: none;
-        }
-
-        /* Demo Table adjustments for cinematic look */
-        .cinematic-card {
-          background: var(--landing-card-bg);
-          border: 1px solid var(--landing-card-border);
-          backdrop-filter: blur(30px);
-          box-shadow: 0 30px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(108,99,255,0.08);
-        }
-
-        @media (prefers-reduced-motion: reduce) {
-          *, ::before, ::after {
-            animation-duration: 0.01ms !important;
-            animation-iteration-count: 1 !important;
-            transition-duration: 0.01ms !important;
-            scroll-behavior: auto !important;
-          }
-        }
-      `}</style>
-      
-      <CustomCursor />
-
-      {/* Cinematic Background Elements */}
-      <div className="cinematic-bg">
-        <div className="noise-overlay" />
-        <div className="aurora-blob aurora-1" style={{ transform: `translate(${mousePos.x * 0.5}px, ${mousePos.y * 0.5}px)` }} />
-        <div className="aurora-blob aurora-2" style={{ transform: `translate(${-mousePos.x * 0.3}px, ${-mousePos.y * 0.3}px)` }} />
-        <div className="aurora-blob aurora-3" style={{ transform: `translate(${mousePos.x * 0.2}px, ${-mousePos.y * 0.4}px)` }} />
+        {/* Floating Particles */}
+        <div className="absolute inset-0 overflow-hidden">
+          {Array.from({ length: 55 }).map((_, i) => (
+            <div 
+              key={i} 
+              className="absolute rounded-full bg-[#6C63FF]/20 animate-float-up"
+              style={{
+                width: Math.random() * 2 + 0.4 + 'px',
+                height: Math.random() * 2 + 0.4 + 'px',
+                left: Math.random() * 100 + '%',
+                top: Math.random() * 100 + '%',
+                opacity: Math.random() * 0.4 + 0.1,
+                animationDuration: Math.random() * 10 + 10 + 's',
+                animationDelay: Math.random() * 5 + 's'
+              }}
+            />
+          ))}
+        </div>
       </div>
 
-      {/* Drifting Cards in Background */}
-      <div className="drifting-cards">
-        {driftCards.map((style, i) => (
-          <div key={i} className="drift-card" style={style} />
-        ))}
-      </div>
+      <style dangerouslySetInnerHTML={{ __html: `
+        @keyframes aurora-1 { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(10%, 5%); } }
+        @keyframes aurora-2 { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(-8%, -10%); } }
+        @keyframes aurora-3 { 0%, 100% { transform: scale(1); opacity: 0.08; } 50% { transform: scale(1.2); opacity: 0.12; } }
+        @keyframes float-up { 0% { transform: translateY(0) translateX(0); } 100% { transform: translateY(-100vh) translateX(20px); } }
+        .animate-aurora-1 { animation: aurora-1 18s ease-in-out infinite; }
+        .animate-aurora-2 { animation: aurora-2 22s ease-in-out infinite; }
+        .animate-aurora-3 { animation: aurora-3 15s ease-in-out infinite; }
+        .animate-float-up { animation: float-up linear infinite; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+      `}} />
 
-      <div className="landing-page">
-        {/* Nav */}
-        <nav className="cinematic-nav">
-          <Link to="/" className="nav-logo">
-            <div className="nav-logo-icon"><TrendingUp size={18} color="#fff" /></div>
-            <span>SubTrackr</span>
+      {/* --- Navigation --- */}
+      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 border-b ${isScrolled ? 'bg-[#080810]/80 backdrop-blur-xl border-white/10 shadow-[0_4px_24px_rgba(0,0,0,0.4)]' : 'bg-transparent border-transparent'}`}>
+        <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+          <Link to="/" className="flex items-center gap-3 group">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#6C63FF] to-[#3ECFCF] flex items-center justify-center shadow-lg shadow-[#6C63FF]/20 group-hover:scale-110 transition-transform">
+              <Zap size={20} className="text-white fill-current" />
+            </div>
+            <span className="text-2xl font-black tracking-tighter bg-gradient-to-r from-white to-[#9999BB] bg-clip-text text-transparent">SubTrackr</span>
           </Link>
-          <div className="nav-links">
-            <Link to="/features">Features</Link>
-            <Link to="/how-it-works">How it works</Link>
-            <Link to="/pricing">Pricing</Link>
-            <Link to="/about">About</Link>
-          </div>
-          <div className="nav-actions">
 
-            <Link to="/login" className="nav-signin">Sign in</Link>
-            <MagneticButton isLink={true} to="/register" className="btn-glass">
-              Get Started Free
-            </MagneticButton>
-          </div>
-        </nav>
-
-        {/* Hero */}
-        <section className="cinematic-hero">
-          <div className="hero-left">
-            <div className="hero-badge reveal active">
-              <Star size={14} fill="#FFD700" color="#FFD700" />
-              <span>Trusted by 50,000+ users worldwide</span>
-            </div>
-            
-            <h1 className="cinematic-title reveal active" style={{ transitionDelay: '0.1s' }}>
-              <div className="title-glow" />
-              Stop leaking money on<br />
-              <span className="gradient-shimmer">forgotten subscriptions.</span>
-            </h1>
-            
-            <p className="cinematic-subtitle reveal active" style={{ transitionDelay: '0.2s' }}>
-              SubTrackr tracks every subscription, detects hidden charges, and helps you save an average of <strong style={{ color: '#4CFF8F' }}>₹3,900/month</strong> with AI-powered insights.
-            </p>
-            
-            <div className="hero-actions reveal active" style={{ transitionDelay: '0.3s' }}>
-              <MagneticButton isLink={true} to={session ? '/dashboard' : '/register'} className="btn-primary-cinematic">
-                {session ? 'Go to Dashboard' : 'Get Started Free'}
-                <ArrowRight size={18} />
-              </MagneticButton>
-            </div>
-          </div>
-          
-          <div className="hero-right reveal active" style={{ transitionDelay: '0.4s' }}>
-            <DemoTable />
-          </div>
-        </section>
-
-        {/* ══════════ STATS ══════════ */}
-        <section className="cinematic-section" style={{ padding: '6rem 5vw', background: 'var(--landing-glass-btn-bg)', borderTop: '1px solid var(--landing-card-border)', borderBottom: '1px solid var(--landing-card-border)' }}>
-          <div className="stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '2rem', maxWidth: '1200px', margin: '0 auto', textAlign: 'center' }}>
-            {STATS.map((s, i) => (
-              <div key={s.label} className="stat-item reveal active" style={{ transitionDelay: `${i * 0.1}s` }}>
-                <div className="stat-value gradient-shimmer" style={{ fontFamily: 'var(--font-mono)', fontSize: '3.5rem', fontWeight: 700, lineHeight: 1.1 }}>{s.value}</div>
-                <div className="stat-label" style={{ color: 'var(--landing-text-muted-dark)', textTransform: 'uppercase', letterSpacing: '0.08em', fontSize: '0.9rem', marginTop: '12px', fontWeight: 600 }}>{s.label}</div>
-              </div>
+          <div className="hidden md:flex items-center gap-10">
+            {['Features', 'How it works', 'Pricing'].map(item => (
+              <a key={item} href={`#${item.toLowerCase().replace(/\s+/g, '-')}`} className="text-sm font-medium text-[#9999BB] hover:text-white transition-colors relative group">
+                {item}
+                <span className="absolute -bottom-1 left-0 w-0 h-[1px] bg-[#3ECFCF] transition-all group-hover:w-full" />
+              </a>
             ))}
           </div>
-        </section>
 
-        {/* ══════════ FEATURES ══════════ */}
-        <section className="cinematic-section" id="features">
-          <div className="section-header-cinematic reveal active">
-            <h2 className="cinematic-title" style={{ fontSize: 'clamp(3rem, 5vw, 4.5rem)' }}>
-              Everything you need to<br /><span className="gradient-shimmer">take control.</span>
-            </h2>
+          <div className="flex items-center gap-4">
+            {session ? (
+              <Link to="/dashboard" className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-[#6C63FF] to-[#3ECFCF] text-white text-sm font-bold shadow-lg shadow-[#6C63FF]/20 hover:scale-105 transition-all">Dashboard</Link>
+            ) : (
+              <>
+                <Link to="/login" className="px-5 py-2 text-sm font-semibold text-[#9999BB] hover:text-white transition-colors">Sign in</Link>
+                <MagneticButton className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-[#6C63FF] to-[#3ECFCF] text-white text-sm font-bold shadow-lg shadow-[#6C63FF]/40 hover:brightness-110">
+                  <Link to="/register">Start free</Link>
+                </MagneticButton>
+              </>
+            )}
           </div>
-          <div className="features-grid">
-            {FEATURES.map((f, i) => <FeatureCard key={f.title} feature={f} index={i} />)}
-          </div>
-        </section>
+        </div>
+      </nav>
 
-        {/* ══════════ PRICING ══════════ */}
-        <section className="cinematic-section" id="pricing">
-          <div className="section-header-cinematic reveal active">
-            <h2 className="cinematic-title" style={{ fontSize: 'clamp(3rem, 5vw, 4.5rem)' }}>
-              Simple, transparent<br /><span className="gradient-shimmer">pricing.</span>
-            </h2>
-          </div>
-          <div className="pricing-grid">
-            {PRICING.map((plan, i) => (
-              <div key={plan.name} className={`reveal active ${plan.highlight ? 'pricing-card-pro-cinematic' : ''}`} style={{ transitionDelay: `${i * 0.2}s` }}>
-                <div className={plan.highlight ? 'pricing-inner' : 'pricing-card cinematic-card'} style={plan.highlight ? {} : { height: '100%', padding: '4rem 3rem', display: 'flex', flexDirection: 'column' }}>
-                  {plan.highlight && <div className="pricing-popular" style={{ position: 'absolute', top: '-16px', left: '50%', transform: 'translateX(-50%)', background: 'linear-gradient(135deg, #6C63FF, #3ECFCF)', color: '#fff', fontSize: '0.8rem', fontWeight: 700, padding: '8px 20px', borderRadius: '100px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Most Popular</div>}
-                  <div className="pricing-name" style={{ color: 'var(--landing-text-muted)', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 600 }}>{plan.name}</div>
-                  <div className="pricing-price-cinematic">{plan.price}<span className="pricing-period" style={{ color: 'var(--landing-text-muted-dark)', fontSize: '1.2rem', fontFamily: 'var(--font-body)', fontWeight: 500 }}>{plan.period}</span></div>
-                  <ul className="pricing-features">
-                    {plan.features.map(f => (
-                      <li key={f} className="pricing-feature-item" style={{ borderBottom: '1px solid var(--landing-card-border)', padding: '16px 0', fontSize: '1.05rem', color: 'var(--landing-text-muted)', display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        <Check size={18} style={{ color: plan.highlight ? '#4CFF8F' : '#6C63FF', flexShrink: 0 }} />
-                        {f}
-                      </li>
-                    ))}
-                  </ul>
-                  <MagneticButton isLink={true} to="/register" className={plan.highlight ? 'btn-primary-cinematic' : 'btn-glass'} style={{ width: '100%', justifyContent: 'center', marginTop: 'auto' }}>
-                    {plan.cta}
-                  </MagneticButton>
+      {/* --- Hero Section --- */}
+      <section className="relative min-h-screen flex flex-col items-center justify-start pt-32 px-6 overflow-hidden">
+        <div className="max-w-5xl mx-auto w-full text-center relative z-10">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2, duration: 0.6 }}
+            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#6C63FF]/10 border border-[#6C63FF]/30 backdrop-blur-sm mb-12 shadow-[0_0_20px_rgba(108,99,255,0.1)]"
+          >
+            <span className="text-[13px] font-bold text-[#E8E8F0]">🚀 Now with AI-powered insights</span>
+          </motion.div>
+
+          <h1 className="text-[clamp(48px,10vw,96px)] font-black tracking-[-0.04em] leading-[0.95] mb-8">
+            <motion.span initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="block text-white">Stop Losing Money</motion.span>
+            <motion.span 
+              initial={{ opacity: 0, y: 30 }} 
+              animate={{ opacity: 1, y: 0 }} 
+              transition={{ delay: 0.4 }} 
+              className="block bg-gradient-to-r from-[#6C63FF] via-[#3ECFCF] to-[#6C63FF] bg-[length:200%_auto] animate-gradient bg-clip-text text-transparent"
+              style={{ paddingBottom: '0.1em' }}
+            >
+              On Subscriptions
+            </motion.span>
+          </h1>
+
+          <motion.p 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.6, duration: 1 }}
+            className="text-lg md:text-xl text-[#9999BB] leading-relaxed max-w-2xl mx-auto mb-12"
+          >
+            The average Indian spends <span className="text-white font-semibold">₹4,800/year</span> on forgotten subscriptions. SubTrackr finds them, tracks them, and helps you cancel what you don't need.
+          </motion.p>
+
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.8 }}
+            className="flex flex-col sm:flex-row items-center justify-center gap-6 mb-20"
+          >
+            <MagneticButton className="group relative px-8 py-5 rounded-2xl bg-gradient-to-r from-[#6C63FF] to-[#3ECFCF] text-white font-black text-lg shadow-[0_8px_32px_rgba(108,99,255,0.4)] hover:shadow-[0_12px_48px_rgba(108,99,255,0.5)] transition-all overflow-hidden">
+              <Link to="/register" className="relative z-10">Start for Free — No credit card</Link>
+              <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-500" />
+            </MagneticButton>
+            
+            <button className="px-8 py-5 rounded-2xl bg-transparent border border-white/15 text-white font-bold text-lg hover:bg-white/5 transition-all flex items-center gap-3 group">
+              <Play size={20} className="fill-white group-hover:scale-110 transition-transform" /> Watch demo
+            </button>
+          </motion.div>
+
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 1.2 }}
+            className="flex items-center justify-center gap-4 mb-20"
+          >
+            <div className="flex -space-x-3">
+              {[1, 2, 3].map(i => (
+                <div key={i} className={`w-10 h-10 rounded-full border-2 border-[#080810] bg-[#1E1E2E] flex items-center justify-center overflow-hidden`}>
+                  <img src={`https://i.pravatar.cc/80?u=${i}`} alt="user" className="w-full h-full object-cover" />
+                </div>
+              ))}
+            </div>
+            <div className="text-left">
+              <p className="text-sm font-bold text-white leading-none mb-1">Join 50,000+ users</p>
+              <p className="text-xs text-[#9999BB]"><span className="text-[#FFD700]">★★★★★</span> 4.9/5 rating</p>
+            </div>
+          </motion.div>
+
+          {/* Screenshot Mockup */}
+          <motion.div 
+            initial={{ opacity: 0, y: 60 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 1, duration: 1.2 }}
+            className="relative w-full max-w-5xl mx-auto px-4"
+          >
+            <motion.div 
+              animate={{ y: [0, -20, 0] }}
+              transition={{ repeat: Infinity, duration: 6, ease: "easeInOut" }}
+              className="relative rounded-3xl overflow-hidden border border-white/10 shadow-[0_40px_120px_rgba(108,99,255,0.25)] bg-[#0F0F1A]"
+            >
+              <div className="aspect-[16/10] w-full p-4 flex flex-col">
+                <div className="h-8 border-b border-white/5 flex items-center px-4 gap-2 mb-4">
+                  <div className="w-2 h-2 rounded-full bg-[#FF5F56]" />
+                  <div className="w-2 h-2 rounded-full bg-[#FFBD2E]" />
+                  <div className="w-2 h-2 rounded-full bg-[#27C93F]" />
+                </div>
+                <div className="flex-1 flex gap-6 overflow-hidden">
+                  <div className="w-48 hidden md:block rounded-xl bg-white/5 border border-white/5" />
+                  <div className="flex-1 flex flex-col gap-4">
+                    <div className="h-40 rounded-2xl bg-gradient-to-br from-[#6C63FF]/20 to-transparent border border-[#6C63FF]/30 p-8">
+                       <div className="h-4 w-32 bg-white/10 rounded mb-4" />
+                       <div className="h-8 w-48 bg-white/20 rounded" />
+                    </div>
+                    <div className="flex gap-4">
+                      <div className="flex-1 h-32 rounded-2xl bg-white/5 border border-white/5" />
+                      <div className="flex-1 h-32 rounded-2xl bg-white/5 border border-white/5" />
+                      <div className="flex-1 h-32 rounded-2xl bg-white/5 border border-white/5" />
+                    </div>
+                  </div>
                 </div>
               </div>
+            </motion.div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* --- Section 2: Social Proof Ticker --- */}
+      <div className="relative py-20 overflow-hidden bg-[#080810] border-y border-white/5">
+        <div className="absolute inset-y-0 left-0 w-40 bg-gradient-to-r from-[#080810] to-transparent z-10" />
+        <div className="absolute inset-y-0 right-0 w-40 bg-gradient-to-l from-[#080810] to-transparent z-10" />
+        
+        <div className="flex flex-col gap-10">
+          <motion.div 
+            animate={{ x: [0, -1000] }}
+            transition={{ repeat: Infinity, duration: 30, ease: "linear" }}
+            className="flex items-center gap-16 whitespace-nowrap"
+          >
+            {['Netflix', 'Spotify', 'Amazon Prime', 'Hotstar', 'Adobe', 'YouTube Premium', 'Notion', 'Figma', 'ChatGPT', 'Swiggy One', 'Zomato Gold'].map((logo, i) => (
+              <div key={i} className="flex items-center gap-4 group cursor-default">
+                <div className="w-12 h-12 rounded-full bg-white/5 border border-white/10 flex items-center justify-center opacity-40 group-hover:opacity-100 transition-opacity">
+                   <Target size={20} className="text-white" />
+                </div>
+                <span className="text-2xl font-black text-[#666680] group-hover:text-[#E8E8F0] transition-colors">{logo}</span>
+              </div>
             ))}
-          </div>
-        </section>
+          </motion.div>
 
-        {/* ══════════ CTA ══════════ */}
-        <section className="cinematic-section" style={{ textAlign: 'center', padding: '12rem 5vw', overflow: 'hidden' }}>
-          <div className="title-glow" style={{ opacity: 0.6 }} />
-          <div className="reveal active">
-            <h2 className="cinematic-title" style={{ fontSize: 'clamp(3rem, 5vw, 5rem)' }}>Ready to stop overspending?</h2>
-            <p className="cinematic-subtitle" style={{ margin: '0 auto 4rem', fontSize: '1.3rem' }}>Join 50,000+ people who saved money with SubTrackr.</p>
-            <MagneticButton isLink={true} to="/register" className="btn-primary-cinematic">
-              Start for Free — No Credit Card <ArrowRight size={18} />
-            </MagneticButton>
-          </div>
-        </section>
-
-        {/* Footer */}
-        <footer className="landing-footer" style={{ borderTop: '1px solid var(--landing-card-border)', background: 'var(--landing-footer-bg)', padding: '2.5rem 5vw', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div className="footer-logo" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <div className="nav-logo-icon" style={{ width: 28, height: 28 }}><TrendingUp size={14} color="#fff" /></div>
-            <span style={{ fontFamily: 'var(--font-body)', fontWeight: 700, fontSize: '1.1rem', color: 'var(--landing-text)' }}>SubTrackr</span>
-          </div>
-          <p className="footer-copy" style={{ color: 'var(--landing-text-muted-dark)', fontSize: '0.9rem', margin: 0 }}>© 2026 SubTrackr. All rights reserved.</p>
-          <div className="footer-links" style={{ display: 'flex', gap: '2rem' }}>
-            <Link to="/privacy" style={{ color: 'var(--landing-text-muted-dark)', textDecoration: 'none', transition: 'color 0.2s', fontSize: '0.9rem' }}>Privacy</Link>
-            <Link to="/terms" style={{ color: 'var(--landing-text-muted-dark)', textDecoration: 'none', transition: 'color 0.2s', fontSize: '0.9rem' }}>Terms</Link>
-            <a href="mailto:support@subtrackr.co" style={{ color: 'var(--landing-text-muted-dark)', textDecoration: 'none', transition: 'color 0.2s', fontSize: '0.9rem' }}>Contact</a>
-          </div>
-        </footer>
+          <motion.div 
+            animate={{ x: [-1000, 0] }}
+            transition={{ repeat: Infinity, duration: 35, ease: "linear" }}
+            className="flex items-center gap-16 whitespace-nowrap"
+          >
+            {['Disney+', 'Uber', 'Cred', 'Coursera', 'LinkedIn', 'Canva', 'Zoom', 'Slack', 'GitHub', 'Airtel Black', 'Jiocinema'].map((logo, i) => (
+              <div key={i} className="flex items-center gap-4 group cursor-default">
+                <div className="w-12 h-12 rounded-full bg-white/5 border border-white/10 flex items-center justify-center opacity-40 group-hover:opacity-100 transition-opacity">
+                   <Bot size={20} className="text-white" />
+                </div>
+                <span className="text-2xl font-black text-[#666680] group-hover:text-[#E8E8F0] transition-colors">{logo}</span>
+              </div>
+            ))}
+          </motion.div>
+        </div>
       </div>
 
-      {/* Floating Feedback Button — Home Page Only */}
-      <div style={{ position: 'fixed', bottom: '32px', right: '32px', zIndex: 1000 }}>
-        <FeedbackWidget />
-      </div>
-      
-      <style>{`
-        /* Avoid showing the default top-right button on Landing Page; our wrapper handles placement */
-        .landing-page ~ div button[style*="top: 24px"] {
-          top: auto !important;
-          bottom: 0 !important;
-          right: 0 !important;
-          position: relative !important;
-          box-shadow: 0 12px 48px rgba(108,99,255,0.4) !important;
-        }
-      `}</style>
-    </>
-  )
+      {/* --- Section 3: Stats Counter --- */}
+      <section className="py-32 px-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <StatCard value="₹4,800" label="Average wasted per year" delay={0} />
+            <StatCard value="50,000+" label="Users tracking subscriptions" delay={0.1} />
+            <StatCard value="₹49" label="Pro plan per month" delay={0.2} />
+            <StatCard value="3 min" label="To find all subscriptions" delay={0.3} />
+          </div>
+        </div>
+      </section>
+
+      {/* --- Section 4: Features --- */}
+      <section id="features" className="py-32 px-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-24">
+            <motion.h2 variants={fadeInUp} initial="hidden" whileInView="show" viewport={{ once: true }} className="text-4xl md:text-5xl font-black tracking-tighter mb-4">Everything you need to take control</motion.h2>
+            <motion.div initial={{ width: 0 }} whileInView={{ width: 80 }} viewport={{ once: true }} className="h-1 bg-gradient-to-r from-[#6C63FF] to-[#3ECFCF] mx-auto rounded-full" />
+          </div>
+
+          <div className="flex flex-col gap-8">
+            <FeatureBlock 
+              title="AI finds subscriptions automatically" 
+              desc="Paste your bank statement and our AI detects every recurring charge instantly. No manual entry required." 
+              icon={<Bot size={32} className="text-[#6C63FF]" />} 
+              visual={<AIScannerMockup />}
+              pill="Saves 2 hours of manual work"
+              align="left"
+            />
+            <FeatureBlock 
+              title="Never get surprised by renewals" 
+              desc="Get smart alerts 7 days before any subscription renews. Cancel before you get charged." 
+              icon={<Bell size={32} className="text-[#3ECFCF]" />} 
+              visual={<RenewalMockup />}
+              pill="100% of renewals tracked"
+              align="right"
+            />
+            <FeatureBlock 
+              title="Cancel anything in 2 minutes" 
+              desc="AI-generated step-by-step cancellation guides for every service. No more hunting for the cancel button." 
+              icon={<XCircle size={32} className="text-[#FF63B3]" />} 
+              visual={<CancelGuideMockup />}
+              pill="Works for 500+ services"
+              align="left"
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* --- Section 5: Interactive Demo --- */}
+      <section id="how-it-works" className="py-32 px-6 bg-[#0F0F1A]/50 border-y border-white/5">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-black tracking-tighter">See it in action</h2>
+          </div>
+          <InteractiveDemoTabs />
+        </div>
+      </section>
+
+      {/* --- Section 6: Testimonials --- */}
+      <section className="py-32 px-6 overflow-hidden">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex gap-8 overflow-x-auto pb-12 no-scrollbar snap-x px-4">
+             <TestimonialCard 
+               quote="Found 3 subscriptions I completely forgot about. Saved ₹1,200 in the first week." 
+               name="Priya S." 
+               loc="Mumbai" 
+               saved="₹1,200"
+             />
+             <TestimonialCard 
+               quote="The AI scanner is insane. Pasted my bank statement and it found everything in 10 seconds." 
+               name="Rahul M." 
+               loc="Bangalore" 
+               saved="₹3,400"
+             />
+             <TestimonialCard 
+               quote="Finally cancelled my gym membership I haven't used in 6 months. The guide made it stupidly easy." 
+               name="Arjun K." 
+               loc="Delhi" 
+               saved="₹4,500"
+             />
+          </div>
+        </div>
+      </section>
+
+      {/* --- Section 7: Pricing --- */}
+      <section id="pricing" className="py-32 px-6">
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-black tracking-tighter mb-4">Simple, honest pricing</h2>
+            <div className="flex items-center justify-center gap-4 text-sm font-medium">
+               <span className="text-white">Monthly</span>
+               <div className="w-12 h-6 rounded-full bg-white/10 p-1 flex items-center justify-end">
+                  <div className="w-4 h-4 rounded-full bg-[#3ECFCF]" />
+               </div>
+               <span className="text-[#666680]">Yearly (Save 20%)</span>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+             {/* Free Card */}
+             <motion.div 
+               variants={fadeInUp} 
+               initial="hidden" 
+               whileInView="show" 
+               viewport={{ once: true }}
+               className="p-10 rounded-3xl bg-[#0F0F1A] border border-white/5 h-full flex flex-col"
+             >
+                <h3 className="text-xl font-bold mb-2">Free Forever</h3>
+                <div className="flex items-baseline gap-1 mb-10">
+                   <span className="text-5xl font-black text-white">₹0</span>
+                </div>
+                <ul className="space-y-4 mb-10 flex-1">
+                   {['5 subscriptions max', 'Basic alerts', 'Manual entry only', 'Email notifications'].map(f => (
+                     <li key={f} className="flex gap-3 text-[#9999BB] text-sm"><Check size={18} className="text-[#3ECFCF]" /> {f}</li>
+                   ))}
+                </ul>
+                <button className="w-full py-4 rounded-xl bg-white/5 border border-white/10 text-white font-bold hover:bg-white/10 transition-colors">Get started free</button>
+             </motion.div>
+
+             {/* Pro Card */}
+             <motion.div 
+               variants={fadeInUp} 
+               initial="hidden" 
+               whileInView="show" 
+               viewport={{ once: true }}
+               className="p-1 (bg-gradient-to-br from-[#6C63FF] to-[#3ECFCF]) rounded-[32px] overflow-hidden shadow-[0_24px_80px_rgba(108,99,255,0.3)] relative group hover:scale-[1.02] transition-transform"
+             >
+                <div className="bg-[#0F0F1A] rounded-[31px] p-10 h-full relative z-10 overflow-hidden">
+                   {/* Background Glow */}
+                   <div className="absolute top-0 right-0 w-64 h-64 bg-[#6C63FF]/20 blur-[80px] -mr-32 -mt-32" />
+                   
+                   <div className="flex justify-between items-start mb-2">
+                      <h3 className="text-xl font-bold">Pro</h3>
+                      <div className="bg-gradient-to-r from-[#6C63FF] to-[#3ECFCF] text-white text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest shadow-lg">Most Popular</div>
+                   </div>
+                   
+                   <div className="flex items-baseline gap-1 mb-1">
+                      <span className="text-sm text-[#666680] line-through mr-2 font-bold">₹199</span>
+                      <span className="text-5xl font-black text-white">₹49</span>
+                      <span className="text-[#9999BB]">/mo</span>
+                   </div>
+                   <p className="text-[#4CFF8F] text-[11px] font-black uppercase tracking-widest mb-10">3 days free trial inclusive</p>
+
+                   <ul className="space-y-4 mb-10">
+                      {['Unlimited subscriptions', 'AI email scanner', 'Cancellation guides', 'Smart budget alerts', 'Yearly report', 'Priority support'].map(f => (
+                        <li key={f} className="flex gap-3 text-white text-sm font-semibold"><CheckCircle2 size={18} className="text-[#3ECFCF]" /> {f}</li>
+                      ))}
+                   </ul>
+                   
+                   <MagneticButton className="w-full py-4 rounded-xl bg-gradient-to-r from-[#6C63FF] to-[#3ECFCF] text-white font-black shadow-lg shadow-[#6C63FF]/30 hover:brightness-110">
+                      Start 3-day free trial
+                   </MagneticButton>
+                   <p className="text-center text-[10px] text-[#666680] mt-4 font-bold uppercase tracking-widest">No credit card required for trial</p>
+                </div>
+             </motion.div>
+          </div>
+        </div>
+      </section>
+
+      {/* --- Section 8: FAQ --- */}
+      <section className="py-32 px-6">
+        <div className="max-w-3xl mx-auto">
+           <h2 className="text-4xl font-black text-center mb-16 tracking-tighter">Common Questions</h2>
+           <div className="space-y-4">
+              {[
+                { q: "Is my bank data safe?", a: "We never store your banking credentials. Our AI scanner only reads your statement text and we use 256-bit encryption for all data." },
+                { q: "How does AI find my subscriptions?", a: "We use specialized LLMs trained to recognize thousands of recurring service providers in Indian bank statements." },
+                { q: "Can I cancel my SubTrackr Pro plan?", a: "Yes, you can cancel at any time with one click from your settings. You'll keep access until the end of the billing period." },
+                { q: "Does it work with Indian banks?", a: "Absolutely. We support statements from all major Indian banks including HDFC, ICICI, SBI, and Axis." }
+              ].map((item, i) => (
+                <FAQItem key={i} question={item.q} answer={item.a} />
+              ))}
+           </div>
+        </div>
+      </section>
+
+      {/* --- Section 9: Final CTA --- */}
+      <section className="py-40 px-6 relative overflow-hidden text-center border-t border-white/5">
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[#6C63FF]/5" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1000px] h-[1000px] bg-[radial-gradient(circle,rgba(108,99,255,0.08)_0%,transparent_70%)] pointer-events-none" />
+        
+        <div className="relative z-10">
+           <motion.h2 variants={fadeInUp} initial="hidden" whileInView="show" className="text-5xl md:text-7xl font-black tracking-tighter mb-8 max-w-4xl mx-auto leading-tight">Start saving money today</motion.h2>
+           <motion.p variants={fadeInUp} initial="hidden" whileInView="show" className="text-xl text-[#9999BB] max-w-xl mx-auto mb-12">Join 50,000+ Indians who stopped leaking money on forgotten subscriptions</motion.p>
+           
+           <div className="flex flex-col sm:flex-row items-center justify-center gap-6 mb-8">
+              <MagneticButton className="px-10 py-5 rounded-2xl bg-gradient-to-r from-[#6C63FF] to-[#3ECFCF] text-white font-black text-xl shadow-[0_12px_48px_rgba(108,99,255,0.4)]">
+                 Start Free Now
+              </MagneticButton>
+              <button className="px-10 py-5 rounded-2xl bg-white/5 border border-white/15 text-white font-bold text-xl hover:bg-white/10 transition-all">
+                 View Pricing
+              </button>
+           </div>
+           
+           <p className="text-[#666680] text-sm font-bold uppercase tracking-widest italic">Free forever • No credit card required • Setup in 2 mins</p>
+        </div>
+      </section>
+
+      {/* --- Section 10: Footer --- */}
+      <footer className="bg-[#080810] pt-24 pb-12 px-6 border-t border-white/5">
+        <div className="max-w-7xl mx-auto">
+           <div className="grid grid-cols-2 md:grid-cols-4 gap-12 mb-20">
+              <div className="col-span-2 md:col-span-1">
+                 <Link to="/" className="flex items-center gap-2 mb-6 group">
+                   <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#6C63FF] to-[#3ECFCF] flex items-center justify-center">
+                     <Zap size={16} className="text-white fill-current" />
+                   </div>
+                   <span className="text-xl font-black tracking-tighter text-white">SubTrackr</span>
+                 </Link>
+                 <p className="text-[#666680] text-sm leading-relaxed mb-6">Stop losing money silently. AI-powered subscription tracking for the modern Indian saver.</p>
+                 <div className="flex gap-4">
+                    {[1, 2, 3, 4].map(i => <div key={i} className="w-8 h-8 rounded-full bg-white/5 border border-white/10 hover:border-white/30 transition-colors cursor-pointer" />)}
+                 </div>
+              </div>
+              
+              <FooterColumn title="Product" links={['Features', 'Pricing', 'Scanner', 'How it works', 'Changelog']} />
+              <FooterColumn title="Company" links={['About Us', 'Success Stories', 'Privacy Policy', 'Terms of Service', 'Support']} />
+              <FooterColumn title="Community" links={['Twitter', 'Discord', 'Indian Indie Hub', 'Product Hunt']} />
+           </div>
+           
+           <div className="flex flex-col md:flex-row items-center justify-between pt-8 border-t border-white/5 text-[11px] font-black uppercase tracking-[0.2em] text-[#444455]">
+              <p>© 2026 SubTrackr INC. All rights reserved.</p>
+              <div className="flex items-center gap-2 mt-4 md:mt-0">
+                 <span>Made with ❤️ in India</span>
+                 <span className="text-lg">🇮🇳</span>
+              </div>
+           </div>
+        </div>
+      </footer>
+    </div>
+  );
+}
+
+// --- Sub-components ---
+
+function FooterColumn({ title, links }) {
+  return (
+    <div>
+      <h4 className="text-white text-xs font-black uppercase tracking-widest mb-6">{title}</h4>
+      <ul className="space-y-3">
+        {links.map((link, i) => (
+          <li key={i}><a href="#" className="text-[#666680] text-sm hover:text-white transition-colors">{link}</a></li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+function StatCard({ value, label, delay }) {
+  return (
+    <motion.div 
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ delay }}
+      className="p-8 rounded-[32px] bg-[#0F0F1A] border border-white/5 group hover:border-[#6C63FF]/30 transition-colors"
+    >
+      <h3 className="text-5xl font-black bg-gradient-to-r from-[#6C63FF] to-[#3ECFCF] bg-clip-text text-transparent mb-2">{value}</h3>
+      <p className="text-sm font-bold text-[#666680] uppercase tracking-widest">{label}</p>
+    </motion.div>
+  );
+}
+
+function FeatureBlock({ title, desc, icon, visual, pill, align }) {
+  const isLeft = align === 'left';
+  return (
+    <motion.div 
+      initial={{ opacity: 0, x: isLeft ? -50 : 50 }}
+      whileInView={{ opacity: 1, x: 0 }}
+      viewport={{ once: true }}
+      transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+      className={`flex flex-col ${isLeft ? 'md:flex-row' : 'md:flex-row-reverse'} items-center gap-12 p-8 md:p-16 rounded-[48px] bg-[#0F0F1A]/50 border border-white/5 overflow-hidden relative group`}
+    >
+       <div className={`flex-1 relative z-10 text-center ${isLeft ? 'md:text-left' : 'md:text-right'}`}>
+          <div className="inline-flex px-3 py-1 rounded-full bg-[#3ECFCF]/10 border border-[#3ECFCF]/30 text-[#3ECFCF] text-[10px] font-black uppercase tracking-widest mb-6">{pill}</div>
+          <div className={`mb-6 flex justify-center ${isLeft ? 'md:justify-start' : 'md:justify-end'}`}>{icon}</div>
+          <h3 className="text-3xl font-black text-white tracking-tighter mb-4">{title}</h3>
+          <p className="text-lg text-[#9999BB] leading-relaxed max-w-md mx-auto md:mx-0">{desc}</p>
+       </div>
+       <div className="flex-1 w-full relative z-10">
+          <div className="rounded-3xl border border-white/10 overflow-hidden bg-[#080810] shadow-2xl transition-transform group-hover:scale-[1.02]">
+             {visual}
+          </div>
+       </div>
+    </motion.div>
+  );
+}
+
+function AIScannerMockup() {
+  return (
+    <div className="aspect-video w-full bg-[#080810] p-6 font-mono text-xs flex flex-col gap-3">
+       <div className="flex items-center gap-2 text-[#6C63FF]">
+          <Zap size={14} /> <span>Analyzing HDFC_JAN_2026.pdf...</span>
+       </div>
+       <div className="space-y-2 opacity-50">
+          <div className="h-2 w-full bg-white/10 rounded" />
+          <div className="h-2 w-3/4 bg-white/10 rounded" />
+       </div>
+       <motion.div 
+         initial={{ x: -100, opacity: 0 }}
+         whileInView={{ x: 0, opacity: 1 }}
+         className="p-3 rounded-lg bg-[#3ECFCF]/10 border border-[#3ECFCF]/30 text-[#3ECFCF] flex justify-between items-center"
+       >
+          <span>✓ Found: Netflix India</span>
+          <span className="font-bold">₹649.00</span>
+       </motion.div>
+       <motion.div 
+         initial={{ x: -100, opacity: 0 }}
+         whileInView={{ x: 0, opacity: 1 }}
+         transition={{ delay: 0.2 }}
+         className="p-3 rounded-lg bg-[#6C63FF]/10 border border-[#6C63FF]/30 text-[#6C63FF] flex justify-between items-center"
+       >
+          <span>✓ Found: Adobe Creative Cloud</span>
+          <span className="font-bold">₹2,394.00</span>
+       </motion.div>
+    </div>
+  );
+}
+
+function RenewalMockup() {
+  return (
+    <div className="aspect-video w-full bg-[#080810] p-8 flex flex-col items-center justify-center gap-6">
+       <div className="grid grid-cols-7 gap-3 w-full">
+          {Array.from({ length: 14 }).map((_, i) => (
+            <div key={i} className="h-8 rounded-lg border border-white/5 flex items-center justify-center text-[10px] text-[#444455]">{i+1}</div>
+          ))}
+       </div>
+       <motion.div 
+         animate={{ scale: [1, 1.05, 1], opacity: [0.8, 1, 0.8] }}
+         transition={{ repeat: Infinity, duration: 2 }}
+         className="w-full p-4 rounded-xl bg-[#0F0F1A] border border-[#3ECFCF]/50 flex items-center gap-4"
+       >
+          <div className="w-10 h-10 rounded-lg bg-[#3ECFCF]/20 flex items-center justify-center text-[#3ECFCF]"><CalendarIcon size={20} /></div>
+          <div className="flex-1">
+             <div className="text-xs font-bold text-white mb-1">Spotify Premium Renewal</div>
+             <div className="text-[10px] text-[#3ECFCF] font-bold">In 7 Days (₹179)</div>
+          </div>
+          <XCircle size={16} className="text-[#FF63B3] cursor-pointer" />
+       </motion.div>
+    </div>
+  );
+}
+
+function CancelGuideMockup() {
+  return (
+    <div className="aspect-video w-full bg-[#080810] p-8">
+       <div className="mb-6 flex items-center gap-2">
+          <ShieldCheck size={18} className="text-[#FF63B3]" />
+          <span className="text-xs font-black uppercase text-white">Cancellation Guide: Hotstar</span>
+       </div>
+       <div className="space-y-4">
+          {[
+            { t: "Go to Account Settings", s: "Completed" },
+            { t: "Click 'Cancel Membership'", s: "In progress" },
+            { t: "Confirm Cancellation", s: "Pending" }
+          ].map((step, i) => (
+            <div key={i} className="flex items-center gap-4">
+               <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold ${i === 0 ? 'bg-[#3ECFCF] text-black' : 'border border-white/20 text-white'}`}>{i+1}</div>
+               <div className="flex-1 h-[2px] bg-white/5 relative">
+                  <div className={`absolute inset-y-0 left-0 bg-[#3ECFCF] ${i === 0 ? 'w-full' : 'w-0'}`} />
+               </div>
+               <div className="text-[10px] text-white font-semibold w-24 text-right">{step.t}</div>
+            </div>
+          ))}
+       </div>
+    </div>
+  );
+}
+
+function InteractiveDemoTabs() {
+  const [activeTab, setActiveTab] = useState(0);
+  const tabs = [
+    { title: 'Dashboard', icon: <LayoutDashboard size={16} />, content: 'Full overview of your spending patterns and active trials.' },
+    { title: 'AI Scanner', icon: <Bot size={16} />, content: 'The fastest way to import your history from any Indian bank.' },
+    { title: 'Calendar', icon: <CalendarIcon size={16} />, content: 'A bird\'s eye view of your upcoming billing cycles.' }
+  ];
+
+  return (
+    <div className="flex flex-col gap-8">
+       <div className="flex flex-wrap justify-center gap-2">
+          {tabs.map((tab, i) => (
+            <button 
+              key={i} 
+              onClick={() => setActiveTab(i)}
+              className={`flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-bold transition-all ${activeTab === i ? 'bg-[#6C63FF] text-white shadow-lg' : 'bg-white/5 text-[#9999BB] hover:bg-white/10 hover:text-white'}`}
+            >
+               {tab.icon} {tab.title}
+            </button>
+          ))}
+       </div>
+       <div className="rounded-[40px] border border-white/10 bg-[#080810] p-2 overflow-hidden shadow-inner">
+          <AnimatePresence mode="wait">
+             <motion.div 
+               key={activeTab}
+               initial={{ opacity: 0, scale: 0.98 }}
+               animate={{ opacity: 1, scale: 1 }}
+               exit={{ opacity: 0, scale: 0.98 }}
+               transition={{ duration: 0.4 }}
+               className="aspect-[16/9] w-full rounded-[32px] bg-[#0F0F1A] p-8 flex flex-col items-center justify-center relative overflow-hidden"
+             >
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(108,99,255,0.05)_0%,transparent_70%)]" />
+                <div className="relative z-10 text-center">
+                   <div className="w-20 h-20 rounded-3xl bg-white/5 flex items-center justify-center mb-6 mx-auto text-[#6C63FF]">{tabs[activeTab].icon}</div>
+                   <h4 className="text-2xl font-black text-white mb-4 italic tracking-tighter">"{tabs[activeTab].title} Interface"</h4>
+                   <p className="text-[#9999BB] max-w-sm mb-8 leading-relaxed font-semibold">{tabs[activeTab].content}</p>
+                   <button className="px-6 py-2 rounded-lg border border-white/10 text-white text-xs font-bold flex items-center gap-2 group mx-auto">
+                      Learn more <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
+                   </button>
+                </div>
+             </motion.div>
+          </AnimatePresence>
+       </div>
+       <div className="mt-8 flex justify-center">
+         <MagneticButton className="px-8 py-4 rounded-xl bg-white/5 border border-white/10 text-white font-bold hover:bg-white/10 transition-colors">
+            Explore Dashboard →
+         </MagneticButton>
+       </div>
+    </div>
+  );
+}
+
+function TestimonialCard({ quote, name, loc, saved }) {
+  return (
+    <motion.div 
+      initial={{ opacity: 0, x: 50 }}
+      whileInView={{ opacity: 1, x: 0 }}
+      viewport={{ once: true }}
+      className="min-w-[320px] md:min-w-[380px] p-10 rounded-[40px] bg-[#0F0F1A] border border-white/5 snap-start flex flex-col justify-between group hover:border-[#6C63FF]/40 transition-colors"
+    >
+       <div>
+          <div className="flex gap-1 mb-8">
+             {Array.from({ length: 5 }).map((_, i) => <div key={i} className="w-4 h-4 rounded-sm bg-[#FFD700]">★</div> )}
+          </div>
+          <p className="text-lg text-white leading-relaxed italic font-medium mb-12">"{quote}"</p>
+       </div>
+       <div className="flex items-center gap-4">
+          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#6C63FF] to-[#3ECFCF] p-[1px]">
+             <div className="w-full h-full rounded-full bg-[#0F0F1A] flex items-center justify-center text-[#E8E8F0] font-black text-xl">{name[0]}</div>
+          </div>
+          <div>
+             <div className="text-white font-black tracking-tight">{name} <span className="text-[#444455] font-bold">— {loc}</span></div>
+             <div className="text-[11px] font-black uppercase text-[#4CFF8F] tracking-widest mt-0.5">Saved {saved}</div>
+          </div>
+       </div>
+    </motion.div>
+  );
+}
+
+function FAQItem({ question, answer }) {
+  const [isOpen, setIsOpen] = useState(false);
+  return (
+    <div className="rounded-2xl border border-white/5 bg-[#0F0F1A] overflow-hidden">
+       <button 
+         onClick={() => setIsOpen(!isOpen)}
+         className="w-full p-6 flex items-center justify-between text-left group"
+       >
+          <span className="text-white font-bold tracking-tight group-hover:text-[#6C63FF] transition-colors">{question}</span>
+          <motion.div animate={{ rotate: isOpen ? 180 : 0 }}>
+             <ChevronDown size={20} className="text-[#666680]" />
+          </motion.div>
+       </button>
+       <AnimatePresence>
+          {isOpen && (
+            <motion.div 
+               initial={{ height: 0 }}
+               animate={{ height: 'auto' }}
+               exit={{ height: 0 }}
+               className="overflow-hidden"
+            >
+               <div className="p-6 pt-0 text-[#9999BB] text-sm leading-relaxed border-t border-white/5">
+                  {answer}
+               </div>
+            </motion.div>
+          )}
+       </AnimatePresence>
+    </div>
+  );
 }

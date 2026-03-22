@@ -1,37 +1,40 @@
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap');
 @import "tailwindcss";
 
-@theme {
-  --color-bg-primary: #0A0A0F;
-  --color-bg-surface: #0F0F1A;
-  --color-bg-card: #13131F;
-  --color-bg-elevated: #1A1A2E;
-  --color-border: #1E1E2E;
-  --color-border-light: #2A2A3E;
-  --color-text-primary: #E8E8F0;
-  --color-text-secondary: #9999BB;
-  --color-text-muted: #666680;
-  --color-brand-purple: #6C63FF;
-  --color-brand-teal: #3ECFCF;
-  --color-status-warning: #FFD700;
-  --color-status-savings: #4CFF8F;
-  --color-status-danger: #FF6363;
-  --color-status-info: #63B3FF;
-  --font-sans: 'DM Sans', system-ui, sans-serif;
-  --animate-fade-in: fadeIn 0.3s ease-in-out;
-  --animate-slide-up: slideUp 0.3s ease-out;
+:root {
+  --bg-primary:    #0A0A0F;
+  --bg-secondary:  #0F0F1A;
+  --bg-surface:    #13131F;
+  --bg-hover:      #1A1A2A;
+  --text-primary:  #E8E8F0;
+  --text-secondary:#9999BB;
+  --text-muted:    #666680;
+  --border:        #1E1E2E;
+  --brand-purple:  #6C63FF;
+  --brand-teal:    #3ECFCF;
+  --success:       #4CFF8F;
+  --danger:        #FF6363;
+  --warning:       #FFD700;
+  --color-bg-primary: var(--bg-primary);
+  --color-bg-surface: var(--bg-secondary);
+  --color-bg-card: var(--bg-surface);
+  --color-bg-elevated: var(--bg-hover);
+  --color-text-primary: var(--text-primary);
+  --color-border: var(--border);
+  --color-border-light: var(--border);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-muted: var(--text-muted);
 }
 
-html[data-theme="light"] {
-  --color-bg-primary: #F8F9FA;
-  --color-bg-surface: #FFFFFF;
-  --color-bg-card: #FFFFFF;
-  --color-bg-elevated: #F1F3F5;
-  --color-border: #E9ECEF;
-  --color-border-light: #DEE2E6;
-  --color-text-primary: #1E1E28;
-  --color-text-secondary: #495057;
-  --color-text-muted: #6C757D;
+[data-theme="light"] {
+  --bg-primary:    #F8F8FF;
+  --bg-secondary:  #FFFFFF;
+  --bg-surface:    #F0F0F8;
+  --bg-hover:      #E8E8F8;
+  --text-primary:  #0A0A0F;
+  --text-secondary:#444460;
+  --text-muted:    #888899;
+  --border:        #E0E0EE;
 }
 
 
@@ -47,6 +50,11 @@ html[data-theme="light"] {
 
 * {
   box-sizing: border-box;
+}
+
+input {
+  background: var(--bg-surface);
+  color: var(--text-primary);
 }
 
 html, body {

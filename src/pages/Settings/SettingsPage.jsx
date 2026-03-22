@@ -512,7 +512,7 @@ export default function SettingsPage() {
             </div>
             <div className="p-6 bg-brand-purple/5 border border-brand-purple/30 border-dashed rounded-[20px] text-center">
               <p className="text-sm text-text-primary mb-3">Still have questions?</p>
-              <button className="btn-secondary" style={{ border: 'none', background: 'white', color: 'black' }}>Contact Support</button>
+              <button className="btn-secondary" style={{ border: 'none', background: 'var(--bg-secondary)', color: 'var(--text-primary)' }}>Contact Support</button>
             </div>
           </motion.div>
         )

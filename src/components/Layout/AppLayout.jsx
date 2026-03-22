@@ -11,6 +11,7 @@ import GlobalSearch from '../GlobalSearch'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import BottomNav from './BottomNav'
 import MobileHeader from './MobileHeader'
+import { supabase } from '../../lib/supabase'
 
 export default function AppLayout() {
   const bannerHeight = 0
@@ -40,7 +41,18 @@ export default function AppLayout() {
       }
     }
     window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
+    
+    // Session keepalive every 10 minutes
+    const keepalive = setInterval(async () => {
+      try {
+        await supabase.auth.getSession()
+      } catch (err) {}
+    }, 10 * 60 * 1000)
+    
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown)
+      clearInterval(keepalive)
+    }
   }, [])
 
   async function handleAdd(data) {

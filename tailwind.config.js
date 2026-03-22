@@ -1,5 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 export default {
+  darkMode: 'class',
   content: [
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
@@ -8,28 +9,28 @@ export default {
     extend: {
       colors: {
         bg: {
-          primary: '#0A0A0F',
-          surface: '#0F0F1A',
-          card: '#13131F',
-          elevated: '#1A1A2E',
+          primary: 'var(--bg-primary)',
+          surface: 'var(--bg-secondary)',
+          card: 'var(--bg-surface)',
+          elevated: 'var(--bg-hover)',
         },
         border: {
-          DEFAULT: '#1E1E2E',
-          light: '#2A2A3E',
+          DEFAULT: 'var(--border)',
+          light: 'var(--border)',
         },
         text: {
-          primary: '#E8E8F0',
-          secondary: '#9999BB',
-          muted: '#666680',
+          primary: 'var(--text-primary)',
+          secondary: 'var(--text-secondary)',
+          muted: 'var(--text-muted)',
         },
         brand: {
-          purple: '#6C63FF',
-          teal: '#3ECFCF',
+          purple: 'var(--brand-purple)',
+          teal: 'var(--brand-teal)',
         },
         status: {
-          warning: '#FFD700',
-          savings: '#4CFF8F',
-          danger: '#FF6363',
+          warning: 'var(--warning)',
+          savings: 'var(--success)',
+          danger: 'var(--danger)',
           info: '#63B3FF',
         },
       },
