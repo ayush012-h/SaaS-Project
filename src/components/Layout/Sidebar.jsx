@@ -11,7 +11,7 @@ import { useTheme } from '../../contexts/ThemeContext'
 import toast from 'react-hot-toast'
 import { useState, useRef, useEffect } from 'react'
 import HelpPanel from '../HelpPanel'
-import { smartCheckout } from '../../lib/payment'
+import { smartCheckout, prefetchOrder } from '../../lib/payment'
 import Avatar from '../Avatar'
 
 // Main nav — shown to all users
@@ -157,12 +157,13 @@ export default function Sidebar({ style, isCollapsed, setIsCollapsed }) {
             return (
               <Tooltip key={to} content={isLocked ? "Upgrade to Pro" : label} isCollapsed={isCollapsed}>
                 <div 
-                  onClick={() => isLocked ? smartCheckout(profile) : navigate(to)}
+                  onClick={() => isLocked ? smartCheckout().catch(err => toast.error(err.message)) : navigate(to)}
+                  onMouseEnter={() => isLocked && prefetchOrder()}
                   className={`
                     flex items-center gap-3 rounded-xl transition-all duration-200 cursor-pointer
                     ${isCollapsed ? 'justify-center p-3' : 'px-4 py-3'} 
                     ${isLocked 
-                      ? 'text-[var(--text-muted)]/50 hover:bg-rgba(0,0,0,0.05)' 
+                      ? 'text-[var(--text-muted)]/50 hover:bg-[var(--bg-surface)]' 
                       : 'text-[var(--text-muted)] hover:bg-[var(--bg-surface)] hover:text-[var(--text-primary)]'
                     }
                   `}
@@ -179,6 +180,39 @@ export default function Sidebar({ style, isCollapsed, setIsCollapsed }) {
             );
           })}
         </div>
+
+        {/* UPGRADE CALL TO ACTION */}
+        {profile !== undefined && profile?.plan !== 'pro' && (
+          <div className={`mt-6 ${isCollapsed ? 'flex justify-center' : 'p-4 rounded-xl bg-gradient-to-br from-[var(--brand-purple)]/10 to-[var(--brand-teal)]/10 border border-[var(--brand-purple)]/20 shadow-inner'}`}>
+            {!isCollapsed ? (
+              <>
+                <div className="flex items-center gap-2 mb-2">
+                  <Crown size={16} className="text-amber-500" />
+                  <span className="text-sm font-bold text-[var(--text-primary)]">Upgrade to Pro</span>
+                </div>
+                <p className="text-xs text-[var(--text-muted)] mb-3 leading-relaxed">
+                  Unlock AI insights, email scanning, and advanced analytics.
+                </p>
+                <button
+                  onClick={() => smartCheckout().catch(err => toast.error(err.message))}
+                  onMouseEnter={() => prefetchOrder()}
+                  className="w-full py-2 bg-gradient-to-r from-[var(--brand-purple)] to-[var(--brand-teal)] text-white text-xs font-black tracking-wide rounded-lg hover:shadow-[0_0_15px_rgba(108,99,255,0.4)] transition-all active:scale-95"
+                >
+                  Get Pro
+                </button>
+              </>
+            ) : (
+              <button
+                onClick={() => smartCheckout().catch(err => toast.error(err.message))}
+                onMouseEnter={() => prefetchOrder()}
+                className="p-3 bg-gradient-to-br from-[var(--brand-purple)]/20 to-[var(--brand-teal)]/20 border border-[var(--brand-purple)]/30 rounded-xl text-amber-500 hover:text-amber-400 hover:shadow-[0_0_10px_rgba(108,99,255,0.3)] transition-all active:scale-95"
+                title="Upgrade to Pro"
+              >
+                <Crown size={20} />
+              </button>
+            )}
+          </div>
+        )}
 
         {/* LOG OUT LINK */}
         <div className="pt-4 border-t border-[var(--border-subtle)]">

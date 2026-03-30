@@ -1,4 +1,5 @@
 import { useMemo, useEffect, useState } from 'react'
+import toast from 'react-hot-toast'
 import { DollarSign, CreditCard, TrendingUp, Bell, Calendar, AlertCircle, MessageSquare } from 'lucide-react'
 import { format, subMonths } from 'date-fns'
 import React, { lazy, Suspense } from 'react'
@@ -131,6 +132,25 @@ export default function DashboardPage() {
 
   useEffect(() => {
     document.title = 'Dashboard — SubTrackr'
+    
+    // Check for payment success from Dodo or Razorpay
+    const params = new URLSearchParams(window.location.search)
+    if (params.get('status') === 'succeeded' || params.get('upgraded') === 'true' || params.get('payment_id')) {
+      const email = params.get('email')
+      const msg = email ? `Pro account activated for ${email}!` : 'Pro account activated successfully!'
+      toast.success(msg, {
+        duration: 6000,
+        icon: '🎉',
+        style: {
+          background: '#12141D',
+          color: '#F8FAFC',
+          border: '1px solid #232736',
+          fontWeight: 'bold'
+        }
+      })
+      // Clean URL
+      window.history.replaceState({}, '', '/dashboard')
+    }
   }, [])
 
   // Calculate totals in display currency
@@ -205,7 +225,7 @@ export default function DashboardPage() {
       <div className="flex items-end justify-between">
         <div>
           <h1 className={`${isMobile ? 'text-2xl' : 'text-4xl'} font-bold text-text-primary tracking-tight`}>
-            Good {new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 18 ? 'afternoon' : 'evening'}{profile?.full_name ? `, ${String(profile.full_name).split(' ')[0]}` : ''}! 👋
+            Welcome! 👋
           </h1>
           <p className={`${isMobile ? 'text-xs' : 'text-sm mt-1'} text-text-muted font-medium`}>Subscription overview</p>
         </div>

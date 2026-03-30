@@ -1,35 +1,56 @@
-import { createContext, useContext, useState, useEffect, useCallback } from 'react'
+import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from './AuthContext'
 
 const SubscriptionsContext = createContext({})
 
 export function SubscriptionsProvider({ children }) {
-  const { user } = useAuth()
+  const { user, profile } = useAuth()
   const [subscriptions, setSubscriptions] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const isFirstFetchForUser = useRef(true)
 
   const fetchSubscriptions = useCallback(async () => {
     if (!user) {
       setSubscriptions([])
       setLoading(false)
+      isFirstFetchForUser.current = true
       return
     }
+
     setLoading(true)
-    const { data, error } = await supabase
-      .from('subscriptions')
-      .select('*')
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: false })
-    if (error) setError(error.message)
-    else setSubscriptions(data || [])
-    setLoading(false)
+
+    // Optional small delay on the first fetch after login to let RLS settle
+    if (isFirstFetchForUser.current) {
+      await new Promise(r => setTimeout(r, 100))
+      isFirstFetchForUser.current = false
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('subscriptions')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+
+      if (error) {
+        console.error('Fetch subs error:', error.message)
+        setError(error.message)
+      } else {
+        setSubscriptions(data || [])
+        setError(null)
+      }
+    } catch (e) {
+      setError(e.message)
+    } finally {
+      setLoading(false)
+    }
   }, [user?.id])
 
   useEffect(() => {
     fetchSubscriptions()
-  }, [fetchSubscriptions])
+  }, [fetchSubscriptions, profile]) // Profile change (e.g. login/update) should trigger a sync
 
   async function addSubscription(sub) {
     const { data, error } = await supabase

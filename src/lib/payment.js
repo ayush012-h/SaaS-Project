@@ -4,44 +4,56 @@ import { supabase } from './supabase'
 let cachedCountry = null
 
 // ── Country Detection ─────────────────────────────────────
-async function detectCountry() {
+let detectionPromise = null
+
+export async function detectCountry() {
   if (cachedCountry) return cachedCountry
+  if (detectionPromise) return detectionPromise
 
-  const services = [
-    async () => {
-      const r = await fetch('https://ipapi.co/json/', { signal: AbortSignal.timeout(3000) })
-      const d = await r.json()
-      return d.country_code
-    },
-    async () => {
-      const r = await fetch('https://api.country.is/', { signal: AbortSignal.timeout(3000) })
-      const d = await r.json()
-      return d.country
-    },
-    async () => {
-      const r = await fetch('https://ipwho.is/', { signal: AbortSignal.timeout(3000) })
-      const d = await r.json()
-      return d.country_code
-    },
-    async () => {
-      const r = await fetch('https://freeipapi.com/api/json', { signal: AbortSignal.timeout(3000) })
-      const d = await r.json()
-      return d.countryCode
-    },
-  ]
+  detectionPromise = (async () => {
+    const services = [
+      async () => {
+        const r = await fetch('https://ipapi.co/json/', { signal: AbortSignal.timeout(3000) })
+        const d = await r.json()
+        return d.country_code
+      },
+      async () => {
+        const r = await fetch('https://api.country.is/', { signal: AbortSignal.timeout(3000) })
+        const d = await r.json()
+        return d.country
+      },
+      async () => {
+        const r = await fetch('https://ipwho.is/', { signal: AbortSignal.timeout(3000) })
+        const d = await r.json()
+        return d.country_code
+      },
+      async () => {
+        const r = await fetch('https://freeipapi.com/api/json', { signal: AbortSignal.timeout(3000) })
+        const d = await r.json()
+        return d.countryCode
+      },
+    ]
 
-  for (const service of services) {
     try {
-      const code = await service()
+      // Try all services in parallel, return the first one that succeeds
+      const code = await Promise.any(services.map(s => s()))
       if (code && code.length === 2) {
         cachedCountry = code.toUpperCase()
         return cachedCountry
       }
-    } catch { continue }
-  }
-  
-  cachedCountry = 'UNKNOWN'
-  return cachedCountry
+    } catch (e) {
+      console.warn('All country detection services failed, defaulting to UNKNOWN')
+    }
+    
+    cachedCountry = 'UNKNOWN'
+    return cachedCountry
+  })()
+
+  return detectionPromise
+}
+
+export function prewarmCountryDetection() {
+  detectCountry()
 }
 
 export function forceInternational() {
@@ -139,6 +151,22 @@ export async function smartCheckout() {
   } catch (error) {
     console.error('Smart checkout error:', error.message)
     throw error
+  }
+}
+
+/**
+ * Prefetches a checkout order in the background.
+ * Call this on hover to make the popup appear instantly.
+ */
+export async function prefetchOrder() {
+  try {
+    const india = await isIndianUser()
+    if (india) {
+      const { prefetchOrder: rzpPrefetch } = await import('./razorpay')
+      return rzpPrefetch()
+    }
+  } catch (e) {
+    console.warn('Prefetch failed:', e)
   }
 }
 

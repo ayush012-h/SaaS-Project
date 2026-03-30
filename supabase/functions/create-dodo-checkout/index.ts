@@ -49,7 +49,7 @@ serve(async (req) => {
     }
 
     // ── Try Dodo API ──────────────────────────────────────
-    const requestBody = {
+    const requestData = {
       billing: {
         city: "Silchar",
         country: "IN",
@@ -59,8 +59,7 @@ serve(async (req) => {
       },
       customer: {
         email: user.email,
-        name: user.user_metadata?.full_name || user.email?.split("@")[0] ||
-          "User",
+        name: user.user_metadata?.full_name || user.email?.split("@")[0] || "User",
         create_new_customer: true,
       },
       metadata: {
@@ -70,20 +69,24 @@ serve(async (req) => {
       product_id: PRODUCT_ID,
       quantity: 1,
       trial_period_days: 3,
-      return_url: `${APP_URL}/dashboard?upgraded=true`,
+      // Dodo automatically appends payment_id, status, and email to return_url
+      return_url: `${APP_URL}/dashboard`,
     };
 
-    console.log("Sending to Dodo:", JSON.stringify(requestBody));
+    console.log("Sending to Dodo:", JSON.stringify(requestData));
 
-    const response = await fetch("https://api.dodopayments.com/subscriptions", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${API_KEY}`,
-        "Content-Type": "application/json",
-        "Accept": "application/json",
+    const response = await fetch(
+      "https://checkout.dodopayments.com/buy/pdt_0NazrpOsZ0CXqCe0hF0Rq",
+      {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${API_KEY}`,
+          "Content-Type": "application/json",
+          "Accept": "application/json",
+        },
+        body: JSON.stringify(requestData),
       },
-      body: JSON.stringify(requestBody),
-    });
+    );
 
     // Read raw response text first for debugging
     const rawText = await response.text();
@@ -136,7 +139,7 @@ serve(async (req) => {
       { status: 200, headers: { ...cors, "Content-Type": "application/json" } },
     );
   } catch (error) {
-    const msg = error instanceof Error ? error.message : String(error)
+    const msg = error instanceof Error ? error.message : String(error);
     console.error("create-dodo-checkout error:", msg);
     return new Response(
       JSON.stringify({ error: msg }),

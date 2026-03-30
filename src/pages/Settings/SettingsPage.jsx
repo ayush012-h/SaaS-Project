@@ -24,7 +24,7 @@ import {
 } from 'lucide-react'
 import { SUPPORTED_CURRENCIES } from '../../hooks/useCurrencyRates'
 import { useAuth } from '../../contexts/AuthContext'
-import { smartCheckout } from '../../lib/payment'
+import { smartCheckout, prefetchOrder } from '../../lib/payment'
 import { supabase } from '../../lib/supabase'
 import toast from 'react-hot-toast'
 import { useTheme } from '../../contexts/ThemeContext'
@@ -58,7 +58,6 @@ export default function SettingsPage() {
   const [emailAlerts, setEmailAlerts] = useState(profile?.preferences?.email_alerts !== false)
   const [pushAlerts, setPushAlerts] = useState(profile?.preferences?.push_alerts !== false)
   const [daysBefore, setDaysBefore] = useState(profile?.preferences?.days_before || '7')
-  const [upgrading, setUpgrading] = useState(false)
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
 
   // Profile Editable States
@@ -96,9 +95,10 @@ export default function SettingsPage() {
     }
   }
 
-  function handleUpgrade() {
+  const handleUpgrade = () => {
     smartCheckout().catch(err => toast.error(err.message))
   }
+
 
   // ── Send newsletter to all users ─────────────────────────
   async function handleSendNewsletter() {
@@ -492,7 +492,15 @@ export default function SettingsPage() {
                   <h3 style={{ fontSize: '32px', fontWeight: '900', marginTop: '16px' }}>₹{isPro ? '49' : '0'}/mo</h3>
                   {isPro && <p style={{ color: '#9999BB', fontSize: '14px' }}>Next payment: {new Date(new Date().setMonth(new Date().getMonth() + 1)).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</p>}
                 </div>
-                {!isPro && <button onClick={handleUpgrade} disabled={upgrading} className="btn-primary">Upgrade</button>}
+                {!isPro && (
+                  <button 
+                    onClick={handleUpgrade} 
+                    onMouseEnter={prefetchOrder}
+                    className="btn-primary"
+                  >
+                    Upgrade
+                  </button>
+                )}
               </div>
             </div>
           </motion.div>

@@ -48,14 +48,23 @@ const PRO_NAV = [
 // ── NavItem defined OUTSIDE component ────────────────────
 // This is the fix — defining inside caused re-creation on
 // every render which crashed React Router's NavLink
-function NavItem({ to, icon: Icon, label, pro, isPro, pathname, onClose }) {
+function NavItem({ to, icon: Icon, label, pro, isPro, pathname, onClose, onLockedClick }) {
   const isActive = pathname === to
   const locked = pro && !isPro
 
+  const handleClick = (e) => {
+    if (locked) {
+      e.preventDefault()
+      onLockedClick()
+      return
+    }
+    onClose()
+  }
+
   return (
     <NavLink
-      to={to}
-      onClick={onClose}
+      to={locked ? '#' : to}
+      onClick={handleClick}
       style={{
         display: 'flex',
         alignItems: 'center',
@@ -169,6 +178,16 @@ export default function MobileHeader() {
           {currentTitle}
         </span>
 
+        {/* Hamburger Menu Button */}
+        <button
+          onClick={() => setDrawerOpen(true)}
+          style={{
+            background: 'transparent', border: 'none',
+            color: '#E8E8F0', cursor: 'pointer', padding: 4,
+          }}
+        >
+          <Menu size={24} />
+        </button>
       </header>
 
       {/* ── Drawer + Backdrop ────────────────────────────── */}
@@ -311,6 +330,7 @@ export default function MobileHeader() {
                       isPro={isPro}
                       pathname={location.pathname}
                       onClose={closeDrawer}
+                      onLockedClick={() => smartCheckout().catch(err => toast.error(err.message))}
                     />
                   ))}
                 </div>
@@ -341,6 +361,7 @@ export default function MobileHeader() {
                     isPro={isPro}
                     pathname={location.pathname}
                     onClose={closeDrawer}
+                    onLockedClick={() => smartCheckout().catch(err => toast.error(err.message))}
                   />
                 ))}
 

@@ -1,17 +1,11 @@
 import React from 'react'
 import { Lock, Sparkles, ChevronRight } from 'lucide-react'
 import { smartCheckout } from '../lib/payment'
+import toast from 'react-hot-toast'
 
 export default function ProGate({ featureName, children }) {
-  const [upgrading, setUpgrading] = React.useState(false)
-
-  const handleUpgrade = async () => {
-    setUpgrading(true)
-    try {
-      await smartCheckout()
-    } finally {
-      setUpgrading(false)
-    }
+  const handleUpgrade = () => {
+    smartCheckout().catch(err => toast.error(err.message))
   }
 
   const containerStyle = {
@@ -143,17 +137,12 @@ export default function ProGate({ featureName, children }) {
             This premium feature is only available to Pro members. Upgrade now to unlock AI-powered insights and smarter subscription management.
           </p>
           <button 
-            style={{ 
-                ...buttonStyle, 
-                opacity: upgrading ? 0.7 : 1, 
-                cursor: upgrading ? 'not-allowed' : 'pointer' 
-              }}
+            style={buttonStyle}
             onClick={handleUpgrade}
-            disabled={upgrading}
-            onMouseEnter={(e) => !upgrading && (e.currentTarget.style.transform = 'translateY(-2px)')}
-            onMouseLeave={(e) => !upgrading && (e.currentTarget.style.transform = 'translateY(0)')}
+            onMouseEnter={(e) => (e.currentTarget.style.transform = 'translateY(-2px)')}
+            onMouseLeave={(e) => (e.currentTarget.style.transform = 'translateY(0)')}
           >
-            {upgrading ? 'Connecting...' : 'Upgrade to Pro'} <ChevronRight size={20} />
+            Upgrade to Pro <ChevronRight size={20} />
           </button>
         </div>
       </div>

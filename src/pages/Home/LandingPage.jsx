@@ -172,7 +172,7 @@ export default function LandingPage() {
               <>
                 <Link to="/login" className="px-5 py-2 text-sm font-semibold text-text-secondary hover:text-text-primary transition-colors">Sign in</Link>
                 <MagneticButton className="px-6 py-2.5 rounded-xl bg-brand-gradient text-white text-sm font-bold shadow-lg shadow-brand-purple/40 hover:brightness-110">
-                  <Link to="/register">Start free</Link>
+                  <Link to={session ? "/dashboard" : "/register"}>{session ? "Dashboard" : "Start free"}</Link>
                 </MagneticButton>
               </>
             )}
@@ -221,7 +221,9 @@ export default function LandingPage() {
             className="flex flex-col sm:flex-row items-center justify-center gap-6 mb-20"
           >
             <MagneticButton className="group relative px-8 py-5 rounded-2xl bg-brand-gradient text-white font-black text-lg shadow-elevation-purple hover:shadow-glow-purple transition-all overflow-hidden">
-              <Link to="/register" className="relative z-10">Start for Free — No credit card</Link>
+              <Link to={session ? "/dashboard" : "/register"} className="relative z-10">
+                {session ? "Go to Dashboard" : "Start for Free — No credit card"}
+              </Link>
               <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-500" />
             </MagneticButton>
             
@@ -500,7 +502,12 @@ export default function LandingPage() {
                      <li key={f} className="flex gap-3 text-text-secondary text-sm"><Check size={18} className="text-brand-teal" /> {f}</li>
                    ))}
                 </ul>
-                <button className="w-full py-4 rounded-xl bg-bg-surface border border-border-subtle text-text-primary font-bold hover:bg-bg-hover transition-colors">Get started free</button>
+                <Link 
+                  to={session ? "/dashboard" : "/register"}
+                  className="w-full py-4 rounded-xl bg-bg-surface border border-border-subtle text-text-primary font-bold hover:bg-bg-hover transition-colors text-center block"
+                >
+                  Get started free
+                </Link>
              </motion.div>
 
              {/* Pro Card */}
@@ -533,7 +540,9 @@ export default function LandingPage() {
                    </ul>
                    
                    <MagneticButton className="w-full py-4 rounded-xl bg-brand-gradient text-white font-black shadow-lg shadow-brand-purple/30 hover:brightness-110">
-                      Start with Pro
+                      <Link to={session ? "/dashboard" : "/register"} className="w-full h-full block text-white">
+                        {session ? "Upgrade to Pro" : "Start with Pro"}
+                      </Link>
                    </MagneticButton>
                    <p className="text-center text-[10px] text-text-muted mt-4 font-bold uppercase tracking-widest">No credit card required for trial</p>
                 </div>
@@ -629,10 +638,12 @@ export default function LandingPage() {
            
            <div className="flex flex-col sm:flex-row items-center justify-center gap-6 mb-8">
               <MagneticButton className="px-10 py-5 rounded-2xl bg-brand-gradient text-white font-black text-xl shadow-elevation-purple hover:shadow-glow-purple">
-                 Start Free Now
+                 <Link to={session ? "/dashboard" : "/register"} className="w-full h-full block text-white">
+                   {session ? "Go to Dashboard" : "Start Free Now"}
+                 </Link>
               </MagneticButton>
               <button className="px-10 py-5 rounded-2xl bg-bg-surface border border-border-subtle text-text-primary font-bold text-xl hover:bg-bg-hover transition-all">
-                 View Pricing
+                 <Link to="/pricing" className="w-full h-full block text-text-primary">View Pricing</Link>
               </button>
            </div>
            

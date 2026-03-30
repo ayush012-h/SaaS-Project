@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { getLocalPrice } from '../../lib/payment'
 import { Check, ArrowRight, Zap, Star, ChevronDown } from 'lucide-react'
 import { LandingNav, LandingFooter } from '../../components/Layout/LandingNavFooter'
+import { useAuth } from '../../contexts/AuthContext'
 
 const FREE_FEATURES = [
   'Up to 5 subscriptions',
@@ -50,6 +51,7 @@ function CheckIcon({ value, isProCol }) {
 }
 
 export default function PricingPage() {
+  const { session } = useAuth()
   const [annual, setAnnual] = useState(false)
   const proSavings = annual ? 'Save ₹396/year' : null
   
@@ -118,7 +120,7 @@ export default function PricingPage() {
                 </li>
               ))}
             </ul>
-            <Link to="/register" className="btn-secondary pricing-btn" style={{ textDecoration: 'none' }}>Get Started Free</Link>
+            <Link to={session ? "/dashboard" : "/register"} className="btn-secondary pricing-btn" style={{ textDecoration: 'none' }}>Get Started Free</Link>
           </div>
 
           {/* Pro plan */}
@@ -156,8 +158,8 @@ export default function PricingPage() {
                 </li>
               ))}
             </ul>
-            <Link to="/register" className="btn-primary pricing-btn" style={{ textDecoration: 'none' }}>
-              <Zap size={16} /> Start with Pro
+            <Link to={session ? "/dashboard" : "/register"} className="btn-primary pricing-btn" style={{ textDecoration: 'none' }}>
+              <Zap size={16} /> {session ? "Upgrade to Pro" : "Start with Pro"}
             </Link>
             <p style={{ textAlign: 'center', color: '#444460', fontSize: 11, marginTop: 10 }}>
               Cancel anytime. No lock-in.
@@ -256,7 +258,7 @@ export default function PricingPage() {
           <h2 className="cta-title">Start saving today</h2>
           <p className="cta-sub">Free plan, no credit card. Upgrade when you're ready.</p>
           <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
-            <Link to="/register" className="btn-primary cta-btn">Start Free <ArrowRight size={18} /></Link>
+            <Link to={session ? "/dashboard" : "/register"} className="btn-primary cta-btn">{session ? "Go to Dashboard" : "Start Free"} <ArrowRight size={18} /></Link>
             <Link to="/features" className="hero-cta-secondary" style={{ padding: '14px 24px', fontSize: '1rem' }}>See all features</Link>
           </div>
         </div>

@@ -1,12 +1,11 @@
 import { Zap } from 'lucide-react'
-import { smartCheckout } from '../../lib/payment'
+import { smartCheckout, prefetchOrder } from '../../lib/payment'
 import React from 'react'
+import toast from 'react-hot-toast'
 
 export default function ProGate({ feature = 'this feature' }) {
-  const [upgrading, setUpgrading] = React.useState(false)
-
   const handleUpgrade = () => {
-    smartCheckout()
+    smartCheckout().catch(err => toast.error(err.message))
   }
 
   return (
@@ -21,7 +20,7 @@ export default function ProGate({ feature = 'this feature' }) {
       </p>
       <button 
         onClick={handleUpgrade}
-        disabled={upgrading}
+        onMouseEnter={prefetchOrder}
         className="btn-primary inline-block cursor-pointer border-none"
         style={{ 
           background: 'linear-gradient(135deg, #6C63FF, #3ECFCF)', 
@@ -30,9 +29,8 @@ export default function ProGate({ feature = 'this feature' }) {
           borderRadius: '12px', 
           fontWeight: 600, 
           textDecoration: 'none',
-          opacity: upgrading ? 0.7 : 1
         }}>
-        {upgrading ? 'Connecting...' : 'Upgrade to Pro — ₹49/month'}
+        Upgrade to Pro — ₹49/month
       </button>
       <p className="text-text-muted text-xs mt-4">Cancel anytime. No hidden fees.</p>
     </div>

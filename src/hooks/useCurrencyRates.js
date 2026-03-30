@@ -65,7 +65,7 @@ export function useCurrencyRates(baseCurrency = 'INR') {
    * All subscription amounts are stored in their own currency (e.g. ₹ or $).
    * We first convert to INR (base), then to the target.
    */
-  function convert(amount, fromCurrencySymbol, toCurrencyCode) {
+  const convert = useCallback((amount, fromCurrencySymbol, toCurrencyCode) => {
     if (!amount) return 0
     // Attempt to map symbol → code
     const fromCode = SUPPORTED_CURRENCIES.find(c => c.symbol === fromCurrencySymbol)?.code || 'INR'
@@ -75,7 +75,7 @@ export function useCurrencyRates(baseCurrency = 'INR') {
     // Convert: amount → INR → target
     const inINR = amount / rates[fromCode]
     return inINR * rates[toCurrencyCode]
-  }
+  }, [rates])
 
   return { rates, loading, error, convert, baseCurrency }
 }

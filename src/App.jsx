@@ -229,11 +229,23 @@ function AppRoutes() {
 }
 
 import { SubscriptionsProvider } from './contexts/SubscriptionsContext'
+import { prewarmCountryDetection } from './lib/payment'
 
 // Root
 function App() {
   // Remove HTML loading screen when React first mounts — clean, race-condition-free
   useEffect(() => {
+    prewarmCountryDetection()
+    
+    // Pre-load Razorpay script for faster checkout response
+    if (!document.getElementById('razorpay-sdk')) {
+      const script = document.createElement('script')
+      script.id = 'razorpay-sdk'
+      script.src = 'https://checkout.razorpay.com/v1/checkout.js'
+      script.async = true
+      document.body.appendChild(script)
+    }
+
     const loader = document.getElementById('loading-screen')
     if (loader) {
       loader.style.opacity = '0'

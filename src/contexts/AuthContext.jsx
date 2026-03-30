@@ -13,37 +13,48 @@ export function AuthProvider({ children }) {
   const mountedRef               = useRef(true)
   const profileCacheRef          = useRef(null)
 
-  const fetchProfile = useCallback(async (userId) => {
+  const fetchProfile = useCallback(async (userId, force = false) => {
     if (!userId) { setProfile(null); return null }
 
-    if (profileCacheRef.current?.id === userId) {
+    if (!force && profileCacheRef.current?.id === userId) {
       setProfile(profileCacheRef.current)
       return profileCacheRef.current
     }
 
-    try {
-      const result = await Promise.race([
-        supabase.from('profiles').select('*').eq('id', userId).single(),
-        new Promise((_, reject) =>
-          setTimeout(() => reject(new Error('Profile fetch timed out')), 15000)
-        ),
-      ])
+    let attempts = 0
+    let lastResult = null
 
-      if (!mountedRef.current) return null
-      if (result.error) throw result.error
+    while (attempts < 3) {
+      try {
+        const result = await Promise.race([
+          supabase.from('profiles').select('*').eq('id', userId).single(),
+          new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('Profile fetch timed out')), 5000)
+          ),
+        ])
 
-      profileCacheRef.current = result.data
-      setProfile(result.data)
-      return result.data
-
-    } catch (error) {
-      console.error('Profile fetch error:', error.message)
-      if (profileCacheRef.current) {
-        setProfile(profileCacheRef.current)
-        return profileCacheRef.current
+        if (!mountedRef.current) return null
+        
+        if (!result.error && result.data) {
+          profileCacheRef.current = result.data
+          setProfile(result.data)
+          return result.data
+        }
+        
+        lastResult = result
+      } catch (error) {
+        console.warn(`Profile fetch attempt ${attempts + 1} failed:`, error.message)
       }
-      return null
+
+      attempts++
+      if (attempts < 3) await new Promise(r => setTimeout(r, 500 * attempts))
     }
+
+    // Fallback or error handled outside
+    if (lastResult?.error) {
+      console.error('Final profile fetch error:', lastResult.error.message)
+    }
+    return null
   }, [])
 
   const handleAuthChange = useCallback(async (currentSession) => {
@@ -98,11 +109,16 @@ export function AuthProvider({ children }) {
           case 'SIGNED_IN':
             profileCacheRef.current = null
             await handleAuthChange(currentSession)
+            // Force a fresh profile fetch just in case
+            if (currentSession?.user) {
+              fetchProfile(currentSession.user.id, true).catch(console.error)
+            }
             break
           case 'TOKEN_REFRESHED':
             if (currentSession?.user && mountedRef.current) {
               setSession(currentSession)
               setUser(currentSession.user)
+              // Optionally refresh profile on token update
               setLoading(false)
             }
             break
@@ -113,8 +129,7 @@ export function AuthProvider({ children }) {
           case 'USER_UPDATED':
             if (currentSession?.user) {
               setUser(currentSession.user)
-              profileCacheRef.current = null
-              fetchProfile(currentSession.user.id).catch(console.error)
+              fetchProfile(currentSession.user.id, true).catch(console.error)
             }
             break
           default:

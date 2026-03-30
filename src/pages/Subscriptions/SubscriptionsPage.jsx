@@ -14,7 +14,7 @@ import { EmptySubscriptions, EmptySearch } from '../../components/EmptyState'
 import DuplicateDetector from '../DuplicateDetector'
 import SubscriptionHistory from '../../components/SubscriptionHistory'
 import ProGate from '../../components/UI/ProGate'
-import { smartCheckout } from '../../lib/payment'
+import { smartCheckout, prefetchOrder } from '../../lib/payment'
 import { Download, History, Tag as TagIcon, FileText } from 'lucide-react'
 import { saveAs } from 'file-saver'
 import jsPDF from 'jspdf'
@@ -150,8 +150,9 @@ export default function SubscriptionsPage() {
         <div className="flex items-center gap-2 sm:gap-3">
           <div className="relative">
             <button
-              onClick={() => isPro ? setShowExportOptions(!showExportOptions) : null}
-              className={`p-2 sm:px-4 sm:py-2 rounded-xl flex items-center gap-2 border border-border bg-bg-elevated/50 text-text-primary hover:bg-bg-hover transition-colors ${!isPro ? 'opacity-50 cursor-not-allowed' : ''}`}
+              onClick={() => isPro ? setShowExportOptions(!showExportOptions) : smartCheckout().catch(err => toast.error(err.message))}
+              onMouseEnter={() => !isPro && prefetchOrder()}
+              className={`p-2 sm:px-4 sm:py-2 rounded-xl flex items-center gap-2 border border-border bg-bg-elevated/50 text-text-primary hover:bg-bg-hover transition-colors`}
             >
               <Download size={isMobile ? 16 : 18} />
               {!isMobile && <span className="text-sm font-bold italic tracking-wide">Export</span>}
@@ -166,14 +167,10 @@ export default function SubscriptionsPage() {
                 </button>
               </div>
             )}
-            {!isPro && showExportOptions && (
-              <div className="absolute right-0 mt-2 z-20">
-                <ProGate feature="data export" />
-              </div>
-            )}
           </div>
           <button
             onClick={() => canAdd ? setAddOpen(true) : smartCheckout().catch(err => toast.error(err.message))}
+            onMouseEnter={() => !canAdd && prefetchOrder()}
             className="p-2 sm:px-4 sm:py-2.5 rounded-xl bg-gradient-to-r from-brand-purple to-brand-teal text-white shadow-lg hover:opacity-90 transition-all flex items-center gap-2 border-none cursor-pointer"
           >
             <Plus size={isMobile ? 18 : 18} strokeWidth={3} />
