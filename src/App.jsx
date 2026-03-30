@@ -1,4 +1,4 @@
-import React, { lazy, Suspense } from 'react'
+import React, { lazy, Suspense, useEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { ThemeProvider } from './contexts/ThemeContext'
 import { Toaster } from 'react-hot-toast'
@@ -18,8 +18,16 @@ const FeaturesPage    = lazy(() => import('./pages/Home/FeaturesPage'))
 const HowItWorksPage  = lazy(() => import('./pages/Home/HowItWorksPage'))
 const PricingPage     = lazy(() => import('./pages/Home/PricingPage'))
 const AboutPage       = lazy(() => import('./pages/Home/AboutPage'))
+const ContactPage     = lazy(() => import('./pages/Home/ContactPage'))
 const PrivacyPage     = lazy(() => import('./pages/Legal/PrivacyPage'))
 const TermsPage       = lazy(() => import('./pages/Legal/TermsPage'))
+
+// Footer Pages
+const ScannerInfoPage = lazy(() => import('./pages/Home/ScannerInfoPage'))
+const SupportPage     = lazy(() => import('./pages/Company/SupportPage'))
+const CompanyPage     = lazy(() => import('./pages/Company/CompanyPage'))
+const ChangelogPage   = lazy(() => import('./pages/Home/ChangelogPage'))
+const SuccessStories  = lazy(() => import('./pages/Home/SuccessStoriesPage'))
 
 // Dashboard pages (Eager load for instant navigation performance)
 import DashboardPage from './pages/Dashboard/DashboardPage'
@@ -45,7 +53,7 @@ function PageLoader() {
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      background: '#0A0A0F',
+      background: 'var(--color-bg-primary)',
     }}>
       <div style={{
         display: 'flex',
@@ -76,7 +84,7 @@ function ErrorFallback({ error, resetErrorBoundary }) {
     <div style={{
       padding: 40,
       color: 'white',
-      background: '#0A0A0F',
+      background: 'var(--color-bg-primary)',
       minHeight: '100vh',
       display: 'flex',
       flexDirection: 'column',
@@ -92,7 +100,7 @@ function ErrorFallback({ error, resetErrorBoundary }) {
         The app encountered an error. Try refreshing.
       </p>
       <div style={{
-        background: '#1A1A2A',
+        background: 'var(--color-bg-elevated)',
         border: '1px solid rgba(255,99,99,0.3)',
         borderRadius: 10,
         padding: '12px 16px',
@@ -139,29 +147,28 @@ function ErrorFallback({ error, resetErrorBoundary }) {
   )
 }
 
-// Protected route
-function ProtectedRoute({ children }) {
-  const { session, loading } = useAuth()
-  if (loading) return (
+// Reusable auth loading spinner (used in both ProtectedRoute and PublicRoute)
+function AuthSpinner() {
+  return (
     <PageTransition>
       <div className="min-h-screen flex items-center justify-center bg-bg-primary">
         <div className="w-8 h-8 border-2 border-border border-t-brand-teal rounded-full animate-spin" />
       </div>
     </PageTransition>
   )
+}
+
+// Protected route
+function ProtectedRoute({ children }) {
+  const { session, loading } = useAuth()
+  if (loading) return <AuthSpinner />
   return session ? children : <Navigate to="/login" replace />
 }
 
 // Public route
 function PublicRoute({ children }) {
   const { session, loading } = useAuth()
-  if (loading) return (
-    <PageTransition>
-      <div className="min-h-screen flex items-center justify-center bg-bg-primary">
-        <div className="w-8 h-8 border-2 border-border border-t-brand-teal rounded-full animate-spin" />
-      </div>
-    </PageTransition>
-  )
+  if (loading) return <AuthSpinner />
   return session ? <Navigate to="/dashboard" replace /> : children
 }
 
@@ -185,8 +192,14 @@ function AppRoutes() {
             <Route path="/how-it-works" element={<PageTransition><HowItWorksPage /></PageTransition>} />
             <Route path="/pricing" element={<PageTransition><PricingPage /></PageTransition>} />
             <Route path="/about" element={<PageTransition><AboutPage /></PageTransition>} />
+            <Route path="/contact" element={<PageTransition><ContactPage /></PageTransition>} />
             <Route path="/privacy" element={<PageTransition><PrivacyPage /></PageTransition>} />
             <Route path="/terms" element={<PageTransition><TermsPage /></PageTransition>} />
+            <Route path="/scanner-info" element={<PageTransition><ScannerInfoPage /></PageTransition>} />
+            <Route path="/support" element={<PageTransition><SupportPage /></PageTransition>} />
+            <Route path="/company" element={<PageTransition><CompanyPage /></PageTransition>} />
+            <Route path="/changelog" element={<PageTransition><ChangelogPage /></PageTransition>} />
+            <Route path="/success-stories" element={<PageTransition><SuccessStories /></PageTransition>} />
 
             <Route path="/login" element={<PublicRoute><PageTransition><AuthPage initialMode="login" /></PageTransition></PublicRoute>} />
             <Route path="/register" element={<PublicRoute><PageTransition><AuthPage initialMode="register" /></PageTransition></PublicRoute>} />
@@ -217,11 +230,21 @@ function AppRoutes() {
 
 // Root
 function App() {
+  // Remove HTML loading screen when React first mounts — clean, race-condition-free
+  useEffect(() => {
+    const loader = document.getElementById('loading-screen')
+    if (loader) {
+      loader.style.opacity = '0'
+      loader.style.transition = 'opacity 0.3s ease'
+      setTimeout(() => loader.remove(), 300)
+    }
+  }, [])
+
   return (
     <ThemeProvider>
       <BrowserRouter>
         <AuthProvider>
-          <div style={{ color: 'white' }}>
+          <div>
             <Toaster position="top-right" />
             <AppRoutes />
           </div>

@@ -1,6 +1,7 @@
 /* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react'
 import { supabase } from '../lib/supabase'
+import toast from 'react-hot-toast'
 
 const AuthContext = createContext({})
 
@@ -54,6 +55,8 @@ export function AuthProvider({ children }) {
           await fetchProfile(currentSession.user.id)
         } catch (profileErr) {
           console.warn('Profile fetch failed, keeping session:', profileErr.message)
+          // Non-intrusive toast so user knows something didn't sync
+          toast.error('Failed to sync profile. Retrying…', { id: 'profile-err', duration: 3000 })
         }
       } else {
         setSession(null)
@@ -132,7 +135,12 @@ export function AuthProvider({ children }) {
     const { data, error } = await supabase.auth.signUp({ email, password })
     if (error) throw error
     if (data.user) {
-      await supabase.from('profiles').upsert({ id: data.user.id, email, full_name: fullName, plan: 'free' })
+      // A Postgres trigger (handle_new_user) auto-creates the profile row.
+      // This upsert is a client-side safety net for edge cases.
+      supabase
+        .from('profiles')
+        .upsert({ id: data.user.id, email, full_name: fullName, plan: 'free' }, { onConflict: 'id', ignoreDuplicates: true })
+        .then() // fire-and-forget — non-blocking
       profileCacheRef.current = null
       if (data.session) await handleAuthChange(data.session)
     }

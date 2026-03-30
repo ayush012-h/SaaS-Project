@@ -11,7 +11,6 @@ import GlobalSearch from '../GlobalSearch'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import BottomNav from './BottomNav'
 import MobileHeader from './MobileHeader'
-import { supabase } from '../../lib/supabase'
 
 export default function AppLayout() {
   const bannerHeight = 0
@@ -34,29 +33,21 @@ export default function AppLayout() {
 
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if (['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName)) return
+      // Don't fire in form fields or rich-text editors
+      if (['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName) || e.target.isContentEditable) return
       if (e.key === 'n' || e.key === 'N') {
         e.preventDefault()
         setAddOpen(true)
       }
     }
     window.addEventListener('keydown', handleKeyDown)
-    
-    // Session keepalive every 10 minutes
-    const keepalive = setInterval(async () => {
-      try {
-        await supabase.auth.getSession()
-      } catch (err) {}
-    }, 10 * 60 * 1000)
-    
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown)
-      clearInterval(keepalive)
-    }
+    // NOTE: No keepalive needed — Supabase client handles autoRefreshToken internally
+    return () => window.removeEventListener('keydown', handleKeyDown)
   }, [])
 
   async function handleAdd(data) {
-    if (!isPro && subscriptions.length >= FREE_LIMIT) {
+    // Guard against subscriptions being undefined while still loading
+    if (!isPro && (subscriptions?.length ?? 0) >= FREE_LIMIT) {
       return toast.error(`Free plan limited to ${FREE_LIMIT} subscriptions. Upgrade to Pro!`)
     }
     try {
@@ -113,7 +104,7 @@ export default function AppLayout() {
               position: 'fixed',
               bottom: isMobile ? 76 : 32,
               right: isMobile ? 16 : 32,
-              zIndex: 900,
+              zIndex: 40,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',

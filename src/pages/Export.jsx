@@ -57,16 +57,19 @@ export default function Export({ userPlan }) {
       const headers = ['Name', 'Category', 'Amount', 'Currency', 'Billing Cycle', 'Next Renewal', 'Status']
       if (options.notes) headers.push('Notes')
       
-      const rows = filtered.map(s => [
-        s.name,
-        s.category,
-        s.amount,
-        s.currency || '₹',
-        s.billing_cycle,
-        s.next_renewal_date,
-        s.status,
-        options.notes ? (s.notes || '') : ''
-      ])
+      const rows = filtered.map(s => {
+        const row = [
+          s.name,
+          s.category,
+          s.amount,
+          s.currency || '₹',
+          s.billing_cycle,
+          s.next_renewal_date,
+          s.status,
+        ]
+        if (options.notes) row.push(s.notes || '')
+        return row
+      })
 
       const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\n')
       const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })

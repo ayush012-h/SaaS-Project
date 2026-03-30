@@ -422,6 +422,23 @@ export default function SettingsPage() {
                       <input className="input pl-10" value={monthlyBudget} onChange={e => setMonthlyBudget(e.target.value)} type="number" />
                     </div>
                   </div>
+                  <button
+                    className="btn-primary w-full"
+                    disabled={saving}
+                    onClick={async () => {
+                      setSaving(true)
+                      try {
+                        await updateProfile({
+                          monthly_budget: parseFloat(monthlyBudget) || 0,
+                          display_currency: displayCurrency,
+                        })
+                        toast.success('Preferences saved ✓')
+                      } catch { toast.error('Failed to save') }
+                      finally { setSaving(false) }
+                    }}
+                  >
+                    {saving ? 'Saving...' : 'Save Preferences'}
+                  </button>
                 </div>
               </div>
               <div className="bg-bg-elevated border border-border rounded-[24px] p-8">
@@ -451,6 +468,27 @@ export default function SettingsPage() {
                   <option value="14">14 days before</option>
                 </select>
               </div>
+              <button
+                className="btn-primary w-full"
+                disabled={saving}
+                onClick={async () => {
+                  setSaving(true)
+                  try {
+                    await updateProfile({
+                      preferences: {
+                        ...profile?.preferences,
+                        email_alerts: emailAlerts,
+                        push_alerts: pushAlerts,
+                        days_before: daysBefore,
+                      }
+                    })
+                    toast.success('Notification settings saved ✓')
+                  } catch { toast.error('Failed to save') }
+                  finally { setSaving(false) }
+                }}
+              >
+                {saving ? 'Saving...' : 'Save Notifications'}
+              </button>
             </div>
           </motion.div>
         )
@@ -479,12 +517,41 @@ export default function SettingsPage() {
           <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-6">
             <SectionHeader icon={Shield} title="Security & Data" subtitle="Protect your account and data" />
             <div className="bg-bg-elevated border border-border rounded-[24px] p-8 space-y-8">
-              <button className="btn-secondary" style={{ width: '100%' }}>Change Password</button>
+              <button 
+                className="btn-secondary" 
+                style={{ width: '100%' }}
+                onClick={async () => {
+                  if (!user?.email) return
+                  const { error } = await supabase.auth.resetPasswordForEmail(user.email)
+                  if (error) toast.error('Failed to send reset email')
+                  else toast.success(`Password reset email sent to ${user.email}`)
+                }}
+              >
+                Change Password
+              </button>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-                <button className="btn-secondary">Download Export</button>
-                <button className="btn-secondary">Clear Cache</button>
+                <button className="btn-secondary" onClick={() => window.location.href = '/export'}>Download Export</button>
+                <button className="btn-secondary" onClick={() => {
+                  if (window.confirm('Clear local cache? You will stay logged in.')) {
+                    const keysToKeep = ['sidebar_collapsed']
+                    Object.keys(localStorage).forEach(k => {
+                      if (!keysToKeep.includes(k)) localStorage.removeItem(k)
+                    })
+                    toast.success('Cache cleared')
+                  }
+                }}>Clear Cache</button>
               </div>
-              <button className="btn-danger" style={{ width: '100%' }}>Delete Account</button>
+              <button 
+                className="btn-danger" 
+                style={{ width: '100%' }}
+                onClick={() => {
+                  if (window.confirm('Are you sure you want to delete your account? This is permanent and cannot be undone.')) {
+                    toast.error('Please contact support@subtrackr.app to delete your account.', { duration: 6000 })
+                  }
+                }}
+              >
+                Delete Account
+              </button>
             </div>
           </motion.div>
         )
@@ -512,7 +579,13 @@ export default function SettingsPage() {
             </div>
             <div className="p-6 bg-brand-purple/5 border border-brand-purple/30 border-dashed rounded-[20px] text-center">
               <p className="text-sm text-text-primary mb-3">Still have questions?</p>
-              <button className="btn-secondary" style={{ border: 'none', background: 'var(--bg-secondary)', color: 'var(--text-primary)' }}>Contact Support</button>
+              <button 
+                className="btn-secondary" 
+                style={{ border: 'none', background: 'var(--bg-secondary)', color: 'var(--text-primary)' }}
+                onClick={() => window.location.href = '/support'}
+              >
+                Contact Support
+              </button>
             </div>
           </motion.div>
         )

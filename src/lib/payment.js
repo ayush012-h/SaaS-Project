@@ -151,13 +151,11 @@ export async function getLocalPrice() {
         period:   '/month',
         flag:     '🇮🇳',
         currency: 'INR',
-        trial:    '3 days free',
       }
     : {
         amount:   '$1',
         period:   '/month',
         flag:     '🌍',
         currency: 'USD',
-        trial:    '3 days free',
       }
 }

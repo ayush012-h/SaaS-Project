@@ -804,6 +804,8 @@ export default function LandingPage() {
             <Link to="#features">Features</Link>
             <Link to="#how-it-works">How it works</Link>
             <Link to="#pricing">Pricing</Link>
+            <Link to="/about">About</Link>
+            <Link to="/contact">Contact</Link>
           </div>
           <div className="nav-actions">
             <Link to="/login" className="nav-signin">Sign in</Link>

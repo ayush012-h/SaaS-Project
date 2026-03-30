@@ -4,6 +4,7 @@ import {
   TrendingUp, UserPlus, LayoutDashboard, Zap, ArrowRight,
   Mail, MousePointer, Bell, PlusCircle, ChevronDown
 } from 'lucide-react'
+import { LandingNav, LandingFooter } from '../../components/Layout/LandingNavFooter'
 
 const STEPS = [
   {
@@ -186,30 +187,14 @@ export default function HowItWorksPage() {
   const s = STEPS[activeStep]
 
   return (
-    <div className="landing-page">
+    <div className="landing-page" style={{ background: '#080810' }}>
       <div className="hero-bg" style={{ position: 'fixed', zIndex: 0 }}>
         <div className="orb orb-1" />
         <div className="orb orb-2" />
         <div className="grid-overlay" />
       </div>
 
-      {/* Nav */}
-      <nav className="landing-nav" style={{ position: 'relative', zIndex: 10 }}>
-        <Link to="/" className="nav-logo">
-          <div className="nav-logo-icon"><TrendingUp size={18} color="#fff" /></div>
-          <span>SubTrackr</span>
-        </Link>
-        <div className="nav-links">
-          <Link to="/features" style={{ color: '#9999BB', textDecoration: 'none' }}>Features</Link>
-          <Link to="/how-it-works" style={{ color: '#E8E8F0', textDecoration: 'none', fontWeight: 600 }}>How it works</Link>
-          <Link to="/pricing" style={{ color: '#9999BB', textDecoration: 'none' }}>Pricing</Link>
-          <Link to="/about" style={{ color: '#9999BB', textDecoration: 'none' }}>About</Link>
-        </div>
-        <div className="nav-actions">
-          <Link to="/login" className="nav-signin">Sign in</Link>
-          <Link to="/register" className="nav-cta">Start Free</Link>
-        </div>
-      </nav>
+      <LandingNav activePath="/how-it-works" />
 
       {/* Hero */}
       <div style={{ position: 'relative', zIndex: 5, textAlign: 'center', padding: '5rem 5vw 3rem' }}>
@@ -322,17 +307,7 @@ export default function HowItWorksPage() {
         </div>
       </section>
 
-      <footer className="landing-footer" style={{ position: 'relative', zIndex: 5 }}>
-        <div className="footer-logo">
-          <div className="nav-logo-icon"><TrendingUp size={16} color="#fff" /></div>
-          <span>SubTrackr</span>
-        </div>
-        <div className="footer-links">
-          <Link to="/" style={{ color: '#666680', textDecoration: 'none', fontSize: '0.85rem' }}>Home</Link>
-          <Link to="/features" style={{ color: '#666680', textDecoration: 'none', fontSize: '0.85rem' }}>Features</Link>
-          <Link to="/pricing" style={{ color: '#666680', textDecoration: 'none', fontSize: '0.85rem' }}>Pricing</Link>
-        </div>
-      </footer>
+      <LandingFooter />
     </div>
   )
 }

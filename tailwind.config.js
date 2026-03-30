@@ -10,13 +10,14 @@ export default {
       colors: {
         bg: {
           primary: 'var(--bg-primary)',
-          surface: 'var(--bg-secondary)',
-          card: 'var(--bg-surface)',
-          elevated: 'var(--bg-hover)',
+          surface: 'var(--bg-surface)',
+          card: 'var(--bg-card)',
+          elevated: 'var(--bg-elevated)',
         },
         border: {
-          DEFAULT: 'var(--border)',
-          light: 'var(--border)',
+          DEFAULT: 'var(--border-subtle)',
+          light: 'var(--border-subtle)',
+          strong: 'var(--border-strong)',
         },
         text: {
           primary: 'var(--text-primary)',
@@ -31,21 +32,21 @@ export default {
           warning: 'var(--warning)',
           savings: 'var(--success)',
           danger: 'var(--danger)',
-          info: '#63B3FF',
+          info: 'var(--brand-teal)',
         },
       },
       fontFamily: {
         sans: ['DM Sans', 'system-ui', 'sans-serif'],
       },
       backgroundImage: {
-        'brand-gradient': 'linear-gradient(135deg, #6C63FF, #3ECFCF)',
-        'card-gradient': 'linear-gradient(145deg, #13131F, #1A1A2E)',
-        'purple-glow': 'radial-gradient(circle at 50% 50%, rgba(108, 99, 255, 0.15), transparent 70%)',
+        'brand-gradient': 'var(--brand-gradient)',
+        'card-gradient': 'linear-gradient(145deg, var(--bg-card), var(--bg-elevated))',
+        'purple-glow': 'radial-gradient(circle at 50% 50%, var(--brand-purple), transparent 70%)',
       },
       boxShadow: {
-        'card': '0 1px 3px rgba(0,0,0,0.4), 0 0 0 1px rgba(30,30,46,0.8)',
-        'glow-purple': '0 0 20px rgba(108, 99, 255, 0.3)',
-        'glow-teal': '0 0 20px rgba(62, 207, 207, 0.3)',
+        'card': 'var(--shadow-md)',
+        'glow-purple': '0 0 20px var(--brand-purple)',
+        'glow-teal': '0 0 20px var(--brand-teal)',
       },
       animation: {
         'fade-in': 'fadeIn 0.3s ease-in-out',

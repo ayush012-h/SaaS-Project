@@ -123,11 +123,12 @@ serve(async (req) => {
             },
         );
     } catch (error) {
-        console.error("❌ send-feedback-email failed:", error.message);
+        const msg = error instanceof Error ? error.message : String(error)
+        console.error("❌ send-feedback-email failed:", msg);
 
         return new Response(
             JSON.stringify({
-                error: error.message,
+                error: msg,
                 hint: "Check Supabase Edge Function logs for details",
             }),
             {

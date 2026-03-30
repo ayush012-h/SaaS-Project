@@ -83,8 +83,12 @@ export default function AddSubscriptionModal({ isOpen, onClose, onSave, initial 
     if (!form.name.trim()) newErrors.name = 'Please enter a name'
     if (!form.amount || parseFloat(form.amount) <= 0) newErrors.amount = 'Please enter a valid price'
     if (!form.next_renewal_date) newErrors.next_renewal_date = 'Renewal date is required'
-    else if (new Date(form.next_renewal_date) < new Date().setHours(0,0,0,0)) {
-       newErrors.next_renewal_date = 'Date must be in the future'
+    else {
+      const today = new Date()
+      today.setHours(0, 0, 0, 0)
+      if (new Date(form.next_renewal_date) < today) {
+        newErrors.next_renewal_date = 'Date must be today or in the future'
+      }
     }
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0

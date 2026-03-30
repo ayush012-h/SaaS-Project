@@ -113,11 +113,11 @@ function AuthInput({ id, type, icon: Icon, label, value, onChange, showToggle, o
           background: error
             ? 'rgba(255,99,99,0.06)'
             : focused
-            ? 'rgba(108,99,255,0.07)'
-            : 'rgba(255,255,255,0.04)',
-          border: `1.5px solid ${error ? '#FF6363' : focused ? '#6C63FF' : 'rgba(255,255,255,0.1)'}`,
+            ? 'var(--bg-elevated)'
+            : 'var(--bg-surface)',
+          border: `1.5px solid ${error ? 'var(--danger)' : focused ? 'var(--brand-purple)' : 'var(--border-subtle)'}`,
           borderRadius: 14,
-          color: '#E8E8F0',
+          color: 'var(--text-primary)',
           fontSize: 15,
           fontFamily: 'inherit',
           padding: active ? '26px 44px 10px' : '18px 44px',
@@ -282,16 +282,17 @@ export default function AuthPage({ initialMode = 'login' }) {
 
         body {
           margin: 0;
-          background: #080810;
+          background: var(--bg-primary);
           font-family: 'Inter', system-ui, sans-serif;
           -webkit-font-smoothing: antialiased;
-          color: #E8E8F0;
+          color: var(--text-primary);
+          transition: background 0.3s, color 0.3s;
         }
 
         .auth-root {
           display: flex;
           min-height: 100vh;
-          background: #080810;
+          background: var(--bg-primary);
           overflow: hidden;
         }
 
@@ -326,12 +327,17 @@ export default function AuthPage({ initialMode = 'login' }) {
           align-items: center;
           justify-content: center;
           padding: 40px 48px;
-          background: rgba(10,10,20,0.85);
-          border-left: 1px solid rgba(255,255,255,0.06);
+          background: var(--glass-bg);
+          border-left: 1px solid var(--glass-border);
           backdrop-filter: blur(30px);
           -webkit-backdrop-filter: blur(30px);
           min-height: 100vh;
           overflow: hidden;
+        }
+
+        [data-theme="light"] .auth-right {
+          background: var(--glass-bg);
+          border-left: 1px solid var(--glass-border);
         }
 
         .form-inner {
@@ -343,9 +349,9 @@ export default function AuthPage({ initialMode = 'login' }) {
         .google-btn {
           width: 100%;
           display: flex; align-items: center; justify-content: center; gap: 10px;
-          background: rgba(255,255,255,0.05);
-          border: 1.5px solid rgba(255,255,255,0.1);
-          color: #E8E8F0;
+          background: var(--bg-surface);
+          border: 1.5px solid var(--border-subtle);
+          color: var(--text-primary);
           font-family: inherit; font-size: 15px; font-weight: 600;
           padding: 14px;
           border-radius: 14px;
@@ -354,10 +360,10 @@ export default function AuthPage({ initialMode = 'login' }) {
           position: relative; overflow: hidden;
         }
         .google-btn:hover {
-          background: rgba(255,255,255,0.09);
-          border-color: rgba(255,255,255,0.18);
+          background: var(--bg-elevated);
+          border-color: var(--border-main);
           transform: translateY(-1px);
-          box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+          box-shadow: var(--shadow-md);
         }
         .google-btn:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
 
@@ -366,10 +372,9 @@ export default function AuthPage({ initialMode = 'login' }) {
           display: flex; align-items: center; gap: 12px;
           margin: 20px 0;
         }
-        .divider-line { flex: 1; height: 1px; background: rgba(255,255,255,0.08); }
         .divider-txt {
           font-size: 11px; font-weight: 600; letter-spacing: 0.08em;
-          text-transform: uppercase; color: #444460;
+          text-transform: uppercase; color: var(--text-muted);
         }
 
         /* submit */
@@ -415,10 +420,10 @@ export default function AuthPage({ initialMode = 'login' }) {
         .chrome-btn {
           position: fixed; z-index: 200;
           display: flex; align-items: center; gap: 8px;
-          background: rgba(255,255,255,0.04);
-          border: 1px solid rgba(255,255,255,0.1);
+          background: var(--glass-bg);
+          border: 1px solid var(--glass-border);
           border-radius: 100px;
-          color: rgba(255,255,255,0.65);
+          color: var(--text-secondary);
           font-family: inherit; font-size: 13px; font-weight: 600;
           padding: 9px 18px;
           cursor: pointer;
@@ -427,9 +432,9 @@ export default function AuthPage({ initialMode = 'login' }) {
           transition: all 0.2s;
         }
         .chrome-btn:hover {
-          background: rgba(255,255,255,0.09);
-          border-color: rgba(255,255,255,0.2);
-          color: #fff;
+          background: var(--bg-elevated);
+          border-color: var(--border-main);
+          color: var(--text-primary);
           transform: translateX(-3px);
         }
         .chrome-btn-right {
@@ -509,8 +514,8 @@ export default function AuthPage({ initialMode = 'login' }) {
                 <TrendingUp size={34} color="#fff" />
               </div>
               <div>
-                <div style={{ fontSize: 30, fontWeight: 800, color: '#fff', letterSpacing: '-0.03em', lineHeight: 1 }}>SubTrackr</div>
-                <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', marginTop: 4, fontWeight: 500 }}>Subscription Manager</div>
+                <div style={{ fontSize: 30, fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.03em', lineHeight: 1 }}>SubTrackr</div>
+                <div style={{ fontSize: 13, color: 'var(--text-secondary)', opacity: 0.7, marginTop: 4, fontWeight: 500 }}>Subscription Manager</div>
               </div>
             </Link>
 
@@ -526,7 +531,7 @@ export default function AuthPage({ initialMode = 'login' }) {
                   style={{
                     position: 'absolute', left: 0, right: 0,
                     margin: 0, fontSize: 16, fontWeight: 400, fontStyle: 'italic',
-                    color: 'rgba(255,255,255,0.55)',
+                    color: 'var(--text-secondary)',
                   }}
                 >
                   {QUOTES[quoteIdx]}
@@ -539,10 +544,10 @@ export default function AuthPage({ initialMode = 'login' }) {
               {CHIPS.map(c => (
                 <div key={c.text} style={{
                   display: 'flex', alignItems: 'center', gap: 7,
-                  background: 'rgba(255,255,255,0.05)',
-                  border: '1px solid rgba(255,255,255,0.1)',
+                  background: 'var(--bg-surface)',
+                  border: '1px solid var(--border-subtle)',
                   borderRadius: 100, padding: '7px 14px',
-                  fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.75)',
+                  fontSize: 13, fontWeight: 600, color: 'var(--text-secondary)',
                   backdropFilter: 'blur(10px)',
                 }}>
                   <span>{c.emoji}</span> {c.text}
@@ -553,12 +558,12 @@ export default function AuthPage({ initialMode = 'login' }) {
             {/* social proof */}
             <div style={{
               display: 'flex', alignItems: 'center', gap: 10,
-              background: 'rgba(76,255,143,0.08)',
-              border: '1px solid rgba(76,255,143,0.2)',
+              background: 'rgba(34,197,94,0.1)',
+              border: '1px solid rgba(34,197,94,0.2)',
               borderRadius: 100, padding: '8px 18px',
             }}>
-              <CheckCircle2 size={15} color="#4CFF8F" />
-              <span style={{ fontSize: 13, fontWeight: 600, color: '#4CFF8F' }}>
+              <CheckCircle2 size={15} color="var(--brand-teal)" />
+              <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--brand-teal)' }}>
                 50,000+ users saving on subscriptions
               </span>
             </div>
@@ -571,8 +576,8 @@ export default function AuthPage({ initialMode = 'login' }) {
 
             {/* Mode toggle pill */}
             <div style={{
-              display: 'flex', background: 'rgba(255,255,255,0.05)',
-              border: '1px solid rgba(255,255,255,0.1)',
+              display: 'flex', background: 'var(--bg-surface)',
+              border: '1px solid var(--border-subtle)',
               borderRadius: 14, padding: 4, gap: 4, marginBottom: 32,
             }}>
               {['login', 'register'].map(m => (
@@ -584,9 +589,9 @@ export default function AuthPage({ initialMode = 'login' }) {
                     fontFamily: 'inherit', fontSize: 14, fontWeight: 700,
                     padding: '11px 0',
                     background: mode === m
-                      ? 'linear-gradient(135deg,#6C63FF,#3ECFCF)'
+                      ? 'var(--brand-gradient)'
                       : 'transparent',
-                    color: mode === m ? '#fff' : '#666680',
+                    color: mode === m ? '#fff' : 'var(--text-muted)',
                     transition: 'all 0.25s',
                     boxShadow: mode === m ? '0 4px 16px rgba(108,99,255,0.35)' : 'none',
                   }}
@@ -611,12 +616,12 @@ export default function AuthPage({ initialMode = 'login' }) {
                   {/* Header */}
                   <div style={{ marginBottom: 28 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
-                      <Sparkles size={20} style={{ color: '#6C63FF' }} />
-                      <h1 style={{ margin: 0, fontSize: 26, fontWeight: 800, color: '#E8E8F0', letterSpacing: '-0.02em' }}>
+                      <Sparkles size={20} style={{ color: 'var(--brand-purple)' }} />
+                      <h1 style={{ margin: 0, fontSize: 26, fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>
                         Welcome back
                       </h1>
                     </div>
-                    <p style={{ margin: 0, fontSize: 14, color: '#666680', fontWeight: 500 }}>
+                    <p style={{ margin: 0, fontSize: 14, color: 'var(--text-secondary)', fontWeight: 500 }}>
                       Log in to your SubTrackr account
                     </p>
                   </div>
@@ -663,7 +668,7 @@ export default function AuthPage({ initialMode = 'login' }) {
                     </button>
                   </motion.form>
 
-                  <p style={{ textAlign: 'center', marginTop: 22, fontSize: 14, color: '#666680' }}>
+                  <p style={{ textAlign: 'center', marginTop: 22, fontSize: 14, color: 'var(--text-muted)' }}>
                     No account yet?
                     <span className="switch-link" onClick={() => setMode('register')}>Create one free</span>
                   </p>
@@ -680,10 +685,10 @@ export default function AuthPage({ initialMode = 'login' }) {
                 >
                   {/* Header */}
                   <div style={{ marginBottom: 28 }}>
-                    <h1 style={{ margin: '0 0 6px', fontSize: 26, fontWeight: 800, color: '#E8E8F0', letterSpacing: '-0.02em' }}>
+                    <h1 style={{ margin: '0 0 6px', fontSize: 26, fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>
                       Create your account
                     </h1>
-                    <p style={{ margin: 0, fontSize: 14, color: '#666680', fontWeight: 500 }}>
+                    <p style={{ margin: 0, fontSize: 14, color: 'var(--text-secondary)', fontWeight: 500 }}>
                       Start tracking subscriptions for free
                     </p>
                   </div>
@@ -745,20 +750,20 @@ export default function AuthPage({ initialMode = 'login' }) {
                     </button>
                   </motion.form>
 
-                  <p style={{ textAlign: 'center', marginTop: 22, fontSize: 14, color: '#666680' }}>
+                  <p style={{ textAlign: 'center', marginTop: 22, fontSize: 14, color: 'var(--text-muted)' }}>
                     Already have an account?
-                    <span className="switch-link" onClick={() => setMode('login')}>Sign in</span>
+                    <span className="switch-link" onClick={() => setMode('login')} style={{ color: 'var(--brand-purple)' }}>Sign in</span>
                   </p>
                 </motion.div>
               )}
             </AnimatePresence>
 
             {/* legal footer */}
-            <p style={{ textAlign: 'center', marginTop: 28, fontSize: 12, color: '#444460', lineHeight: 1.6 }}>
+            <p style={{ textAlign: 'center', marginTop: 28, fontSize: 12, color: 'var(--text-muted)', lineHeight: 1.6 }}>
               By continuing you agree to our{' '}
-              <Link to="/terms" style={{ color: '#6C63FF', textDecoration: 'none', fontWeight: 600 }}>Terms</Link>
+              <Link to="/features" style={{ color: 'var(--brand-purple)', textDecoration: 'none', fontWeight: 600 }}>Terms</Link>
               {' '}and{' '}
-              <Link to="/privacy" style={{ color: '#6C63FF', textDecoration: 'none', fontWeight: 600 }}>Privacy Policy</Link>
+              <Link to="/features" style={{ color: 'var(--brand-purple)', textDecoration: 'none', fontWeight: 600 }}>Privacy Policy</Link>
             </p>
           </div>
         </div>

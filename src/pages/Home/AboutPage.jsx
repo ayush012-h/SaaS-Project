@@ -1,8 +1,9 @@
 import { Link } from 'react-router-dom'
 import {
-  TrendingUp, ArrowRight, Shield, Zap, Heart,
+  ArrowRight, Shield, Zap, Heart,
   BarChart3, Bell, ScanText, Globe, Lock, Star
 } from 'lucide-react'
+import { LandingNav, LandingFooter } from '../../components/Layout/LandingNavFooter'
 
 const TECH_STACK = [
   { name: 'React + Vite', desc: 'Lightning-fast frontend framework', color: '#3ECFCF', icon: '⚛️' },
@@ -59,23 +60,7 @@ export default function AboutPage() {
         <div className="grid-overlay" />
       </div>
 
-      {/* Nav */}
-      <nav className="landing-nav" style={{ position: 'relative', zIndex: 10 }}>
-        <Link to="/" className="nav-logo">
-          <div className="nav-logo-icon"><TrendingUp size={18} color="#fff" /></div>
-          <span>SubTrackr</span>
-        </Link>
-        <div className="nav-links">
-          <Link to="/features">Features</Link>
-          <Link to="/how-it-works">How it works</Link>
-          <Link to="/pricing">Pricing</Link>
-          <Link to="/about" style={{ color: '#E8E8F0', fontWeight: 600 }}>About</Link>
-        </div>
-        <div className="nav-actions">
-          <Link to="/login" className="nav-signin">Sign in</Link>
-          <Link to="/register" className="nav-cta">Start Free</Link>
-        </div>
-      </nav>
+      <LandingNav activePath="/about" />
 
       {/* ══ HERO ══ */}
       <div style={{ position: 'relative', zIndex: 5, textAlign: 'center', padding: '5rem 5vw 3rem' }}>
@@ -298,19 +283,7 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="landing-footer" style={{ position: 'relative', zIndex: 5 }}>
-        <div className="footer-logo">
-          <div className="nav-logo-icon"><TrendingUp size={16} color="#fff" /></div>
-          <span>SubTrackr</span>
-        </div>
-        <p className="footer-copy">© 2025 SubTrackr. All rights reserved.</p>
-        <div className="footer-links">
-          <Link to="/features" style={{ color: '#666680', textDecoration: 'none', fontSize: '0.85rem' }}>Features</Link>
-          <Link to="/pricing" style={{ color: '#666680', textDecoration: 'none', fontSize: '0.85rem' }}>Pricing</Link>
-          <Link to="/about" style={{ color: '#666680', textDecoration: 'none', fontSize: '0.85rem' }}>About</Link>
-        </div>
-      </footer>
+      <LandingFooter />
     </div>
   )
 }

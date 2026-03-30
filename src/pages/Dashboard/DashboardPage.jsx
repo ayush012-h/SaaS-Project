@@ -1,521 +1,205 @@
-import { useMemo, useEffect, useState } from 'react'
-import { DollarSign, CreditCard, TrendingUp, Bell, Calendar, AlertCircle, MessageSquare } from 'lucide-react'
-import { format, subMonths } from 'date-fns'
-import React, { lazy, Suspense } from 'react'
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
-import { useSubscriptions } from '../../hooks/useSubscriptions'
-import { useAuth } from '../../contexts/AuthContext'
-import { useCurrencyRates, getCurrencySymbol } from '../../hooks/useCurrencyRates'
-import StatCard from '../../components/UI/StatCard'
-import StatusBadge from '../../components/UI/StatusBadge'
+import { useState } from 'react'
+import { 
+  TrendingUp, CreditCard, Zap, Bell, 
+  ArrowRight, Pause, XCircle, Search,
+  Filter, Plus, Info
+} from 'lucide-react'
+import { motion } from 'framer-motion'
 import { Link } from 'react-router-dom'
 import { ServiceLogo } from '../../lib/logos'
-import { SkeletonDashboard } from '../../components/Skeleton'
-import { EmptySubscriptions, EmptyAlerts } from '../../components/EmptyState'
-import { motion, AnimatePresence } from 'framer-motion'
-import { CheckSquare, Square, X } from 'lucide-react'
-import WhatsNewBanner from '../../components/WhatsNewBanner'
-import { useIsMobile } from '../../hooks/useIsMobile'
-import FeedbackWidget from '../../components/FeedbackWidget'
+import { useAuth } from '../../contexts/AuthContext'
 
-const SubscriptionRow = React.memo(function SubscriptionRow({ sub, isMobile, days, type = 'renewal' }) {
-  if (type === 'renewal') {
-    return (
-      <motion.div
-        variants={itemVariants}
-        className="flex items-center justify-between p-2 sm:p-3 rounded-lg sm:rounded-xl bg-bg-elevated/40 border border-border/50"
-      >
-        <div className="flex items-center gap-2 sm:gap-3">
-          <ServiceLogo name={sub.name} size={isMobile ? 28 : 36} color={sub.color || '#6C63FF'} />
-          <div className="min-w-0">
-            <p className="text-[13px] font-bold text-text-primary truncate">{sub.name}</p>
-            <p className="text-[10px] text-text-muted truncate">{sub.currency || '₹'}{sub.amount}</p>
-          </div>
-        </div>
-        <div className="shrink-0 text-right">
-          <span className={`text-[11px] font-black uppercase ${days <= 2 ? 'text-status-danger' : days <= 5 ? 'text-status-warning' : 'text-text-secondary'}`}>
-            {days === 0 ? 'Today' : `${days}d`}
-          </span>
-        </div>
-      </motion.div>
-    )
-  }
-  return (
-    <motion.div
-      variants={itemVariants}
-      className="flex items-center justify-between p-2 sm:p-2.5 rounded-lg sm:rounded-xl hover:bg-bg-elevated transition-colors"
-    >
-      <div className="flex items-center gap-2 sm:gap-3">
-        <ServiceLogo name={sub.name} size={isMobile ? 28 : 36} color={sub.color || '#6C63FF'} />
-        <div className="min-w-0">
-          <p className="text-[13px] font-bold text-text-primary truncate">{sub.name}</p>
-          <p className="text-[10px] text-text-muted truncate capitalize">{sub.category || 'Other'}</p>
-        </div>
-      </div>
-      <div className="shrink-0 text-right">
-        <p className="text-[13px] font-black text-text-primary">{sub.currency || '₹'}{sub.amount}</p>
-        <div className="scale-75 origin-right -mt-1"><StatusBadge status={sub.status} /></div>
-      </div>
-    </motion.div>
-  )
-})
-
-function FeedbackModal({ onClose }) {
-  return (
-    <>
-      <div
-        onClick={onClose}
-        style={{
-          position: 'fixed', inset: 0, zIndex: 9998,
-          background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(4px)',
-        }}
-      />
-      <div style={{
-        position: 'fixed', top: '50%', left: '50%', zIndex: 9999,
-        transform: 'translate(-50%, -50%)',
-      }}>
-        <FeedbackWidget _asModal onModalClose={onClose} />
-      </div>
-    </>
-  )
-}
-
-
-const CATEGORY_COLORS = ['#6C63FF', '#3ECFCF', '#FFD700', '#FF6363', '#4CFF8F', '#FF63B3', '#63B3FF', '#FF9F63']
-
-const containerVariants = {
-  hidden: { opacity: 0 },
-  show: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.1
-    }
-  }
-}
-
-const itemVariants = {
-  hidden: { opacity: 0, y: 20 },
-  show: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 100 } },
-  style: { willChange: 'transform, opacity' }
-}
-
-const CustomTooltip = ({ active, payload, label, currencySymbol }) => {
-  if (active && payload && payload.length > 0) {
-    return (
-      <div className="bg-bg-elevated border border-border rounded-xl px-4 py-3 shadow-xl">
-        <p className="text-text-muted text-xs mb-1">{label}</p>
-        <p className="text-text-primary font-bold">{currencySymbol}{payload[0].value.toFixed(2)}</p>
-      </div>
-    )
-  }
-  return null
-}
+const MOCK_SUBS = [
+  { id: 1, name: 'Netflix', cycle: 'Monthly', cost: 649, date: 'Apr 12, 2026', color: '#E50914' },
+  { id: 2, name: 'Disney+ Hotstar', cycle: 'Yearly', cost: 899, date: 'Oct 24, 2026', color: '#0046AD' },
+  { id: 3, name: 'Amazon Prime', cycle: 'Monthly', cost: 149, date: 'Apr 03, 2026', color: '#00A8E1' },
+  { id: 4, name: 'Spotify Premium', cycle: 'Monthly', cost: 179, date: 'Apr 15, 2026', color: '#1DB954' },
+  { id: 5, name: 'Swiggy One', cycle: 'Monthly', cost: 129, date: 'Apr 08, 2026', color: '#FC8019' },
+]
 
 export default function DashboardPage() {
-  const { subscriptions, activeSubscriptions, upcomingRenewals, loading } = useSubscriptions()
-  const { profile, isPro } = useAuth()
-  const { convert } = useCurrencyRates()
-  
-  const displayCurrency = profile?.display_currency || 'INR'
-  const currencySymbol = getCurrencySymbol(displayCurrency)
-
-  useEffect(() => {
-    document.title = 'Dashboard — SubTrackr'
-  }, [])
-
-  // Calculate totals in display currency
-  const { convMonthlyTotal, convYearlyTotal, convCategoryBreakdown } = useMemo(() => {
-    let mTotal = 0
-    let yTotal = 0
-    const catBreakdown = {}
-
-    activeSubscriptions.forEach(sub => {
-      const amountInDisplay = convert(sub.amount, sub.currency || '₹', displayCurrency)
-      
-      let monthly = 0
-      if (sub.billing_cycle === 'monthly') monthly = amountInDisplay
-      else if (sub.billing_cycle === 'yearly') monthly = amountInDisplay / 12
-      else if (sub.billing_cycle === 'weekly') monthly = amountInDisplay * 4.33
-      
-      mTotal += monthly
-      yTotal += monthly * 12
-      
-      let cat = sub.category || 'Other'
-      cat = cat.charAt(0).toUpperCase() + cat.slice(1)
-      catBreakdown[cat] = (catBreakdown[cat] || 0) + monthly
-    })
-
-    return { 
-      convMonthlyTotal: mTotal, 
-      convYearlyTotal: yTotal, 
-      convCategoryBreakdown: catBreakdown 
-    }
-  }, [activeSubscriptions, displayCurrency, convert])
-
-  const budget = profile?.monthly_budget || 0
-  const budgetProgress = budget > 0 ? (convMonthlyTotal / budget) * 100 : 0
-  const isOverBudget = budget > 0 && convMonthlyTotal > budget
-  // Monthly spending trend (last 6 months)
-  const trendData = useMemo(() => {
-    const months = Array.from({ length: 6 }, (_, i) => subMonths(new Date(), 5 - i))
-    return months.map(month => {
-      const total = subscriptions
-        .filter(s => {
-          const created = new Date(s.created_at)
-          return created <= month && s.status !== 'cancelled'
-        })
-        .reduce((sum, s) => {
-          const amountInDisplay = convert(s.amount, s.currency || '₹', displayCurrency)
-          if (s.billing_cycle === 'monthly') return sum + amountInDisplay
-          if (s.billing_cycle === 'yearly') return sum + amountInDisplay / 12
-          if (s.billing_cycle === 'weekly') return sum + amountInDisplay * 4.33
-          return sum
-        }, 0)
-      return { month: format(month, 'MMM'), amount: parseFloat(total.toFixed(2)) }
-    })
-  }, [subscriptions, displayCurrency, convert])
-
-  const categoryChartData = Object.entries(convCategoryBreakdown).map(([name, value]) => ({
-    name, value: parseFloat(value.toFixed(2))
-  }))
-
-  const [feedbackOpen, setFeedbackOpen] = useState(false)
-  const isMobile = useIsMobile()
-
-  if (loading) {
-    return <SkeletonDashboard />
-  }
+  const [searchTerm, setSearchTerm] = useState('')
+  const { profile } = useAuth()
 
   return (
-    <div className={`${isMobile ? 'space-y-4' : 'space-y-8'} animate-fade-in`}>
-      <WhatsNewBanner />
-      {/* Header */}
-      <div className="flex items-end justify-between">
-        <div>
-          <h1 className={`${isMobile ? 'text-xl' : 'text-3xl'} font-black text-text-primary tracking-tight`}>
-            Good {new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 18 ? 'afternoon' : 'evening'}{profile?.full_name ? `, ${String(profile.full_name).split(' ')[0]}` : ''}! 👋
-          </h1>
-          <p className={`${isMobile ? 'text-[10px]' : 'text-text-muted mt-1'} uppercase font-bold tracking-widest text-text-muted`}>Subscription overview</p>
-        </div>
-        <div className="flex items-center gap-3">
-          {!isMobile && (
-            <div className="text-right">
-              <p className="text-text-muted text-sm font-semibold">{format(new Date(), 'EEEE, MMMM d')}</p>
-            </div>
-          )}
-          <button
-            onClick={() => setFeedbackOpen(true)}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-bg-elevated border border-border text-text-muted hover:text-white transition-all group shadow-sm active:scale-95"
-          >
-            <MessageSquare size={16} className="text-brand-purple group-hover:scale-110 transition-transform" />
-            <span className="text-sm font-bold tracking-tight">Feedback</span>
-          </button>
-        </div>
-      </div>
-
-      <AnimatePresence>
-        {feedbackOpen && <FeedbackModal onClose={() => setFeedbackOpen(false)} />}
-      </AnimatePresence>
-
-      {/* Onboarding Checklist */}
-      {!localStorage.getItem('dashboard_checklist_dismissed') && (
-        <DashboardChecklist 
-          profile={profile} 
-          subscriptions={subscriptions} 
-          onDismiss={() => {
-            localStorage.setItem('dashboard_checklist_dismissed', 'true')
-            window.location.reload()
-          }} 
-        />
-      )}
-
-      {/* Stat Cards */}
-      <motion.div
-        variants={containerVariants}
-        initial="hidden"
-        animate="show"
-        className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4"
-      >
-        <motion.div variants={itemVariants} whileHover={{ y: -4 }}>
-          <StatCard
-            title="Monthly Spend"
-            value={`${currencySymbol}${convMonthlyTotal.toFixed(2)}`}
-            subtitle={displayCurrency !== 'INR' ? `Converted from original` : "All active subscriptions"}
-            icon={DollarSign}
-            color="#6C63FF"
-            trend={trendData.length > 1 && trendData[4].amount ? Math.round(((trendData[5].amount - trendData[4].amount) / trendData[4].amount) * 100) : 0}
-          />
-        </motion.div>
-        <motion.div variants={itemVariants} whileHover={{ y: -4 }}>
-          <StatCard
-            title="Yearly Estimate"
-            value={`${currencySymbol}${convYearlyTotal.toFixed(0)}`}
-            subtitle="Projected annual cost"
-            icon={TrendingUp}
-            color="#3ECFCF"
-            trend={trendData.length > 1 && trendData[4].amount ? Math.round(((trendData[5].amount - trendData[4].amount) / trendData[4].amount) * 100) : 0}
-          />
-        </motion.div>
-        <motion.div variants={itemVariants} whileHover={{ y: -4 }}>
-          <StatCard
-            title="Active Subs"
-            value={activeSubscriptions.length}
-            subtitle={`of ${subscriptions.length} total`}
-            icon={CreditCard}
-            color="#4CFF8F"
-            trend={0}
-          />
-        </motion.div>
-        <motion.div variants={itemVariants} whileHover={{ y: -4 }}>
-          <StatCard
-            title="Upcoming Renewals"
-            value={upcomingRenewals.length}
-            subtitle="Next 7 days"
-            icon={Bell}
-            color="#FFD700"
-            trend={0}
-          />
-        </motion.div>
-      </motion.div>
-
-      {/* Feature 2: Budget Progress (Pro) */}
-      {isPro && budget > 0 && (
-        <motion.div 
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className={`card overflow-hidden relative p-4 sm:p-5 ${isOverBudget ? 'border-status-danger/30' : ''}`}
-        >
-          <div className="flex items-center justify-between mb-3 sm:mb-4 gap-4">
-            <div>
-              <h3 className="text-sm sm:text-lg font-bold text-text-primary flex items-center gap-2">
-                Monthly Budget
-                {isOverBudget && <span className="bg-status-danger/10 text-status-danger text-[9px] px-2 py-0.5 rounded-full uppercase tracking-wider">Over</span>}
-              </h3>
-              <p className="text-text-muted text-[10px] sm:text-xs">
-                {currencySymbol}{convMonthlyTotal.toFixed(0)} / {currencySymbol}{budget.toFixed(0)}
-              </p>
-            </div>
-            <div className="text-right">
-              <span className={`text-xl sm:text-2xl font-black ${isOverBudget ? 'text-status-danger' : 'text-brand-teal'}`}>
-                {Math.round(budgetProgress)}%
-              </span>
-            </div>
+    <div className="space-y-8 animate-fade-in transition-colors duration-300">
+      
+      {/* 1. TOP BANNER / HEADER */}
+      <div className="relative overflow-hidden rounded-3xl p-8 bg-gradient-to-br from-[var(--bg-surface)] to-[var(--bg-primary)] border border-[var(--border-subtle)] shadow-2xl transition-all duration-500">
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div>
+            <h1 className="text-3xl font-black text-[var(--text-primary)] tracking-tight">
+              Welcome back, {profile?.full_name?.split(' ')[0] || 'User'}! 👋
+            </h1>
+            <p className="text-[var(--text-muted)] mt-1 font-medium italic">
+              Your personal financial command center is ready.
+            </p>
           </div>
           
-          <div className="h-2 sm:h-3 w-full bg-bg-elevated rounded-full overflow-hidden border border-border">
-            <motion.div 
-              initial={{ width: 0 }}
-              animate={{ width: `${Math.min(budgetProgress, 100)}%` }}
-              transition={{ duration: 1, ease: "easeOut" }}
-              className={`h-full rounded-full ${isOverBudget ? 'bg-status-danger shadow-glow-red' : 'bg-brand-teal shadow-glow-teal'}`}
-              style={{ background: isOverBudget ? 'linear-gradient(90deg, #FF6363, #FF3E3E)' : 'linear-gradient(90deg, #3ECFCF, #63FFBD)' }}
-            />
-          </div>
-
-          {!isMobile && isOverBudget && (
-            <p className="mt-3 text-[11px] text-status-danger font-medium flex items-center gap-1">
-              <AlertCircle size={12} />
-              Warning: Budget exceeded by {currencySymbol}{(convMonthlyTotal - budget).toFixed(0)}.
-            </p>
-          )}
-        </motion.div>
-      )}
-
-      {/* Charts Row */}
-      <motion.div
-        variants={containerVariants}
-        initial="hidden"
-        animate="show"
-        className="grid grid-cols-1 lg:grid-cols-3 gap-6"
-      >
-        {/* Monthly Trend */}
-        <motion.div variants={itemVariants} whileHover={{ y: -4 }} className="card lg:col-span-2" style={{ minWidth: 0 }}>
-          <h2 className="text-lg font-semibold text-text-primary mb-6">Monthly Spending Trend</h2>
-          {trendData.every(d => d.amount === 0) ? (
-            <div className="h-52 flex flex-col items-center justify-center text-text-muted text-center p-4 rounded-xl border border-dashed border-border/50 bg-bg-elevated/20">
-              <div className="w-16 h-16 bg-brand-purple/10 flex items-center justify-center rounded-full mb-4 shadow-[0_0_15px_rgba(108,99,255,0.2)]">
-                <TrendingUp size={28} className="text-brand-purple" />
-              </div>
-              <p className="text-sm text-text-primary font-medium mb-1">Visualize your spending</p>
-              <p className="text-xs text-text-muted mb-4 max-w-xs">Add your first subscription to see your spending trend over time.</p>
-              <button 
-                 onClick={() => window.dispatchEvent(new KeyboardEvent('keydown', { key: 'n' }))}
-                 className="btn-primary py-1.5 px-4 text-xs">
-                + Add Subscription
+          {/* AI Insight Box */}
+          <div className="bg-[var(--bg-elevated)]/60 backdrop-blur-md rounded-2xl p-4 border border-[var(--brand-purple)]/30 flex items-start gap-3 max-w-md shadow-lg transition-all duration-300">
+            <div className="w-10 h-10 rounded-xl bg-[var(--brand-purple)]/20 flex items-center justify-center shrink-0">
+              <Zap size={20} className="text-[var(--brand-purple)]" />
+            </div>
+            <div>
+              <h4 className="text-[var(--text-primary)] text-sm font-bold flex items-center gap-2">
+                AI Insight — Subscription Alert
+              </h4>
+              <p className="text-[11px] text-[var(--text-secondary)] mt-1 leading-relaxed">
+                ⚠️ <span className="text-[var(--text-primary)] font-semibold">Heads up!</span> Your Amazon Prime subscription renews in 3 days. You haven't used Prime Video this month.
+              </p>
+              <button className="text-[var(--brand-purple)] text-[10px] font-bold uppercase tracking-widest mt-2 hover:opacity-80 transition-opacity">
+                Cancel Now →
               </button>
             </div>
-          ) : (
-            <ResponsiveContainer width="100%" height={200}>
-              <BarChart data={trendData} barSize={32}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#1E1E2E" vertical={false} />
-                <XAxis dataKey="month" tick={{ fill: '#666680', fontSize: 12 }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fill: '#666680', fontSize: 12 }} axisLine={false} tickLine={false}
-                  tickFormatter={v => `${currencySymbol}${v}`} />
-                <Tooltip content={<CustomTooltip currencySymbol={currencySymbol} />} />
-                <Bar dataKey="amount" fill="url(#barGrad)" radius={[6, 6, 0, 0]} />
-                <defs>
-                  <linearGradient id="barGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#6C63FF" />
-                    <stop offset="100%" stopColor="#3ECFCF" />
-                  </linearGradient>
-                </defs>
-              </BarChart>
-            </ResponsiveContainer>
-          )}
-        </motion.div>
-
-        {/* Category Breakdown */}
-        <motion.div variants={itemVariants} whileHover={{ y: -4 }} className="card" style={{ minWidth: 0 }}>
-          <h2 className="text-lg font-semibold text-text-primary mb-6">By Category</h2>
-          {categoryChartData.length === 0 ? (
-            <div className="h-48 flex flex-col justify-center items-center">
-              <div className="w-28 h-28 rounded-full border-[10px] border-border relative opacity-40 shadow-inner -mt-4">
-                <div className="absolute inset-0 m-auto w-10 h-10 flex items-center justify-center text-text-muted/60">
-                  <CreditCard size={24} />
-                </div>
-              </div>
-              <div className="w-full flex-1 flex flex-col justify-center gap-2 mt-4 px-4">
-                {['Streaming', 'Software', 'Utilities', 'Other'].map((cat, i) => (
-                  <div key={cat} className="flex items-center justify-between opacity-30">
-                    <div className="flex items-center gap-2">
-                       <div className="w-2 h-2 rounded-full" style={{ background: CATEGORY_COLORS[i] }} />
-                       <span className="text-xs text-text-muted font-medium">{cat}</span>
-                    </div>
-                    <span className="text-[10px] font-semibold text-text-muted">—</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          ) : (
-            <>
-              <ResponsiveContainer width="100%" height={160}>
-                <PieChart>
-                  <Pie data={categoryChartData} cx="50%" cy="50%" innerRadius={45} outerRadius={70}
-                    paddingAngle={4} dataKey="value">
-                    {categoryChartData.map((_, i) => (
-                      <Cell key={i} fill={CATEGORY_COLORS[i % CATEGORY_COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip formatter={(v) => [`${currencySymbol}${v.toFixed(2)}/mo`, '']}
-                    contentStyle={{ background: '#13131F', border: '1px solid #1E1E2E', borderRadius: '12px', color: '#E8E8F0' }} />
-                </PieChart>
-              </ResponsiveContainer>
-              <div className="space-y-2 mt-2">
-                {categoryChartData.slice(0, 4).map((item, i) => (
-                  <div key={item.name} className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <div className="w-2.5 h-2.5 rounded-full" style={{ background: CATEGORY_COLORS[i % CATEGORY_COLORS.length] }} />
-                      <span className="text-xs text-text-secondary">{item.name}</span>
-                    </div>
-                    <span className="text-xs font-semibold text-text-primary">{currencySymbol}{item.value.toFixed(0)}/mo</span>
-                  </div>
-                ))}
-              </div>
-            </>
-          )}
-        </motion.div>
-      </motion.div>
-
-      {/* Upcoming Renewals + Recent Subs */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Upcoming Renewals */}
-        <motion.div variants={itemVariants} whileHover={{ y: -4 }} className="card p-4 sm:p-5">
-          <div className="flex items-center justify-between mb-4 sm:mb-5">
-            <h2 className="text-base sm:text-lg font-bold text-text-primary uppercase tracking-tight">Renewals</h2>
-            <Link to="/alerts" className="text-brand-purple text-[10px] sm:text-sm font-bold uppercase tracking-wider hover:opacity-80">View all →</Link>
           </div>
-          {upcomingRenewals.length === 0 ? (
-            <div className="py-4 text-center text-text-muted text-xs border border-dashed border-border/50 rounded-xl bg-bg-elevated/20 flex flex-col items-center justify-center" style={{ minHeight: '130px' }}>
-              <Bell size={20} className="mb-2 opacity-30 text-brand-teal" />
-              No upcoming renewals
-            </div>
-          ) : (
-            <motion.div
-              initial="hidden"
-              animate="show"
-              variants={containerVariants}
-              className="space-y-2"
-            >
-              {upcomingRenewals.slice(0, 4).map(sub => {
-                const days = Math.ceil((new Date(sub.next_renewal_date) - new Date()) / (1000 * 60 * 60 * 24))
-                return <SubscriptionRow key={sub.id} sub={sub} isMobile={isMobile} days={days} type="renewal" />
-              })}
-            </motion.div>
-          )}
-        </motion.div>
-
-        {/* Recent Subscriptions */}
-        <motion.div variants={itemVariants} whileHover={{ y: -4 }} className="card p-4 sm:p-5">
-          <div className="flex items-center justify-between mb-4 sm:mb-5">
-            <h2 className="text-base sm:text-lg font-bold text-text-primary uppercase tracking-tight">Recent</h2>
-            <Link to="/subscriptions" className="text-brand-purple text-[10px] sm:text-sm font-bold uppercase tracking-wider hover:opacity-80">All →</Link>
-          </div>
-          {subscriptions.length === 0 ? (
-            <div className="py-4 px-2">
-              <div className="space-y-3">
-                {[1, 2, 3].map(i => (
-                  <div key={i} className="flex items-center gap-3">
-                    <div className="w-5 h-5 rounded-full bg-border/40 text-[10px] flex items-center justify-center font-bold text-text-muted">{i}</div>
-                    <div className="flex-1 h-3 bg-border/20 rounded max-w-[120px]" />
-                  </div>
-                ))}
-              </div>
-            </div>
-          ) : (
-            <motion.div
-              initial="hidden"
-              animate="show"
-              variants={containerVariants}
-              className="space-y-2"
-            >
-              {[...subscriptions].sort((a,b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 4).map(sub => (
-                <SubscriptionRow key={sub.id} sub={sub} isMobile={isMobile} type="recent" />
-              ))}
-            </motion.div>
-          )}
-        </motion.div>
+        </div>
+        
+        {/* Decorative corner orb */}
+        <div className="absolute -top-24 -right-24 w-64 h-64 bg-[var(--brand-purple)]/10 rounded-full blur-[100px] pointer-events-none" />
       </div>
-    </div>
-  )
-}
 
-function DashboardChecklist({ profile, subscriptions, onDismiss }) {
-  const isMobile = useIsMobile()
-  const steps = [
-    { id: 'sub', label: 'First Sub', done: subscriptions.length > 0 },
-    { id: 'budget', label: 'Budget', done: Boolean(profile?.monthly_budget) },
-    { id: 'alerts', label: 'Alerts', done: profile?.preferences?.email_alerts || profile?.preferences?.push_alerts },
-    { id: 'scanner', label: 'Scanner', done: false },
-  ]
-  
-  const completedCount = steps.filter(s => s.done).length
-
-  return (
-    <div className={`card bg-gradient-to-r from-brand-purple/10 to-transparent border-brand-purple/20 relative animate-fade-in ${isMobile ? 'my-2 p-3' : 'my-6 p-5'}`}>
-      <button onClick={onDismiss} className="absolute top-3 right-3 p-1 text-text-muted hover:text-white bg-bg-elevated rounded transition-colors">
-        <X size={14} />
-      </button>
-      <div className={`${isMobile ? 'mb-2' : 'mb-4'}`}>
-        <h3 className="text-sm sm:text-base font-bold text-text-primary flex items-center gap-2">
-          🚀 Get started
-        </h3>
-        <p className="text-[10px] sm:text-xs text-text-muted mt-0.5">{completedCount} of {steps.length} done</p>
-      </div>
-      
-      <div className={`grid ${isMobile ? 'grid-cols-2 gap-2' : 'grid-cols-4 gap-3'}`}>
-        {steps.map((step) => (
-          <div key={step.id} className="flex items-center gap-2 p-2 rounded-lg bg-bg-elevated/50 border border-border">
-            {step.done ? (
-              <CheckSquare size={14} className="text-brand-teal shrink-0" />
-            ) : (
-              <Square size={14} className="text-text-muted/50 shrink-0" />
-            )}
-            <span className={`text-[10px] sm:text-xs truncate ${step.done ? 'text-text-muted line-through font-normal' : 'text-text-primary font-bold'}`}>
-              {step.label}
+      {/* 2. THREE METRIC CARDS */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* Monthly Spend */}
+        <div className="bg-[var(--bg-surface)] rounded-3xl p-6 border border-[var(--border-subtle)] hover:border-[var(--brand-purple)]/50 transition-all group overflow-hidden relative shadow-sm hover:shadow-md">
+          <div className="flex items-center justify-between mb-4">
+            <div className="w-10 h-10 rounded-xl bg-[var(--brand-purple)]/10 flex items-center justify-center text-[var(--brand-purple)]">
+              <TrendingUp size={22} />
+            </div>
+            <span className="text-[var(--brand-teal)] text-xs font-bold bg-[var(--brand-teal)]/10 px-2 py-1 rounded-lg">
+              +₹250 <span className="font-normal opacity-60">vs last mo</span>
             </span>
           </div>
-        ))}
+          <div className="text-[var(--text-muted)] text-xs font-bold uppercase tracking-widest">Monthly Spend</div>
+          <div className="text-3xl font-black text-[var(--text-primary)] mt-1">₹3,450</div>
+          <div className="absolute -right-4 -bottom-4 opacity-[0.03] rotate-12 group-hover:rotate-0 transition-transform pointer-events-none">
+             <TrendingUp size={120} />
+          </div>
+        </div>
+
+        {/* Active Subs */}
+        <div className="bg-[var(--bg-surface)] rounded-3xl p-6 border border-[var(--border-subtle)] hover:border-[var(--brand-teal)]/50 transition-all group overflow-hidden relative shadow-sm hover:shadow-md">
+          <div className="flex items-center justify-between mb-4">
+            <div className="w-10 h-10 rounded-xl bg-[var(--brand-teal)]/10 flex items-center justify-center text-[var(--brand-teal)]">
+              <CreditCard size={22} />
+            </div>
+            <span className="text-[var(--text-muted)] text-[10px] font-bold uppercase tracking-widest">Verified</span>
+          </div>
+          <div className="text-[var(--text-muted)] text-xs font-bold uppercase tracking-widest">Active Subscriptions</div>
+          <div className="text-3xl font-black text-[var(--text-primary)] mt-1">12</div>
+          <p className="text-[11px] text-[var(--text-secondary)] mt-2">
+            <span className="text-[var(--brand-teal)]">4 Entertainment</span> · 3 Software · 5 Basic
+          </p>
+        </div>
+
+        {/* AI Savings */}
+        <div className="bg-[var(--bg-surface)] rounded-3xl p-6 border border-[var(--border-subtle)] hover:border-[var(--brand-purple)]/50 transition-all group overflow-hidden relative shadow-sm hover:shadow-md">
+          <div className="flex items-center justify-between mb-4">
+            <div className="w-10 h-10 rounded-xl bg-[var(--brand-purple)]/10 flex items-center justify-center text-[var(--brand-purple)]">
+              <Zap size={22} />
+            </div>
+            <div className="flex-1 ml-3 h-1 bg-[var(--border-subtle)] rounded-full overflow-hidden">
+               <div className="w-3/4 h-full bg-[var(--brand-purple)]" />
+            </div>
+          </div>
+          <div className="text-[var(--text-muted)] text-xs font-bold uppercase tracking-widest">Money Saved</div>
+          <div className="text-3xl font-black text-[var(--brand-teal)] mt-1">₹998<span className="text-lg opacity-50 font-medium tracking-normal text-[var(--text-primary)]">/mo</span></div>
+          <p className="text-[11px] text-[var(--text-secondary)] mt-2">Potential savings detected by AI</p>
+        </div>
       </div>
+
+      {/* 3. MAIN CONTENT: RECENT SUBSCRIPTIONS */}
+      <div className="bg-[var(--bg-surface)] rounded-3xl border border-[var(--border-subtle)] overflow-hidden shadow-sm">
+        <div className="p-6 border-b border-[var(--border-subtle)] flex items-center justify-between gap-4 flex-wrap">
+          <div>
+            <h2 className="text-xl font-bold text-[var(--text-primary)] flex items-center gap-2">
+              Recent Subscriptions
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-[var(--bg-elevated)] text-[var(--text-muted)] border border-[var(--border-subtle)]">ALL DATA</span>
+            </h2>
+          </div>
+          
+          <div className="flex items-center gap-3">
+             <div className="relative group">
+                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] group-focus-within:text-[var(--brand-purple)] transition-colors" />
+                <input 
+                  type="text" 
+                  placeholder="Search services..." 
+                  className="bg-[var(--bg-primary)] border border-[var(--border-subtle)] rounded-xl py-2 pl-9 pr-4 text-xs text-[var(--text-primary)] focus:outline-none focus:border-[var(--brand-purple)]/50 w-48 transition-all"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+             </div>
+             <button className="p-2 rounded-xl border border-[var(--border-subtle)] text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors">
+                <Filter size={16} />
+             </button>
+             <button className="flex items-center gap-2 bg-gradient-to-r from-[var(--brand-purple)] to-[var(--brand-teal)] text-white font-bold text-xs px-4 py-2 rounded-xl shadow-lg active:scale-95 transition-all">
+                <Plus size={16} /> Add New
+             </button>
+          </div>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full text-left">
+            <thead>
+              <tr className="border-b border-[var(--border-subtle)] bg-[var(--bg-secondary)]/50">
+                <th className="py-4 px-6 text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)]">Service & Name</th>
+                <th className="py-4 px-6 text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)]">Billing Cycle</th>
+                <th className="py-4 px-6 text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)]">Cost</th>
+                <th className="py-4 px-6 text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)]">Next Payment</th>
+                <th className="py-4 px-6 text-right text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)]">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[var(--border-subtle)]">
+              {MOCK_SUBS.map((sub) => (
+                <tr key={sub.id} className="hover:bg-[var(--bg-elevated)]/50 transition-colors group">
+                  <td className="py-4 px-6">
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: `${sub.color}20` }}>
+                        <ServiceLogo name={sub.name} size={24} color={sub.color} />
+                      </div>
+                      <div>
+                        <div className="text-sm font-bold text-[var(--text-primary)] group-hover:text-[var(--brand-purple)] transition-colors">{sub.name}</div>
+                        <div className="text-[10px] text-[var(--text-muted)] font-medium uppercase tracking-tighter">Verified Provider</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="py-4 px-6">
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${sub.cycle === 'Yearly' ? 'bg-[var(--brand-teal)]/10 text-[var(--brand-teal)]' : 'bg-[var(--brand-purple)]/10 text-[var(--brand-purple)]'}`}>
+                      {sub.cycle}
+                    </span>
+                  </td>
+                  <td className="py-4 px-6">
+                    <div className="text-sm font-black text-[var(--text-primary)]">₹{sub.cost}</div>
+                    <div className="text-[9px] text-[var(--text-muted)]">Tax Incl.</div>
+                  </td>
+                  <td className="py-4 px-6">
+                    <div className="text-xs font-semibold text-[var(--text-primary)]">{sub.date}</div>
+                    {sub.id === 3 && <div className="text-[9px] text-[var(--brand-teal)] font-bold bg-[var(--brand-teal)]/10 px-1 rounded inline-block">Renewing Soon</div>}
+                  </td>
+                  <td className="py-4 px-6 text-right">
+                    <div className="flex items-center justify-end gap-2">
+                       <button className="p-2 rounded-lg bg-[var(--bg-elevated)] text-[var(--text-muted)] hover:text-[var(--brand-teal)] hover:bg-[var(--brand-teal)]/10 transition-all" title="Pause">
+                          <Pause size={14} />
+                       </button>
+                       <button className="p-2 rounded-lg bg-[var(--bg-elevated)] text-[var(--text-muted)] hover:text-red-500 hover:bg-red-500/10 transition-all" title="Cancel">
+                          <XCircle size={14} />
+                       </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        
+        {/* Table Footer / Pagination Placeholder */}
+        <div className="p-4 border-t border-[var(--border-subtle)] bg-[var(--bg-secondary)]/50 flex items-center justify-between px-6">
+           <p className="text-[10px] text-[var(--text-muted)] font-bold">SHOWING 5 OF 12 SUBSCRIPTIONS</p>
+           <button className="text-[10px] font-black uppercase text-[var(--brand-purple)] hover:underline underline-offset-4">View All Subscriptions →</button>
+        </div>
+      </div>
+
     </div>
   )
 }

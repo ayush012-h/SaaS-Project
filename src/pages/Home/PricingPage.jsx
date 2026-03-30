@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { getLocalPrice } from '../../lib/payment'
-import { TrendingUp, Check, ArrowRight, Zap, Shield, Star, ChevronDown } from 'lucide-react'
+import { Check, ArrowRight, Zap, Star, ChevronDown } from 'lucide-react'
+import { LandingNav, LandingFooter } from '../../components/Layout/LandingNavFooter'
 
 const FREE_FEATURES = [
   'Up to 5 subscriptions',
@@ -63,30 +64,14 @@ export default function PricingPage() {
   }, [])
 
   return (
-    <div className="landing-page">
+    <div className="landing-page" style={{ background: '#080810' }}>
       <div className="hero-bg" style={{ position: 'fixed', zIndex: 0 }}>
         <div className="orb orb-1" />
         <div className="orb orb-2" />
         <div className="grid-overlay" />
       </div>
 
-      {/* Nav */}
-      <nav className="landing-nav" style={{ position: 'relative', zIndex: 10 }}>
-        <Link to="/" className="nav-logo">
-          <div className="nav-logo-icon"><TrendingUp size={18} color="#fff" /></div>
-          <span>SubTrackr</span>
-        </Link>
-        <div className="nav-links">
-          <Link to="/features" style={{ color: '#9999BB', textDecoration: 'none' }}>Features</Link>
-          <Link to="/how-it-works" style={{ color: '#9999BB', textDecoration: 'none' }}>How it works</Link>
-          <Link to="/pricing" style={{ color: '#E8E8F0', textDecoration: 'none', fontWeight: 600 }}>Pricing</Link>
-          <Link to="/about" style={{ color: '#9999BB', textDecoration: 'none' }}>About</Link>
-        </div>
-        <div className="nav-actions">
-          <Link to="/login" className="nav-signin">Sign in</Link>
-          <Link to="/register" className="nav-cta">Start Free</Link>
-        </div>
-      </nav>
+      <LandingNav activePath="/pricing" />
 
       {/* Hero */}
       <div style={{ position: 'relative', zIndex: 5, textAlign: 'center', padding: '5rem 5vw 3rem' }}>
@@ -172,7 +157,7 @@ export default function PricingPage() {
               ))}
             </ul>
             <Link to="/register" className="btn-primary pricing-btn" style={{ textDecoration: 'none' }}>
-              <Zap size={16} /> Start Pro
+              <Zap size={16} /> Start with Pro
             </Link>
             <p style={{ textAlign: 'center', color: '#444460', fontSize: 11, marginTop: 10 }}>
               Cancel anytime. No lock-in.
@@ -277,17 +262,7 @@ export default function PricingPage() {
         </div>
       </section>
 
-      <footer className="landing-footer" style={{ position: 'relative', zIndex: 5 }}>
-        <div className="footer-logo">
-          <div className="nav-logo-icon"><TrendingUp size={16} color="#fff" /></div>
-          <span>SubTrackr</span>
-        </div>
-        <div className="footer-links">
-          <Link to="/" style={{ color: '#666680', textDecoration: 'none', fontSize: '0.85rem' }}>Home</Link>
-          <Link to="/features" style={{ color: '#666680', textDecoration: 'none', fontSize: '0.85rem' }}>Features</Link>
-          <Link to="/how-it-works" style={{ color: '#666680', textDecoration: 'none', fontSize: '0.85rem' }}>How it works</Link>
-        </div>
-      </footer>
+      <LandingFooter />
     </div>
   )
 }

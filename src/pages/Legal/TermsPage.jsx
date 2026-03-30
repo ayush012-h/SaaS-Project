@@ -1,222 +1,180 @@
-import { useEffect } from 'react'
-import { Link } from 'react-router-dom'
-import { FileText, ArrowLeft } from 'lucide-react'
+import React, { useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import { FileText } from 'lucide-react';
+import { LandingNav, LandingFooter } from '../../components/Layout/LandingNavFooter';
 
 const SECTIONS = [
   {
-    title: '1. Acceptance of Terms',
-    content: `By accessing or using SubTrackr ("the Service"), you agree to be bound by these Terms of Service. If you do not agree to these terms, please do not use our service.
+    title: '1. Agreement to Terms',
+    body: `By accessing or using SubTrackr ("the Service," "we," "us," or "our"), you agree to be bound by these Terms of Service ("Terms"). If you disagree with any part of these terms, you may not access the Service.
 
-These terms apply to all users of the service, including users on the free plan and Pro plan subscribers.`,
+These Terms apply to all visitors, users, and others who access or use the Service. Our Privacy Policy is incorporated by reference into these Terms.`,
   },
   {
     title: '2. Description of Service',
-    content: `SubTrackr is a subscription tracking and management tool that allows users to:
+    body: `SubTrackr is an AI-powered subscription management platform that helps users track, manage, and optimize their recurring software and service subscriptions. The Service includes:
 
-- Track personal and business subscriptions in one place
-- Receive renewal alerts before subscriptions charge
-- View spending analytics and trends
-- Use AI-powered tools to detect subscriptions from email or bank statement text (Pro plan)
-
-SubTrackr is provided "as is" and may be updated, modified, or discontinued at any time.`,
+• A subscription tracking dashboard to monitor active, cancelled, and upcoming renewals
+• Renewal alert notifications via email and in-app notifications
+• An AI-powered scanner that analyzes pasted bank statement or email text to detect subscriptions
+• A cancellation guide tool with step-by-step instructions for common services
+• Analytics tools including spend trends, category breakdowns, and yearly reports
+• A budget management tool to set and monitor spending caps (Pro feature)`,
   },
   {
-    title: '3. Eligibility',
-    content: `You must be at least 13 years old to use SubTrackr. By using the service, you represent that:
+    title: '3. User Accounts',
+    body: `3.1 Registration: To access the Service, you must create an account using a valid email address or Google OAuth. You are responsible for maintaining the confidentiality of your account credentials.
 
-- You are at least 13 years of age
-- You have the legal capacity to enter into this agreement
-- Your use of the service will comply with all applicable laws and regulations`,
+3.2 Accuracy: You agree to provide accurate, current, and complete information during registration and to keep this information updated.
+
+3.3 Account Security: You are responsible for all activities that occur under your account. You must immediately notify SubTrackr at support@subtrackr.me if you suspect any unauthorized use of your account.
+
+3.4 Age Requirement: You must be at least 13 years old to use SubTrackr. By creating an account, you represent that you meet this age requirement.`,
   },
   {
-    title: '4. Account Registration',
-    content: `To use SubTrackr, you must create an account with a valid email address. You are responsible for:
+    title: '4. Subscription Plans & Billing',
+    body: `4.1 Free Plan: SubTrackr offers a free tier permitting up to 5 stored subscriptions with basic alert functionality.
 
-- Maintaining the confidentiality of your account credentials
-- All activity that occurs under your account
-- Notifying us immediately of any unauthorized use of your account
+4.2 Pro Plan: Advanced features including unlimited subscriptions, AI Scanner, cancellation guides, yearly reports, and budget tools are available under the Pro plan (₹49/month or equivalent annual rate).
 
-We reserve the right to terminate accounts that violate these terms.`,
+4.3 Payment: Pro subscriptions are billed through Razorpay, a PCI-DSS compliant payment processor. By subscribing, you authorize recurring charges to your selected payment method.
+
+4.4 Cancellation: You may cancel your Pro subscription at any time from Settings → Billing. Cancellation takes effect at the end of the current billing cycle. We do not offer prorated refunds for partial months.
+
+4.5 Price Changes: SubTrackr reserves the right to modify subscription pricing with 30 days' advance notice via email.`,
   },
   {
-    title: '5. Free Plan & Pro Plan',
-    content: `**Free Plan:** Allows tracking of up to 5 subscriptions with basic features including dashboard, charts, and renewal alerts. No credit card required.
+    title: '5. Acceptable Use Policy',
+    body: `You agree not to use SubTrackr to:
 
-**Pro Plan:** Paid subscription (₹49/month) providing unlimited subscriptions, AI spending insights, email scanner, and advanced analytics.
+• Violate any applicable local, national, or international laws or regulations
+• Transmit or upload malicious code, viruses, or any other software that may damage systems
+• Attempt to gain unauthorized access to any part of the Service or its related systems
+• Use automated bots, scrapers, or crawlers to access the Service without written permission
+• Reverse-engineer, decompile, or disassemble any portion of the Service
+• Submit inaccurate, misleading, or fraudulent financial information
+• Impersonate any person or entity, or falsely state or misrepresent your affiliation
 
-**Billing:** Pro plan billing is handled by Razorpay. By subscribing, you authorize us to charge your payment method on a recurring monthly basis.
-
-**Cancellation:** You may cancel your Pro plan at any time via Settings. You will retain Pro access until the end of the current billing period. No refunds are issued for partial months.`,
+Violations may result in immediate suspension or permanent termination of your account.`,
   },
   {
-    title: '6. Acceptable Use',
-    content: `You agree not to use SubTrackr to:
+    title: '6. Data & Privacy',
+    body: `6.1 Financial Data: SubTrackr is a subscription tracker, not a bank. We do not connect to your bank accounts, request banking credentials, or have access to your actual financial accounts.
 
-- Violate any applicable laws or regulations
-- Upload or transmit malicious code or content
-- Attempt to gain unauthorized access to our systems
-- Use the service to harass, harm, or defraud others
-- Reverse engineer or attempt to extract our source code
-- Resell or sublicense access to the service
+6.2 AI Scanner: The AI Scanner feature processes text you manually paste into the application. This text is sent to OpenAI's API for analysis and is not stored by SubTrackr. You are responsible for ensuring you have the right to share any text you submit.
 
-We reserve the right to suspend or terminate your account for violations of these terms.`,
+6.3 Privacy Policy: Your use of SubTrackr is subject to our Privacy Policy, which explains in detail how we collect, use, store, and protect your personal data. Please review it at subtrackr.me/privacy.`,
   },
   {
     title: '7. Intellectual Property',
-    content: `The SubTrackr service, including its design, code, logos, and content, is owned by SubTrackr and protected by intellectual property laws. You are granted a limited, non-exclusive, non-transferable license to use the service for personal, non-commercial purposes.
+    body: `7.1 SubTrackr IP: The Service and all its original content, features, functionality, branding, and UI design are and will remain the exclusive property of SubTrackr and its licensors. Our trademarks, logos, and service marks may not be used in connection with any product or service without prior written consent.
 
-You retain ownership of any data you input into the service (subscription records, etc.).`,
+7.2 Your Content: You retain full ownership of any subscription data, preferences, or other content you enter into SubTrackr. You grant SubTrackr a limited, non-exclusive license to process this data solely to provide you with the Service.`,
   },
   {
-    title: '8. Data & Privacy',
-    content: `Your use of SubTrackr is also governed by our Privacy Policy, which is incorporated into these Terms by reference. By using the service, you consent to the collection and use of your data as described in our Privacy Policy.
+    title: '8. Disclaimer of Warranties',
+    body: `SubTrackr is provided on an "AS IS" and "AS AVAILABLE" basis without warranties of any kind, either express or implied, including but not limited to implied warranties of merchantability, fitness for a particular purpose, or non-infringement.
 
-We implement industry-standard security measures but cannot guarantee absolute security. You use the service at your own risk.`,
+We do not warrant that:
+• The Service will always be available, uninterrupted, or error-free
+• AI-generated insights, spending summaries, or detected subscriptions will always be 100% accurate
+• Any errors or defects in the Service will be corrected on a specific timeline`,
   },
   {
-    title: '9. Disclaimer of Warranties',
-    content: `SubTrackr is provided "as is" and "as available" without warranties of any kind, either express or implied. We do not warrant that:
+    title: '9. Limitation of Liability',
+    body: `To the maximum extent permitted by applicable law, SubTrackr and its officers, directors, employees, and agents shall not be liable for any indirect, incidental, special, consequential, or punitive damages, including but not limited to loss of profits, data, or goodwill, arising from:
 
-- The service will be uninterrupted or error-free
-- Renewal alerts will be delivered without delay or failure
-- The service will meet your specific requirements
+• Your use of or inability to use the Service
+• Any unauthorized access to or alteration of your data
+• Any inaccuracies in AI-generated subscription detection or spending insights
+• Any third-party conduct or content on the Service
 
-Financial decisions made based on information in SubTrackr are your sole responsibility.`,
+In no event shall our total liability to you exceed the amount you have paid SubTrackr in the 12 months prior to the claim.`,
   },
   {
-    title: '10. Limitation of Liability',
-    content: `To the maximum extent permitted by law, SubTrackr shall not be liable for any indirect, incidental, special, consequential, or punitive damages, including:
+    title: '10. Termination',
+    body: `10.1 By You: You may delete your account at any time from Settings → Account → Delete Account.
 
-- Loss of data or profits
-- Missed subscription renewals or unexpected charges
-- Unauthorized access to your account
+10.2 By SubTrackr: We reserve the right to suspend or terminate your account immediately, without prior notice, if we determine you have violated these Terms or engaged in fraudulent, harmful, or illegal activity.
 
-Our total liability to you for any claims arising from your use of the service shall not exceed the amount you paid us in the 3 months preceding the claim.`,
+10.3 Effect: Upon termination, your right to access the Service ceases immediately. If you have an active Pro subscription at termination, you will not be refunded any prepaid subscription fees. Your data will be deleted in accordance with our Privacy Policy.`,
   },
   {
-    title: '11. Changes to Terms',
-    content: `We reserve the right to modify these Terms at any time. We will notify you of material changes via email or in-app notification at least 14 days before the changes take effect.
-
-Your continued use of SubTrackr after the effective date of updated Terms constitutes your acceptance of those changes.`,
+    title: '11. Governing Law',
+    body: `These Terms shall be governed by and construed in accordance with the laws of India, without regard to conflict of law provisions. Any disputes arising from these Terms or your use of SubTrackr will be subject to the exclusive jurisdiction of the courts located in India.`,
   },
   {
-    title: '12. Governing Law',
-    content: `These Terms shall be governed by and construed in accordance with the laws of India. Any disputes arising from these Terms shall be subject to the exclusive jurisdiction of the courts located in India.`,
+    title: '12. Changes to Terms',
+    body: `We reserve the right to modify these Terms at any time. When we do, we will update the "Last updated" date at the top of this page and notify registered users via email. Material changes will be communicated with at least 14 days' advance notice.
+
+Your continued use of SubTrackr following notification of changes constitutes your acceptance of the updated Terms.`,
   },
   {
-    title: '13. Contact Us',
-    content: `If you have questions about these Terms of Service, please contact us:
+    title: '13. Contact Information',
+    body: `If you have any questions about these Terms, please contact us:
 
-**Email:** support@subtrackr.me
-**Website:** subtrackr.me
+Email: support@subtrackr.me
+Website: subtrackr.me
 
-SubTrackr, India`,
+SubTrackr, India — We typically respond within 24 business hours.`,
   },
-]
+];
 
 export default function TermsPage() {
-  useEffect(() => {
-    document.title = 'Terms of Service — SubTrackr'
-    window.scrollTo(0, 0)
-  }, [])
+  useEffect(() => { window.scrollTo(0, 0); document.title = 'Terms of Service — SubTrackr'; }, []);
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      background: '#0A0A0F',
-      color: '#E8E8F0',
-      fontFamily: 'Inter, system-ui, sans-serif',
-    }}>
-      {/* Header */}
-      <div style={{
-        background: 'linear-gradient(135deg, rgba(62,207,207,0.08), rgba(108,99,255,0.06))',
-        borderBottom: '1px solid rgba(255,255,255,0.06)',
-        padding: '48px 0 40px',
-      }}>
-        <div style={{ maxWidth: 760, margin: '0 auto', padding: '0 24px' }}>
-          <Link to="/" style={{
-            display: 'inline-flex', alignItems: 'center', gap: 6,
-            color: '#666680', textDecoration: 'none', fontSize: 13, fontWeight: 600,
-            marginBottom: 24,
-          }}>
-            <ArrowLeft size={14} /> Back to SubTrackr
-          </Link>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 12 }}>
-            <div style={{
-              width: 44, height: 44, borderRadius: 12,
-              background: 'linear-gradient(135deg, rgba(62,207,207,0.2), rgba(108,99,255,0.1))',
-              border: '1px solid rgba(62,207,207,0.3)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-            }}>
-              <FileText size={20} style={{ color: '#3ECFCF' }} />
-            </div>
-            <h1 style={{ margin: 0, fontSize: 32, fontWeight: 800, color: '#E8E8F0' }}>
-              Terms of Service
-            </h1>
-          </div>
-          <p style={{ color: '#666680', fontSize: 14, margin: 0 }}>
-            Last updated: March 17, 2026 · Effective immediately
-          </p>
-        </div>
+    <div style={{ minHeight: '100vh', background: '#080810', color: '#E8E8F0', fontFamily: 'Inter, system-ui, sans-serif' }}>
+      <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 0 }}>
+        <div style={{ position: 'absolute', top: '-20%', right: '-10%', width: '60vw', height: '60vw', borderRadius: '50%', background: 'radial-gradient(circle, rgba(62,207,207,0.05) 0%, transparent 70%)' }} />
       </div>
 
-      {/* Intro */}
-      <div style={{ maxWidth: 760, margin: '0 auto', padding: '40px 24px 0' }}>
-        <div style={{
-          background: 'rgba(62,207,207,0.05)', border: '1px solid rgba(62,207,207,0.15)',
-          borderRadius: 12, padding: '16px 20px', marginBottom: 40,
-        }}>
-          <p style={{ margin: 0, color: '#A8A8C0', fontSize: 14, lineHeight: 1.7 }}>
-            Please read these Terms of Service carefully before using SubTrackr. These terms govern your access to and use of our subscription tracking service. By using SubTrackr, you agree to these terms.
-          </p>
-        </div>
+      <LandingNav activePath="/terms" />
 
-        {/* Sections */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 36 }}>
-          {SECTIONS.map((section, i) => (
-            <div key={i}>
-              <h2 style={{
-                color: '#E8E8F0', fontSize: 17, fontWeight: 700,
-                margin: '0 0 12px', paddingBottom: 10,
-                borderBottom: '1px solid rgba(255,255,255,0.06)',
-              }}>
-                {section.title}
-              </h2>
-              <div style={{ color: '#888898', fontSize: 14, lineHeight: 1.8 }}>
-                {section.content.split('\n').map((line, j) => {
-                  if (!line.trim()) return <br key={j} />
-                  const parts = line.split(/(\*\*.*?\*\*)/g)
-                  return (
-                    <p key={j} style={{ margin: '0 0 6px' }}>
-                      {parts.map((part, k) =>
-                        part.startsWith('**') && part.endsWith('**')
-                          ? <strong key={k} style={{ color: '#C8C8E0' }}>{part.slice(2, -2)}</strong>
-                          : part
-                      )}
-                    </p>
-                  )
-                })}
+      <div style={{ position: 'relative', zIndex: 5, paddingTop: 120 }}>
+        {/* Header */}
+        <div style={{ background: 'linear-gradient(135deg, rgba(62,207,207,0.08), rgba(108,99,255,0.05))', borderBottom: '1px solid rgba(255,255,255,0.06)', padding: '48px 24px 40px' }}>
+          <div style={{ maxWidth: 760, margin: '0 auto' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 12 }}>
+              <div style={{ width: 48, height: 48, borderRadius: 14, background: 'linear-gradient(135deg, rgba(62,207,207,0.2), rgba(108,99,255,0.15))', border: '1px solid rgba(62,207,207,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <FileText size={24} color="#3ECFCF" />
               </div>
+              <h1 style={{ margin: 0, fontSize: 36, fontWeight: 900, color: '#E8E8F0', letterSpacing: '-0.03em' }}>Terms of Service</h1>
             </div>
-          ))}
+            <p style={{ color: '#666680', fontSize: 14, margin: 0 }}>Last updated: March 17, 2026 · Effective immediately</p>
+          </div>
         </div>
 
-        {/* Footer */}
-        <div style={{
-          marginTop: 60, marginBottom: 60,
-          padding: '24px', borderRadius: 12,
-          border: '1px solid rgba(255,255,255,0.06)',
-          background: 'rgba(255,255,255,0.02)',
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          flexWrap: 'wrap', gap: 12,
-        }}>
-          <span style={{ color: '#666680', fontSize: 13 }}>© 2026 SubTrackr. All rights reserved.</span>
-          <div style={{ display: 'flex', gap: 20 }}>
-            <Link to="/privacy" style={{ color: '#3ECFCF', fontSize: 13, textDecoration: 'none', fontWeight: 600 }}>Privacy Policy</Link>
-            <Link to="/" style={{ color: '#666680', fontSize: 13, textDecoration: 'none' }}>Home</Link>
+        {/* Intro Banner */}
+        <div style={{ maxWidth: 760, margin: '40px auto 0', padding: '0 24px' }}>
+          <div style={{ background: 'rgba(62,207,207,0.05)', border: '1px solid rgba(62,207,207,0.15)', borderRadius: 14, padding: '18px 22px', marginBottom: 48 }}>
+            <p style={{ margin: 0, color: '#A8A8C0', fontSize: 14, lineHeight: 1.75 }}>
+              <strong style={{ color: '#E8E8F0' }}>Plain-language summary:</strong> Use SubTrackr responsibly, don't misuse the platform, and we'll keep building great things for you. You own your data, we never sell it, and you can delete your account at any time.
+            </p>
+          </div>
+
+          {/* Sections */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 44, paddingBottom: 80 }}>
+            {SECTIONS.map((s, i) => (
+              <div key={i}>
+                <h2 style={{ color: '#E8E8F0', fontSize: 18, fontWeight: 800, margin: '0 0 16px', paddingBottom: 12, borderBottom: '1px solid rgba(255,255,255,0.06)' }}>{s.title}</h2>
+                <div style={{ color: '#888898', fontSize: 14, lineHeight: 1.85, whiteSpace: 'pre-line' }}>{s.body}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* Footer links */}
+          <div style={{ marginBottom: 80, padding: 24, borderRadius: 14, border: '1px solid rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.02)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
+            <span style={{ color: '#666680', fontSize: 13 }}>© 2026 SubTrackr. All rights reserved.</span>
+            <div style={{ display: 'flex', gap: 20 }}>
+              <Link to="/privacy" style={{ color: '#3ECFCF', fontSize: 13, textDecoration: 'none', fontWeight: 600 }}>Privacy Policy</Link>
+              <Link to="/contact" style={{ color: '#3ECFCF', fontSize: 13, textDecoration: 'none', fontWeight: 600 }}>Contact Us</Link>
+            </div>
           </div>
         </div>
       </div>
+
+      <LandingFooter />
     </div>
-  )
+  );
 }

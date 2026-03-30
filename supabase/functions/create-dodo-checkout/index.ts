@@ -136,9 +136,10 @@ serve(async (req) => {
       { status: 200, headers: { ...cors, "Content-Type": "application/json" } },
     );
   } catch (error) {
-    console.error("create-dodo-checkout error:", error.message);
+    const msg = error instanceof Error ? error.message : String(error)
+    console.error("create-dodo-checkout error:", msg);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: msg }),
       { status: 500, headers: { ...cors, "Content-Type": "application/json" } },
     );
   }
