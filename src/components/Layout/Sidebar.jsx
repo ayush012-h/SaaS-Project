@@ -85,14 +85,6 @@ export default function Sidebar({ style, isCollapsed, setIsCollapsed }) {
   const [menuOpen, setMenuOpen] = useState(false)
   const menuRef = useRef(null)
 
-  const navItems = [
-    { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { to: '/subscriptions', label: 'My Subscriptions', icon: CreditCard },
-    { to: '/analytics', label: 'Analytics', icon: BarChart3 },
-    { to: '/settings#billing', label: 'Payment Methods', icon: Zap },
-    { to: '/settings', label: 'Settings', icon: Settings },
-  ]
-
   async function handleSignOut() {
     try {
       await signOut()
@@ -130,36 +122,77 @@ export default function Sidebar({ style, isCollapsed, setIsCollapsed }) {
       </div>
 
       {/* 2. NAVIGATION */}
-      <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
-        {navItems.map(({ to, label, icon: Icon }) => (
-          <NavLink
-            key={to}
-            to={to}
-            className={({ isActive }) => `
-              flex items-center gap-3 rounded-xl transition-all duration-200 
-              ${isCollapsed ? 'justify-center p-3' : 'px-4 py-3'} 
-              ${isActive 
-                ? 'bg-gradient-to-r from-[var(--brand-purple)]/20 to-[var(--brand-teal)]/10 text-[var(--text-primary)] font-bold border-l-4 border-[var(--brand-purple)] shadow-sm' 
-                : 'text-[var(--text-muted)] hover:bg-[var(--bg-surface)] hover:text-[var(--text-primary)]'
-              }
-            `}
-          >
-            <Icon size={isCollapsed ? 20 : 18} />
-            {!isCollapsed && <span className="truncate">{label}</span>}
-          </NavLink>
-        ))}
+      <nav className="flex-1 p-3 space-y-4 overflow-y-auto custom-scrollbar">
+        {/* Main Section */}
+        <div className="space-y-1">
+          {mainNavItems.map(({ to, label, icon: Icon }) => (
+            <NavLink
+              key={to}
+              to={to}
+              className={({ isActive }) => `
+                flex items-center gap-3 rounded-xl transition-all duration-200 
+                ${isCollapsed ? 'justify-center p-3' : 'px-4 py-3'} 
+                ${isActive 
+                  ? 'bg-gradient-to-r from-[var(--brand-purple)]/20 to-[var(--brand-teal)]/10 text-[var(--text-primary)] font-bold border-l-4 border-[var(--brand-purple)] shadow-sm' 
+                  : 'text-[var(--text-muted)] hover:bg-[var(--bg-surface)] hover:text-[var(--text-primary)]'
+                }
+              `}
+            >
+              <Icon size={isCollapsed ? 20 : 18} />
+              {!isCollapsed && <span className="truncate">{label}</span>}
+            </NavLink>
+          ))}
+        </div>
+
+        {/* Pro Section */}
+        <div className="space-y-1">
+          {!isCollapsed && (
+            <div className="px-4 py-2 text-[10px] font-black text-[var(--text-muted)] uppercase tracking-widest flex items-center justify-between">
+              Pro Features
+              {profile?.plan !== 'pro' && <Crown size={12} className="text-amber-500" />}
+            </div>
+          )}
+          {proNavItems.map(({ to, label, icon: Icon }) => {
+            const isLocked = profile?.plan !== 'pro';
+            return (
+              <Tooltip key={to} content={isLocked ? "Upgrade to Pro" : label} isCollapsed={isCollapsed}>
+                <div 
+                  onClick={() => isLocked ? smartCheckout(profile) : navigate(to)}
+                  className={`
+                    flex items-center gap-3 rounded-xl transition-all duration-200 cursor-pointer
+                    ${isCollapsed ? 'justify-center p-3' : 'px-4 py-3'} 
+                    ${isLocked 
+                      ? 'text-[var(--text-muted)]/50 hover:bg-rgba(0,0,0,0.05)' 
+                      : 'text-[var(--text-muted)] hover:bg-[var(--bg-surface)] hover:text-[var(--text-primary)]'
+                    }
+                  `}
+                >
+                  <Icon size={isCollapsed ? 20 : 18} />
+                  {!isCollapsed && (
+                    <span className="flex-1 truncate flex items-center justify-between">
+                      {label}
+                      {isLocked && <Lock size={12} className="opacity-50" />}
+                    </span>
+                  )}
+                </div>
+              </Tooltip>
+            );
+          })}
+        </div>
 
         {/* LOG OUT LINK */}
-        <button
-          onClick={handleSignOut}
-          className={`
-            w-full flex items-center gap-3 rounded-xl text-[var(--text-muted)] hover:bg-red-500/10 hover:text-red-500 transition-all
-            ${isCollapsed ? 'justify-center p-3' : 'px-4 py-3'}
-          `}
-        >
-          <LogOut size={isCollapsed ? 20 : 18} />
-          {!isCollapsed && <span className="font-medium">Log Out</span>}
-        </button>
+        <div className="pt-4 border-t border-[var(--border-subtle)]">
+          <button
+            onClick={handleSignOut}
+            className={`
+              w-full flex items-center gap-3 rounded-xl text-[var(--text-muted)] hover:bg-red-500/10 hover:text-red-500 transition-all
+              ${isCollapsed ? 'justify-center p-3' : 'px-4 py-3'}
+            `}
+          >
+            <LogOut size={isCollapsed ? 20 : 18} />
+            {!isCollapsed && <span className="font-medium">Log Out</span>}
+          </button>
+        </div>
       </nav>
 
       {/* FOOTER TOGGLE */}
