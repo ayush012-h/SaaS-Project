@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Plus, Search, Pencil, Trash2, Filter, CreditCard, ChevronRight, Calendar } from 'lucide-react'
-import { useSubscriptions } from '../../hooks/useSubscriptions'
+import { useSubscriptions } from '../../contexts/SubscriptionsContext'
 import { useAuth } from '../../contexts/AuthContext'
 import StatusBadge from '../../components/UI/StatusBadge'
 import SubscriptionModal from '../../components/UI/SubscriptionModal'

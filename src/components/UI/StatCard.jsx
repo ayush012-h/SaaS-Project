@@ -5,12 +5,12 @@ export default function StatCard({ title, value, subtitle, icon: Icon, color = '
   const isMobile = useIsMobile()
   
   return (
-    <div className={`card group p-3 sm:p-5`} style={{ height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+    <div className={`card group p-3 sm:p-6`} style={{ height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
       <div className={`flex items-start justify-between ${isMobile ? 'mb-1' : 'mb-4'}`}>
         <div className="flex-1 min-w-0">
-          <p className="text-text-muted text-[10px] sm:text-xs font-semibold uppercase tracking-wider mb-0.5 sm:mb-1">{title}</p>
-          <p className={`${isMobile ? 'text-xl' : 'text-3xl'} font-black text-text-primary truncate`}>{value}</p>
-          {!isMobile && subtitle && <p className="text-text-muted text-xs mt-1 truncate">{subtitle}</p>}
+          <p className="text-text-muted text-[11px] sm:text-xs font-medium tracking-wide mb-0.5 sm:mb-1 uppercase">{title}</p>
+          <p className={`${isMobile ? 'text-3xl' : 'text-4xl'} font-black text-text-primary truncate tracking-tight py-1`}>{value}</p>
+          {!isMobile && subtitle && <p className="text-text-muted text-xs mt-1.5 truncate">{subtitle}</p>}
         </div>
         <div className={`${isMobile ? 'w-8 h-8' : 'w-11 h-11'} rounded-lg sm:rounded-xl flex items-center justify-center shrink-0 ml-2`}
           style={{ background: `${color}12`, border: `1px solid ${color}25` }}>

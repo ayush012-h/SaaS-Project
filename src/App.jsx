@@ -29,13 +29,13 @@ const CompanyPage     = lazy(() => import('./pages/Company/CompanyPage'))
 const ChangelogPage   = lazy(() => import('./pages/Home/ChangelogPage'))
 const SuccessStories  = lazy(() => import('./pages/Home/SuccessStoriesPage'))
 
-// Dashboard pages (Eager load for instant navigation performance)
-import DashboardPage from './pages/Dashboard/DashboardPage'
-import SubscriptionsPage from './pages/Subscriptions/SubscriptionsPage'
-import AnalyticsPage from './pages/Analytics/AnalyticsPage'
-import AlertsPage from './pages/Alerts/AlertsPage'
-import SettingsPage from './pages/Settings/SettingsPage'
-import EmailScannerPage from './pages/Scanner/EmailScannerPage'
+// Dashboard pages (Lazy loaded for faster initial boot and refresh performance)
+const DashboardPage = lazy(() => import('./pages/Dashboard/DashboardPage'))
+const SubscriptionsPage = lazy(() => import('./pages/Subscriptions/SubscriptionsPage'))
+const AnalyticsPage = lazy(() => import('./pages/Analytics/AnalyticsPage'))
+const AlertsPage = lazy(() => import('./pages/Alerts/AlertsPage'))
+const SettingsPage = lazy(() => import('./pages/Settings/SettingsPage'))
+const EmailScannerPage = lazy(() => import('./pages/Scanner/EmailScannerPage'))
 
 // Pro feature pages — heaviest, load only when needed
 const CancelGuide       = lazy(() => import('./pages/CancelGuide'))
@@ -228,6 +228,8 @@ function AppRoutes() {
   )
 }
 
+import { SubscriptionsProvider } from './contexts/SubscriptionsContext'
+
 // Root
 function App() {
   // Remove HTML loading screen when React first mounts — clean, race-condition-free
@@ -244,10 +246,12 @@ function App() {
     <ThemeProvider>
       <BrowserRouter>
         <AuthProvider>
-          <div>
-            <Toaster position="top-right" />
-            <AppRoutes />
-          </div>
+          <SubscriptionsProvider>
+            <div>
+              <Toaster position="top-right" />
+              <AppRoutes />
+            </div>
+          </SubscriptionsProvider>
         </AuthProvider>
       </BrowserRouter>
     </ThemeProvider>

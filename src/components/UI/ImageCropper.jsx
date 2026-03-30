@@ -25,9 +25,12 @@ export default function ImageCropper({ image, onCropComplete, onCancel }) {
       // Create a canvas to crop the image
       const canvas = document.createElement('canvas')
       const img = new Image()
+      const loadPromise = new Promise((resolve, reject) => {
+        img.onload = resolve
+        img.onerror = reject
+      })
       img.src = image
-      
-      await new Promise((resolve) => (img.onload = resolve))
+      await loadPromise
       
       const ctx = canvas.getContext('2d')
       

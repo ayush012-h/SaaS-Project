@@ -1,9 +1,9 @@
-﻿import { useMemo, useEffect, useState } from 'react'
+import { useMemo, useEffect, useState } from 'react'
 import { DollarSign, CreditCard, TrendingUp, Bell, Calendar, AlertCircle, MessageSquare } from 'lucide-react'
 import { format, subMonths } from 'date-fns'
 import React, { lazy, Suspense } from 'react'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
-import { useSubscriptions } from '../../hooks/useSubscriptions'
+import { useSubscriptions } from '../../contexts/SubscriptionsContext'
 import { useAuth } from '../../contexts/AuthContext'
 import { useCurrencyRates, getCurrencySymbol } from '../../hooks/useCurrencyRates'
 import StatCard from '../../components/UI/StatCard'
@@ -18,45 +18,55 @@ import WhatsNewBanner from '../../components/WhatsNewBanner'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import FeedbackWidget from '../../components/FeedbackWidget'
 
+import { ChevronRight } from 'lucide-react'
+
 const SubscriptionRow = React.memo(function SubscriptionRow({ sub, isMobile, days, type = 'renewal' }) {
   if (type === 'renewal') {
     return (
-      <motion.div
-        variants={itemVariants}
-        className="flex items-center justify-between p-2 sm:p-3 rounded-lg sm:rounded-xl bg-bg-elevated/40 border border-border/50"
-      >
-        <div className="flex items-center gap-2 sm:gap-3">
-          <ServiceLogo name={sub.name} size={isMobile ? 28 : 36} color={sub.color || '#6C63FF'} />
-          <div className="min-w-0">
-            <p className="text-[13px] font-bold text-text-primary truncate">{sub.name}</p>
-            <p className="text-[10px] text-text-muted truncate">{sub.currency || 'Γé╣'}{sub.amount}</p>
+      <Link to="/subscriptions" className="block outline-none">
+        <motion.div
+          variants={itemVariants}
+          className="flex items-center justify-between p-2.5 sm:p-4 rounded-lg sm:rounded-xl bg-bg-elevated/40 border border-border/50 hover:bg-bg-elevated/60 transition-all duration-200"
+        >
+          <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
+            <ServiceLogo name={sub.name} size={isMobile ? 28 : 36} color={sub.color || '#6C63FF'} />
+            <div className="min-w-0">
+              <p className="text-[13px] font-bold text-text-primary truncate">{sub.name}</p>
+              <p className="text-[10px] text-text-muted truncate">{sub.currency || '₹'}{sub.amount}</p>
+            </div>
           </div>
-        </div>
-        <div className="shrink-0 text-right">
-          <span className={`text-[11px] font-black uppercase ${days <= 2 ? 'text-status-danger' : days <= 5 ? 'text-status-warning' : 'text-text-secondary'}`}>
-            {days === 0 ? 'Today' : `${days}d`}
-          </span>
-        </div>
-      </motion.div>
+          <div className="shrink-0 text-right flex items-center gap-2">
+            <span className={`text-[11px] font-black uppercase ${days <= 2 ? 'text-status-danger' : days <= 5 ? 'text-status-warning' : 'text-text-secondary'}`}>
+              {days === 0 ? 'Today' : `${days}d`}
+            </span>
+            <ChevronRight size={14} className="text-text-muted/50" />
+          </div>
+        </motion.div>
+      </Link>
     )
   }
   return (
-    <motion.div
-      variants={itemVariants}
-      className="flex items-center justify-between p-2 sm:p-2.5 rounded-lg sm:rounded-xl hover:bg-bg-elevated transition-colors"
-    >
-      <div className="flex items-center gap-2 sm:gap-3">
-        <ServiceLogo name={sub.name} size={isMobile ? 28 : 36} color={sub.color || '#6C63FF'} />
-        <div className="min-w-0">
-          <p className="text-[13px] font-bold text-text-primary truncate">{sub.name}</p>
-          <p className="text-[10px] text-text-muted truncate capitalize">{sub.category || 'Other'}</p>
+    <Link to="/subscriptions" className="block outline-none">
+      <motion.div
+        variants={itemVariants}
+        className="flex items-center justify-between p-2.5 sm:p-4 rounded-lg sm:rounded-xl hover:bg-bg-hover transition-all duration-200"
+      >
+        <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
+          <ServiceLogo name={sub.name} size={isMobile ? 28 : 36} color={sub.color || '#6C63FF'} />
+          <div className="min-w-0">
+            <p className="text-[13px] font-bold text-text-primary truncate">{sub.name}</p>
+            <p className="text-[10px] text-text-muted truncate capitalize">{sub.category || 'Other'}</p>
+          </div>
         </div>
-      </div>
-      <div className="shrink-0 text-right">
-        <p className="text-[13px] font-black text-text-primary">{sub.currency || 'Γé╣'}{sub.amount}</p>
-        <div className="scale-75 origin-right -mt-1"><StatusBadge status={sub.status} /></div>
-      </div>
-    </motion.div>
+        <div className="shrink-0 text-right flex items-center gap-2">
+          <div>
+            <p className="text-[13px] font-black text-text-primary">{sub.currency || '₹'}{sub.amount}</p>
+            <div className="scale-75 origin-right -mt-1"><StatusBadge status={sub.status} /></div>
+          </div>
+          <ChevronRight size={14} className="text-text-muted/50" />
+        </div>
+      </motion.div>
+    </Link>
   )
 })
 
@@ -81,7 +91,7 @@ function FeedbackModal({ onClose }) {
 }
 
 
-const CATEGORY_COLORS = ['#6C63FF', '#3ECFCF', '#FFD700', '#FF6363', '#4CFF8F', '#FF63B3', '#63B3FF', '#FF9F63']
+const CATEGORY_COLORS = ['#818CF8', '#6366F1', '#4F46E5', '#4338CA', '#312E81', '#3730A3', '#4F46E5', '#6366F1']
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -120,7 +130,7 @@ export default function DashboardPage() {
   const currencySymbol = getCurrencySymbol(displayCurrency)
 
   useEffect(() => {
-    document.title = 'Dashboard ΓÇö SubTrackr'
+    document.title = 'Dashboard — SubTrackr'
   }, [])
 
   // Calculate totals in display currency
@@ -130,7 +140,7 @@ export default function DashboardPage() {
     const catBreakdown = {}
 
     activeSubscriptions.forEach(sub => {
-      const amountInDisplay = convert(sub.amount, sub.currency || 'Γé╣', displayCurrency)
+      const amountInDisplay = convert(sub.amount, sub.currency || '₹', displayCurrency)
       
       let monthly = 0
       if (sub.billing_cycle === 'monthly') monthly = amountInDisplay
@@ -165,7 +175,7 @@ export default function DashboardPage() {
           return created <= month && s.status !== 'cancelled'
         })
         .reduce((sum, s) => {
-          const amountInDisplay = convert(s.amount, s.currency || 'Γé╣', displayCurrency)
+          const amountInDisplay = convert(s.amount, s.currency || '₹', displayCurrency)
           if (s.billing_cycle === 'monthly') return sum + amountInDisplay
           if (s.billing_cycle === 'yearly') return sum + amountInDisplay / 12
           if (s.billing_cycle === 'weekly') return sum + amountInDisplay * 4.33
@@ -188,14 +198,16 @@ export default function DashboardPage() {
 
   return (
     <div className={`${isMobile ? 'space-y-4' : 'space-y-8'} animate-fade-in`}>
-      <WhatsNewBanner />
+      <div className="hidden md:block">
+        <WhatsNewBanner />
+      </div>
       {/* Header */}
       <div className="flex items-end justify-between">
         <div>
-          <h1 className={`${isMobile ? 'text-xl' : 'text-3xl'} font-black text-text-primary tracking-tight`}>
-            Good {new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 18 ? 'afternoon' : 'evening'}{profile?.full_name ? `, ${String(profile.full_name).split(' ')[0]}` : ''}! ≡ƒæï
+          <h1 className={`${isMobile ? 'text-2xl' : 'text-4xl'} font-bold text-text-primary tracking-tight`}>
+            Good {new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 18 ? 'afternoon' : 'evening'}{profile?.full_name ? `, ${String(profile.full_name).split(' ')[0]}` : ''}! 👋
           </h1>
-          <p className={`${isMobile ? 'text-[10px]' : 'text-text-muted mt-1'} uppercase font-bold tracking-widest text-text-muted`}>Subscription overview</p>
+          <p className={`${isMobile ? 'text-xs' : 'text-sm mt-1'} text-text-muted font-medium`}>Subscription overview</p>
         </div>
         <div className="flex items-center gap-3">
           {!isMobile && (
@@ -381,37 +393,39 @@ export default function DashboardPage() {
                        <div className="w-2 h-2 rounded-full" style={{ background: CATEGORY_COLORS[i] }} />
                        <span className="text-xs text-text-muted font-medium">{cat}</span>
                     </div>
-                    <span className="text-[10px] font-semibold text-text-muted">ΓÇö</span>
+                    <span className="text-[10px] font-semibold text-text-muted">—</span>
                   </div>
                 ))}
               </div>
             </div>
           ) : (
-            <>
-              <ResponsiveContainer width="100%" height={160}>
-                <PieChart>
-                  <Pie data={categoryChartData} cx="50%" cy="50%" innerRadius={45} outerRadius={70}
-                    paddingAngle={4} dataKey="value">
-                    {categoryChartData.map((_, i) => (
-                      <Cell key={i} fill={CATEGORY_COLORS[i % CATEGORY_COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip formatter={(v) => [`${currencySymbol}${v.toFixed(2)}/mo`, '']}
-                    contentStyle={{ background: '#13131F', border: '1px solid #1E1E2E', borderRadius: '12px', color: '#E8E8F0' }} />
-                </PieChart>
-              </ResponsiveContainer>
-              <div className="space-y-2 mt-2">
+            <div className="flex flex-col lg:flex-col lg:h-[220px]">
+              <div className="relative w-[200px] h-[200px] mx-auto lg:w-full lg:h-[160px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie data={categoryChartData} cx="50%" cy="50%" innerRadius={isMobile ? 60 : 45} outerRadius={isMobile ? 90 : 70}
+                      paddingAngle={4} dataKey="value">
+                      {categoryChartData.map((_, i) => (
+                        <Cell key={i} fill={CATEGORY_COLORS[i % CATEGORY_COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip formatter={(v) => [`${currencySymbol}${v.toFixed(2)}/mo`, '']}
+                      contentStyle={{ background: 'var(--bg-surface)', border: '1px solid var(--border-main)', borderRadius: '12px', color: 'var(--text-primary)' }} />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+              <div className="grid grid-cols-2 gap-x-4 gap-y-2 mt-2 w-full mx-auto md:max-w-none md:flex md:flex-col">
                 {categoryChartData.slice(0, 4).map((item, i) => (
                   <div key={item.name} className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <div className="w-2.5 h-2.5 rounded-full" style={{ background: CATEGORY_COLORS[i % CATEGORY_COLORS.length] }} />
-                      <span className="text-xs text-text-secondary">{item.name}</span>
+                      <span className="text-xs text-text-secondary truncate max-w-[70px]">{item.name}</span>
                     </div>
-                    <span className="text-xs font-semibold text-text-primary">{currencySymbol}{item.value.toFixed(0)}/mo</span>
+                    <span className="text-xs font-semibold text-text-primary ml-1">{currencySymbol}{item.value.toFixed(0)}</span>
                   </div>
                 ))}
               </div>
-            </>
+            </div>
           )}
         </motion.div>
       </motion.div>
@@ -422,7 +436,7 @@ export default function DashboardPage() {
         <motion.div variants={itemVariants} whileHover={{ y: -4 }} className="card p-4 sm:p-5">
           <div className="flex items-center justify-between mb-4 sm:mb-5">
             <h2 className="text-base sm:text-lg font-bold text-text-primary uppercase tracking-tight">Renewals</h2>
-            <Link to="/alerts" className="text-brand-purple text-[10px] sm:text-sm font-bold uppercase tracking-wider hover:opacity-80">View all ΓåÆ</Link>
+            <Link to="/alerts" className="text-brand-purple text-[10px] sm:text-sm font-bold uppercase tracking-wider hover:opacity-80">View all →</Link>
           </div>
           {upcomingRenewals.length === 0 ? (
             <div className="py-4 text-center text-text-muted text-xs border border-dashed border-border/50 rounded-xl bg-bg-elevated/20 flex flex-col items-center justify-center" style={{ minHeight: '130px' }}>
@@ -448,7 +462,7 @@ export default function DashboardPage() {
         <motion.div variants={itemVariants} whileHover={{ y: -4 }} className="card p-4 sm:p-5">
           <div className="flex items-center justify-between mb-4 sm:mb-5">
             <h2 className="text-base sm:text-lg font-bold text-text-primary uppercase tracking-tight">Recent</h2>
-            <Link to="/subscriptions" className="text-brand-purple text-[10px] sm:text-sm font-bold uppercase tracking-wider hover:opacity-80">All ΓåÆ</Link>
+            <Link to="/subscriptions" className="text-brand-purple text-[10px] sm:text-sm font-bold uppercase tracking-wider hover:opacity-80">All →</Link>
           </div>
           {subscriptions.length === 0 ? (
             <div className="py-4 px-2">
@@ -492,30 +506,50 @@ function DashboardChecklist({ profile, subscriptions, onDismiss }) {
 
   return (
     <div className={`card bg-gradient-to-r from-brand-purple/10 to-transparent border-brand-purple/20 relative animate-fade-in ${isMobile ? 'my-2 p-3' : 'my-6 p-5'}`}>
-      <button onClick={onDismiss} className="absolute top-3 right-3 p-1 text-text-muted hover:text-white bg-bg-elevated rounded transition-colors">
+      <button onClick={onDismiss} className="absolute top-2 right-2 p-1.5 text-text-muted hover:text-white bg-bg-elevated rounded-lg transition-colors">
         <X size={14} />
       </button>
-      <div className={`${isMobile ? 'mb-2' : 'mb-4'}`}>
-        <h3 className="text-sm sm:text-base font-bold text-text-primary flex items-center gap-2">
-          ≡ƒÜÇ Get started
-        </h3>
-        <p className="text-[10px] sm:text-xs text-text-muted mt-0.5">{completedCount} of {steps.length} done</p>
-      </div>
-      
-      <div className={`grid ${isMobile ? 'grid-cols-2 gap-2' : 'grid-cols-4 gap-3'}`}>
-        {steps.map((step) => (
-          <div key={step.id} className="flex items-center gap-2 p-2 rounded-lg bg-bg-elevated/50 border border-border">
-            {step.done ? (
-              <CheckSquare size={14} className="text-brand-teal shrink-0" />
-            ) : (
-              <Square size={14} className="text-text-muted/50 shrink-0" />
-            )}
-            <span className={`text-[10px] sm:text-xs truncate ${step.done ? 'text-text-muted line-through font-normal' : 'text-text-primary font-bold'}`}>
-              {step.label}
-            </span>
+
+      {isMobile ? (
+        <div className="flex flex-col pr-8">
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-sm font-bold text-text-primary flex items-center gap-1.5">
+              🚀 Setup
+            </h3>
+            <span className="text-[10px] font-bold text-brand-purple">{Math.round((completedCount/steps.length)*100)}%</span>
           </div>
-        ))}
-      </div>
+          <div className="h-1.5 w-full bg-border rounded-full overflow-hidden">
+            <div 
+              className="h-full bg-brand-purple transition-all duration-500 ease-out" 
+              style={{ width: `${(completedCount/steps.length)*100}%` }} 
+            />
+          </div>
+        </div>
+      ) : (
+        <>
+          <div className="mb-4">
+            <h3 className="text-base font-bold text-text-primary flex items-center gap-2">
+              🚀 Get started
+            </h3>
+            <p className="text-xs text-text-muted mt-0.5">{completedCount} of {steps.length} done</p>
+          </div>
+          
+          <div className="grid grid-cols-4 gap-3">
+            {steps.map((step) => (
+              <div key={step.id} className="flex items-center gap-2 p-2 rounded-lg bg-bg-elevated/50 border border-border">
+                {step.done ? (
+                  <CheckSquare size={14} className="text-brand-teal shrink-0" />
+                ) : (
+                  <Square size={14} className="text-text-muted/50 shrink-0" />
+                )}
+                <span className={`text-xs truncate ${step.done ? 'text-text-muted line-through font-normal' : 'text-text-primary font-bold'}`}>
+                  {step.label}
+                </span>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
     </div>
   )
 }

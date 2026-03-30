@@ -30,7 +30,8 @@ import toast from 'react-hot-toast'
 import { useTheme } from '../../contexts/ThemeContext'
 import { motion, AnimatePresence } from 'framer-motion'
 import ProfileUpload from '../../components/ProfileUpload'
-import { sendNewsletterToAllUsers } from '../../lib/emails'  // ← ADDED
+import { sendNewsletterToAllUsers } from '../../lib/emails'
+import { useIsMobile } from '../../hooks/useIsMobile'
 
 const TABS = [
   { id: 'profile', icon: User, label: 'Profile', desc: 'Manage your personal info' },
@@ -47,6 +48,7 @@ const FOUNDER_EMAIL = 'ayushkumar00467@gmail.com'
 export default function SettingsPage() {
   const { user, profile, isPro, signOut, updateProfile } = useAuth()
   const { theme, toggleTheme } = useTheme()
+  const isMobile = useIsMobile()
   const [activeTab, setActiveTab] = useState('profile')
   const [saving, setSaving] = useState(false)
 
@@ -256,36 +258,41 @@ export default function SettingsPage() {
                     Features to Announce ({newsletterFeatures.length})
                   </label>
                   {newsletterFeatures.map((f, i) => (
-                    <div key={i} style={{
-                      display: 'grid',
-                      gridTemplateColumns: '60px 1fr 1fr auto',
-                      gap: 8,
-                      marginBottom: 8,
-                      alignItems: 'center',
-                    }}>
+                    <div key={i} className="flex flex-col sm:grid sm:grid-cols-[60px_1fr_1fr_auto] gap-2 mb-4 sm:mb-2 items-start sm:items-center bg-bg-surface sm:bg-transparent p-3 sm:p-0 rounded-xl sm:rounded-none border border-border sm:border-none">
+                      <div className="flex items-center gap-2 w-full sm:w-auto">
+                        <input
+                          className="input w-16 sm:w-full shrink-0"
+                          value={f.icon}
+                          onChange={e => {
+                            const updated = [...newsletterFeatures]
+                            updated[i].icon = e.target.value
+                            setNewsletterFeatures(updated)
+                          }}
+                          placeholder="Icon"
+                          style={{ textAlign: 'center', fontSize: 20 }}
+                        />
+                        <input
+                          className="input flex-1 sm:w-full"
+                          value={f.title}
+                          onChange={e => {
+                            const updated = [...newsletterFeatures]
+                            updated[i].title = e.target.value
+                            setNewsletterFeatures(updated)
+                          }}
+                          placeholder="Feature title"
+                        />
+                        <button
+                          className="sm:hidden"
+                          onClick={() => setNewsletterFeatures(newsletterFeatures.filter((_, idx) => idx !== i))}
+                          style={{
+                            background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.2)', borderRadius: 8, color: '#EF4444', padding: '8px 12px', fontSize: 16, fontWeight: 700
+                          }}
+                        >
+                          ×
+                        </button>
+                      </div>
                       <input
-                        className="input"
-                        value={f.icon}
-                        onChange={e => {
-                          const updated = [...newsletterFeatures]
-                          updated[i].icon = e.target.value
-                          setNewsletterFeatures(updated)
-                        }}
-                        placeholder="Icon"
-                        style={{ textAlign: 'center', fontSize: 20 }}
-                      />
-                      <input
-                        className="input"
-                        value={f.title}
-                        onChange={e => {
-                          const updated = [...newsletterFeatures]
-                          updated[i].title = e.target.value
-                          setNewsletterFeatures(updated)
-                        }}
-                        placeholder="Feature title"
-                      />
-                      <input
-                        className="input"
+                        className="input w-full"
                         value={f.desc}
                         onChange={e => {
                           const updated = [...newsletterFeatures]
@@ -295,16 +302,10 @@ export default function SettingsPage() {
                         placeholder="Short description"
                       />
                       <button
+                        className="hidden sm:block shrink-0"
                         onClick={() => setNewsletterFeatures(newsletterFeatures.filter((_, idx) => idx !== i))}
                         style={{
-                          background: 'rgba(255,99,99,0.1)',
-                          border: '1px solid rgba(255,99,99,0.2)',
-                          borderRadius: 8,
-                          color: '#FF6363',
-                          cursor: 'pointer',
-                          padding: '8px 12px',
-                          fontSize: 16,
-                          fontWeight: 700,
+                          background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.2)', borderRadius: 8, color: '#EF4444', cursor: 'pointer', padding: '8px 12px', fontSize: 16, fontWeight: 700
                         }}
                       >
                         ×
@@ -333,39 +334,24 @@ export default function SettingsPage() {
                 <button
                   onClick={handleSendNewsletter}
                   disabled={sendingNewsletter || newsletterFeatures.length === 0}
+                  className={`flex items-center justify-center gap-2 border-none rounded-xl font-extrabold ${isMobile ? 'py-3 text-sm w-full mx-auto max-w-[280px]' : 'py-[14px] text-[15px] w-full'}`}
                   style={{
-                    width: '100%',
-                    padding: '14px 0',
-                    background: sendingNewsletter
-                      ? '#1A1A2A'
-                      : 'linear-gradient(135deg, #6C63FF, #3ECFCF)',
-                    border: 'none',
-                    borderRadius: 12,
+                    background: sendingNewsletter ? '#1A1A2A' : 'linear-gradient(135deg, #6C63FF, #3ECFCF)',
                     color: sendingNewsletter ? '#666' : '#fff',
-                    fontWeight: 800,
-                    fontSize: 15,
                     cursor: sendingNewsletter ? 'not-allowed' : 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: 8,
                   }}
                 >
                   {sendingNewsletter ? (
                     <>
                       <div style={{
-                        width: 16, height: 16,
-                        border: '2px solid #444',
-                        borderTop: '2px solid #888',
-                        borderRadius: '50%',
-                        animation: 'spin 0.8s linear infinite',
+                        width: 16, height: 16, border: '2px solid #444', borderTop: '2px solid #888', borderRadius: '50%', animation: 'spin 0.8s linear infinite',
                       }} />
                       Sending...
                     </>
                   ) : (
                     <>
                       <Send size={16} />
-                      Send Newsletter to All Users
+                      Send Newsletter
                     </>
                   )}
                 </button>
@@ -596,7 +582,7 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto flex flex-col md:flex-row gap-8 lg:gap-12 pb-24 md:pb-12">
+    <div className="max-w-5xl mx-auto flex flex-col md:flex-row gap-8 lg:gap-12 pb-24 md:pb-12 w-full px-4 sm:px-6">
       {/* Sidebar Navigation */}
       <div className="md:w-64 shrink-0 flex flex-col">
         <div className="hidden md:block mb-8">

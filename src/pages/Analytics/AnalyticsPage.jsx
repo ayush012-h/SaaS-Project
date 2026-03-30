@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
 import { subMonths, format } from 'date-fns'
-import { useSubscriptions } from '../../hooks/useSubscriptions'
+import { useSubscriptions } from '../../contexts/SubscriptionsContext'
 import { useAuth } from '../../contexts/AuthContext'
 import { useCurrencyRates, getCurrencySymbol } from '../../hooks/useCurrencyRates'
 import { useMemo } from 'react'
@@ -13,10 +13,10 @@ import { SkeletonAnalytics, SkeletonBox } from '../../components/Skeleton'
 import { EmptyInsights } from '../../components/EmptyState'
 import { useIsMobile } from '../../hooks/useIsMobile'
 
-const COLORS = ['#6C63FF', '#3ECFCF', '#FFD700', '#FF6363', '#4CFF8F', '#FF63B3', '#63B3FF', '#FF9F63']
+const COLORS = ['#818CF8', '#6366F1', '#4F46E5', '#4338CA', '#312E81']
 
 const INSIGHT_ICONS = { overlap: AlertTriangle, unused: TrendingUp, downgrade: DollarSign }
-const INSIGHT_COLORS = { overlap: '#FFD700', unused: '#FF6363', downgrade: '#4CFF8F' }
+const INSIGHT_COLORS = { overlap: '#F59E0B', unused: '#EF4444', downgrade: '#10B981' }
 
 const CustomTooltip = ({ active, payload, label, currencySymbol }) => {
   if (active && payload?.length) {

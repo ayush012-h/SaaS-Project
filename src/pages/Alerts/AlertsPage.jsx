@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Bell, Clock, X, BookOpen, ChevronRight, Loader2, BellOff, ArrowLeft } from 'lucide-react'
-import { useSubscriptions } from '../../hooks/useSubscriptions'
+import { useSubscriptions } from '../../contexts/SubscriptionsContext'
 import { format } from 'date-fns'
 import { supabase } from '../../lib/supabase'
 import toast from 'react-hot-toast'

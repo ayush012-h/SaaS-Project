@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Search, ChevronRight } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
-import { useSubscriptions } from '../hooks/useSubscriptions'
+import { useSubscriptions } from '../contexts/SubscriptionsContext'
 import { ServiceLogo } from '../lib/logos'
 
 export default function GlobalSearch() {

@@ -16,7 +16,7 @@ import {
   Info
 } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
-import { useSubscriptions } from '../../hooks/useSubscriptions'
+import { useSubscriptions } from '../../contexts/SubscriptionsContext'
 import { supabase } from '../../lib/supabase'
 import ProGate from '../../components/UI/ProGate'
 import toast from 'react-hot-toast'

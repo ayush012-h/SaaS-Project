@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, CheckCircle2, ChevronRight, Sparkles, LayoutDashboard, CreditCard, PieChart, Mail, Bell, ShieldCheck } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
-import { useSubscriptions } from '../hooks/useSubscriptions'
+import { useSubscriptions } from '../contexts/SubscriptionsContext'
 
 const ONBOARDING_KEY = 'onboarded_v2'
 

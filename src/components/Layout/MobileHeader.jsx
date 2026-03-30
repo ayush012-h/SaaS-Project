@@ -169,21 +169,6 @@ export default function MobileHeader() {
           {currentTitle}
         </span>
 
-        {/* Hamburger button */}
-        <button
-          onClick={() => setDrawerOpen(true)}
-          style={{
-            background: 'rgba(255,255,255,0.05)',
-            border: '1px solid #1E1E2E',
-            borderRadius: 10,
-            width: 38, height: 38,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            cursor: 'pointer', color: '#9999BB',
-          }}
-          aria-label="Open menu"
-        >
-          <Menu size={20} />
-        </button>
       </header>
 
       {/* ── Drawer + Backdrop ────────────────────────────── */}

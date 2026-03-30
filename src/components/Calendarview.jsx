@@ -96,7 +96,7 @@ export default function CalendarView({ userPlan }) {
     return '#3ECFCF'
   }
 
-  const accentColors = ['#6C63FF', '#FF6363', '#3ECFCF', '#FFD700', '#4CFF8F', '#FF9F43']
+  const accentColors = ['#818CF8', '#6366F1', '#4F46E5', '#4338CA', '#312E81']
 
   const pageContent = (
     <div style={{ padding: '32px 36px' }}>
