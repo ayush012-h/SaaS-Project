@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 
 const CACHE_KEY = 'subtrackr_fx_rates'
 const CACHE_TTL = 60 * 60 * 1000 // 1 hour
